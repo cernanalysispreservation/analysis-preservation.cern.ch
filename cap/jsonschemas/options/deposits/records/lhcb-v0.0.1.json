@@ -54,7 +54,10 @@
       },
       "gitlab_links": {
         "items": {
-          "ui:field": "CapFiles"
+          "ui:field": "CapFiles",
+          "ui:options": {
+            "zenodo": true
+          }
         }
       },
       "ui:object": "accordionObjectField",

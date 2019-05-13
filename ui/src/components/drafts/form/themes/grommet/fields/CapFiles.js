@@ -5,17 +5,27 @@ import { connect } from "react-redux";
 
 import Box from "grommet/components/Box";
 import Anchor from "grommet/components/Anchor";
+import Button from "grommet/components/Button"
 
 import Edit from "grommet/components/icons/base/FormEdit";
-import { toggleFilemanagerLayer } from "../../../../../../actions/drafts";
+import CloudUploadIcon from "grommet/components/icons/base/CloudUpload";
+import {
+  toggleFilemanagerLayer,
+  uploadToZenodo
+} from "../../../../../../actions/drafts";
+
+import Status from "grommet/components/icons/Status";
 
 class CapFile extends React.Component {
   constructor(props) {
     super(props);
-
+    let isZenodo = props.uiSchema["ui:options"]
+      ? props.uiSchema["ui:options"]["zenodo"]
+      : null;
     this.state = {
       layerActive: false,
-      selected: {}
+      selected: {},
+      isZenodo: isZenodo
     };
   }
 
@@ -43,6 +53,9 @@ class CapFile extends React.Component {
   }
 
   render() {
+    let bucket = this.props.links ? this.props.links.get("bucket") : null;
+    let bucket_id = bucket ? bucket.split("/").pop() : null;
+
     return (
       <Box
         pad="small"
@@ -54,13 +67,35 @@ class CapFile extends React.Component {
         wrap={false}
       >
         {this.props.formData ? (
-          <React.Fragment>
-            <span>{this.props.formData}</span>
-            <Anchor
-              icon={<Edit />}
-              onClick={this._toggleFileManager.bind(this)}
-            />
-          </React.Fragment>
+          <Box>
+            <Box direction="row">
+              <Box pad="small">{this.props.formData}</Box>
+              <Anchor
+                icon={<Edit />}
+                onClick={this._toggleFileManager.bind(this)}
+              />
+            </Box>
+            {this.state.isZenodo ? (
+              <Box direction="row">
+                <Button
+                  icon={<CloudUploadIcon />}
+                  label="Upload to zenodo"
+                  onClick={() => {
+                    this.props.uploadToZenodo(
+                      this.props.idSchema.$id,
+                      bucket_id,
+                      this.props.formData
+                    );
+                  }}
+                />
+                {this.props.zenodoId == 200 ? (
+                  <Box pad="small">
+                    <Status value="ok" />
+                  </Box>
+                ) : null}
+              </Box>
+            ) : null}
+          </Box>
         ) : (
           <React.Fragment>
             <Anchor
@@ -82,17 +117,31 @@ CapFile.propTypes = {
   onChange: PropTypes.func,
   properties: PropTypes.object,
   toggleFilemanagerLayer: PropTypes.func,
-  formData: PropTypes.object
+  formData: PropTypes.object,
+  uploadToZenodo: PropTypes.func,
+  links: PropTypes.object,
+  zenodo: PropTypes.object,
+  uiSchema: PropTypes.object,
+  idSchema: PropTypes.object
 };
+
+function mapStateToProps(state, props) {
+  return {
+    links: state.drafts.getIn(["current_item", "links"]),
+    zenodoId: state.drafts.getIn(["zenodo", props.idSchema.$id, "status"])
+  };
+}
 
 function mapDispatchToProps(dispatch) {
   return {
     toggleFilemanagerLayer: (selectable = false, action) =>
-      dispatch(toggleFilemanagerLayer(selectable, action))
+      dispatch(toggleFilemanagerLayer(selectable, action)),
+    uploadToZenodo: (element_id, bucket_id, filename) =>
+      dispatch(uploadToZenodo(element_id, bucket_id, filename))
   };
 }
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(CapFile);

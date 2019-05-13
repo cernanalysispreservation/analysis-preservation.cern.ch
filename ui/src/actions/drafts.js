@@ -57,6 +57,10 @@ export const DELETE_FILE_REQUEST = "DELETE_FILE_REQUEST";
 export const DELETE_FILE_SUCCESS = "DELETE_FILE_SUCCESS";
 export const DELETE_FILE_ERROR = "DELETE_FILE_ERROR";
 
+export const UPLOAD_TO_ZENODO_REQUEST = "UPLOAD_TO_ZENODO_REQUEST";
+export const UPLOAD_TO_ZENODO_SUCCESS = "UPLOAD_TO_ZENODO_SUCCESS";
+export const UPLOAD_TO_ZENODO_ERROR = "UPLOAD_TO_ZENODO_ERROR";
+
 export const EDIT_PUBLISHED_REQUEST = "EDIT_PUBLISHED_REQUEST";
 export const EDIT_PUBLISHED_SUCCESS = "EDIT_PUBLISHED_SUCCESS";
 export const EDIT_PUBLISHED_ERROR = "EDIT_PUBLISHED_ERROR";
@@ -320,9 +324,31 @@ export function permissionsItemError(error) {
   };
 }
 
+
 export function clearErrorSuccess() {
   return {
     type: CLEAR_ERROR_SUCCESS
+  };
+}
+
+export function uploadToZenodoRequest() {
+  return {
+    type: UPLOAD_TO_ZENODO_REQUEST
+  };
+}
+
+export function uploadToZenodoSuccess(element_id, status) {
+  return {
+    type: UPLOAD_TO_ZENODO_SUCCESS,
+    element_id,
+    status
+  };
+}
+
+export function uploadToZenodoError(error) {
+  return {
+    type: UPLOAD_TO_ZENODO_ERROR,
+    error
   };
 }
 
@@ -713,6 +739,22 @@ export function handlePermissions(draft_id, type, email, action, operation) {
       })
       .catch(error => {
         dispatch(permissionsItemError(error));
+      });
+  };
+}
+
+export function uploadToZenodo(element_id, bucket_id, filename) {
+  return dispatch => {
+    dispatch(uploadToZenodoRequest());
+    let file = filename.split("/").pop();
+    let uri = `/api/zenodo/${bucket_id}/${file}`;
+    axios
+      .get(uri)
+      .then(response => {
+        dispatch(uploadToZenodoSuccess(element_id, response.status));
+      })
+      .catch(error => {
+        dispatch(uploadToZenodoError(error));
       });
   };
 }

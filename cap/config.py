@@ -638,7 +638,7 @@ GITHUB_OAUTH_ACCESS_TOKEN = os.environ.get(
 GITLAB_OAUTH_ACCESS_TOKEN = os.environ.get(
     'APP_GITLAB_OAUTH_ACCESS_TOKEN', None)
 
-# Reana server url
+# Reana access token
 # ================
 REANA_ACCESS_TOKEN = {
     'ATLAS': os.environ.get(
@@ -650,3 +650,8 @@ REANA_ACCESS_TOKEN = {
     'LHCb': os.environ.get(
         'APP_REANA_LHCb_ACCESS_TOKEN', None)
 }
+
+# Zenodo
+# ======
+ZENODO_SERVER_URL = os.environ.get('APP_ZENODO_SERVER_URL', None)
+ZENODO_ACCESS_TOKEN = os.environ.get('APP_ZENODO_ACCESS_TOKEN', None)

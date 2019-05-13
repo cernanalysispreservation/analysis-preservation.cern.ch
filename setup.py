@@ -64,7 +64,7 @@ install_requires = [
     'Flask-Cache>=0.13.1',
     'Flask-Debugtoolbar>=0.10.1',
     # CAP specific libraries
-    'PyGithub>=1.35',
+    'PyGithub>=1.43.2',
     'python-gitlab>=1.0.2',
 
     # Pinned libraries
@@ -143,6 +143,7 @@ setup(
             'cap_lhcb = cap.modules.experiments.views.lhcb:lhcb_bp',
             'cap_cms = cap.modules.experiments.views.cms:cms_bp',
             'cap_reana = cap.modules.reana.views:reana_bp',
+            'cap_zenodo = cap.modules.zenodo.views:zenodo_bp',
             'invenio_oauthclient = invenio_oauthclient.views.client:blueprint',
         ],
         'invenio_celery.tasks': [

@@ -53,7 +53,10 @@ import {
   GENERAL_TITLE_CHANGED,
   GENERAL_TITLE_REQUEST,
   GENERAL_TITLE_SUCCESS,
-  GENERAL_TITLE_ERROR
+  GENERAL_TITLE_ERROR,
+  UPLOAD_TO_ZENODO_REQUEST,
+  UPLOAD_TO_ZENODO_SUCCESS,
+  UPLOAD_TO_ZENODO_ERROR
 } from "../actions/drafts";
 
 const initialState = Map({
@@ -93,7 +96,8 @@ const initialState = Map({
     error: null,
     links: null,
     permissions: []
-  })
+  }),
+  zenodo: Map({})
 });
 
 export default function draftsReducer(state = initialState, action) {
@@ -218,17 +222,26 @@ export default function draftsReducer(state = initialState, action) {
           msg: "Error while updating.."
         });
     case INIT_FORM:
-      return state.set(
-        "current_item",
-        Map({
-          id: null,
-          data: null,
-          loading: false,
-          error: null,
-          links: null,
-          files: Map({})
-        })
-      );
+      return state
+        .set(
+          "current_item",
+          Map({
+            id: null,
+            data: null,
+            loading: false,
+            error: null,
+            links: null,
+            files: Map({})
+          })
+        )
+        .set(
+          "zenodo",
+          Map({
+            loading: false,
+            error: null,
+            status: null
+          })
+        );
     case UPLOAD_FILE_REQUEST:
       return state.setIn(["current_item", "files", action.filename], {
         key: action.filename,
@@ -323,6 +336,19 @@ export default function draftsReducer(state = initialState, action) {
         .setIn(["current_item", "error"], action.error.response.data);
     case CLEAR_ERROR_SUCCESS:
       return state.setIn(["current_item", "error"], null);
+    case UPLOAD_TO_ZENODO_REQUEST:
+      return state
+        .setIn(["zenodo", "loading"], true)
+        .setIn(["zenodo", "error"], false);
+    case UPLOAD_TO_ZENODO_SUCCESS:
+      return state.setIn(
+        ["zenodo", action.element_id, "status"],
+        action.status
+      );
+    case UPLOAD_TO_ZENODO_ERROR:
+      return state
+        .setIn(["zenodo", "loading"], false)
+        .setIn(["zenodo", "error"], action.error);
     case FORM_DATA_CHANGE:
       return state.setIn(["current_item", "formData"], action.data);
     case GENERAL_TITLE_CHANGED:
