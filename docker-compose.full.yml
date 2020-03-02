@@ -89,5 +89,9 @@ services:
     extends:
       file: docker-services.yml
       service: es
+  api-docs:
+    extends:
+      file: docker-services.yml
+      service: api-docs
 volumes:
   static_data:

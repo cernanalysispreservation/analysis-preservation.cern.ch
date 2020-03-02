@@ -75,6 +75,12 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+  api-docs:
+    build: ./docker/api-docs/
+    image: api-docs
+    restart: always
+    ports:
+      - "8012:80"
   kibana:
     image: kibana:5.6.4
     environment:

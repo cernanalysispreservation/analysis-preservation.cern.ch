@@ -55,7 +55,11 @@ install_requires = [
     'Flask-Cli>=0.4.0',
     'Flask-Cache>=0.13.1',
     'Flask-Debugtoolbar>=0.10.1',
-
+    # [TOFIX] Flask-Talisman from 0.5.0->0.5.1 pinning needed for issue
+    # https://github.com/GoogleCloudPlatform/flask-talisman/issues/22
+    # Check also invenio issue
+    # https://github.com/inveniosoftware/invenio-admin/issues/66
+    'flask-talisman==0.5.1',
     # CAP specific libraries
     'PyGithub>=1.35',
     'python-gitlab>=1.0.2',
@@ -83,7 +87,7 @@ install_requires = [
     'Authlib==0.12.1',
     # "raven" versions needed till we FIX dependecies on installation
     'raven[flask]>=5.0.0,<5.5',
-    'invenio-logging[sentry]>=1.0.0b1',
+    'invenio-logging[sentry]>=1.0.0',
     'uWSGI==2.0.17',
     'uwsgi-tools==1.1.1',
     'uwsgitop==0.10',
@@ -125,8 +129,6 @@ setup(
             'cap.modules.experiments.permissions:atlas_access_action',
         ],
         'invenio_base.api_apps': [
-            'cap_access = cap.modules.access.ext:CAPAccess',
-            'cap_cache = cap.modules.cache.ext:CAPCache',
             'cap_deposit = cap.modules.deposit.ext:CAPDeposit',
             'cap_experiments = cap.modules.experiments.ext:CAPExperiments',
             'cap_fixtures = cap.modules.fixtures.ext:CAPFixtures',
@@ -179,7 +181,11 @@ setup(
             'git_model = cap.modules.repoimporter.models',
         ],
         'invenio_db.alembic': ['cap = cap:alembic'],
-        'invenio_config.module': ['cap = cap.config']
+        'invenio_config.module': [
+            'cap = cap.config',
+            'cap_records = cap.modules.records.config',
+            'cap_deposit = cap.modules.deposit.config',
+        ]
     },
     extras_require=extras_require,
     install_requires=install_requires,

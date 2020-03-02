@@ -73,6 +73,4 @@ class WelcomePage extends React.Component {
   }
 }
 
-WelcomePage.propTypes = {};
-
 export default WelcomePage;

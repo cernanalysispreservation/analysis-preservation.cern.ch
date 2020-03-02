@@ -10,4 +10,4 @@ reana-commons==0.6.0
 -e git+git://github.com/Lilykos/flask-celeryext.git@master#egg=flask-celeryext
 # Install invenio-records from last commit before 1.1.0 version release
 -e git+git://github.com/inveniosoftware/invenio-records.git@a5d4efb1e1466aa571aeef013d699dca1452f7cd#egg=invenio-records
--e  git+git://github.com/michamos/celery@fix-redis-connection-result-consumer#egg=celery
+# -e  git+git://github.com/michamos/celery@fix-redis-connection-result-consumer#egg=celery

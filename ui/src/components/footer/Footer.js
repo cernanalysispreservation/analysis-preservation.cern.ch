@@ -5,6 +5,8 @@ import Paragraph from "grommet/components/Paragraph";
 import Menu from "grommet/components/Menu";
 import Anchor from "grommet/components/Anchor";
 
+import capPackageJSON from "../../../package";
+
 class GrommetFooter extends React.Component {
   render() {
     return (
@@ -27,10 +29,20 @@ class GrommetFooter extends React.Component {
             <Anchor label="About" path="/about" />
             <Anchor label="Status" path="/status" />
           </Menu>
+          <div style={styles.version}>ver. {capPackageJSON.version}</div>
         </Box>
       </Footer>
     );
   }
 }
+
+const styles = {
+  version: {
+    padding: "0 10px",
+    fontSize: "11px",
+    color: "#ccc",
+    justifySelf: "flex-end"
+  }
+};
 
 export default GrommetFooter;

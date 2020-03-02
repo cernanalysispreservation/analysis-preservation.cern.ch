@@ -14,6 +14,8 @@ import SocialTwitterIcon from "grommet/components/icons/base/SocialTwitter";
 import SocialMailIcon from "grommet/components/icons/base/SocialMail";
 import SocialGithubIcon from "grommet/components/icons/base/SocialGithub";
 
+import capPackageJSON from "../../../package";
+
 class Footer extends React.Component {
   render() {
     return (
@@ -76,9 +78,18 @@ class Footer extends React.Component {
               </Box>
             </Box>
           </Box>
-          <Box flex={false} align="center">
-            Copyright {new Date().getFullYear()} © CERN. Created & Hosted by
-            CERN. Powered by Invenio Software.
+          <Box flex={false} align="center" style={styles.copyright}>
+            <Box
+              flex={true}
+              align="center"
+              justify="center"
+              direction="row"
+              pad={{ between: "small" }}
+            >
+              Copyright {new Date().getFullYear()} © CERN. Created & Hosted by
+              CERN. Powered by Invenio Software.
+              <div style={styles.version}>ver. {capPackageJSON.version}</div>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -87,5 +98,15 @@ class Footer extends React.Component {
 }
 
 Footer.propTypes = {};
+
+const styles = {
+  version: {
+    color: "#878787",
+    marginLeft: "10px"
+  },
+  copyright: {
+    padding: "5px"
+  }
+};
 
 export default Footer;

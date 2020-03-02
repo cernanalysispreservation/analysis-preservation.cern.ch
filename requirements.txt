@@ -51,7 +51,11 @@ flask-principal==0.4.0    # via flask-security, invenio-admin
 flask-security==3.0.0     # via invenio-accounts
 flask-shell-ipython==0.3.1  # via invenio-app
 flask-sqlalchemy==2.4   # via flask-alembic, invenio-db
-flask-talisman==0.5.0     # via invenio-app
+# [TOFIX] Flask-Talisman pinning needed for issue
+# https://github.com/GoogleCloudPlatform/flask-talisman/issues/22
+# Check also invenio issue
+# https://github.com/inveniosoftware/invenio-admin/issues/66
+flask-talisman==0.5.1     # via invenio-app
 flask-wtf==0.14.2         # via flask-security, invenio-accounts, invenio-oauth2server, invenio-userprofiles
 flask==0.12.4
 ftfy==4.4.3               # via invenio-records-rest
@@ -79,8 +83,7 @@ invenio-formatter==1.0.1  # via invenio
 invenio-i18n==1.0.0       # via invenio, invenio-accounts, invenio-theme
 invenio-indexer==1.0.1    # via invenio, invenio-records-rest
 invenio-jsonschemas==1.0.0  # via invenio
-# invenio-logging[sentry]==1.0.0b1  # via invenio
-invenio-logging==1.0.0
+invenio-logging[sentry]==1.0.0  # via invenio
 invenio-mail==1.0.1       # via invenio, invenio-oauthclient
 invenio-oaiserver==1.0.0  # via invenio
 invenio-oauth2server==1.0.1  # via invenio, invenio-accounts-rest
