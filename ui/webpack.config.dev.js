@@ -12,14 +12,15 @@ export default {
     "./src/webpack-public-path",
     "react-hot-loader/patch",
     "webpack-hot-middleware/client?reload=true",
-    path.resolve(__dirname, "src/index.js") // Defining path seems necessary for this to work consistently on Windows machines.
+    path.resolve(__dirname, "src/index.js"), // Defining path seems necessary for this to work consistently on Windows machines.
+    "pdfjs-dist/build/pdf.worker.entry"
   ],
   target: "web",
   mode: "development",
   output: {
     path: path.resolve(__dirname, "dist"), // Note: Physical files are only output by the production build task `npm run build`.
     publicPath: "/",
-    filename: "bundle.js",
+    filename: "[name].bundle.js",
     crossOriginLoading: false
   },
   plugins: [

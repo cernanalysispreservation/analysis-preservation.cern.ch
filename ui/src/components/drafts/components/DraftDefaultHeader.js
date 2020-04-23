@@ -16,14 +16,12 @@ class DraftDefaultHeader extends React.Component {
     return (
       <Box flex={true} direction="row">
         <Box direction="row" flex={true} wrap={false}>
-          <Box align="center">
-            <Anchor
-              path={{ path: `/drafts/${this.props.draft_id}`, index: true }}
-              data-tip="Overview"
-            >
-              <AppsIcon />
-            </Anchor>
-          </Box>
+          <Anchor
+            path={{ path: `/drafts/${this.props.draft_id}`, index: true }}
+            data-tip="Overview"
+          >
+            <AppsIcon />
+          </Anchor>
           <Box
             pad="small"
             justify="center"

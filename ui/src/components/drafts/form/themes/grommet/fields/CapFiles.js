@@ -33,8 +33,8 @@ class CapFile extends React.Component {
     this.props.selectPath(path, "dir");
   };
 
-  _onFileClick = path => {
-    this._onChange({ path, type: "file" });
+  _onFileClick = ({ key }) => {
+    this._onChange({ path: key, type: "file" });
   };
 
   render() {

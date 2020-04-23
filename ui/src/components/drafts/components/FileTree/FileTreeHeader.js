@@ -79,7 +79,7 @@ class FileTreeHeader extends React.Component {
               filename={data.name}
               action={
                 this.props.onFileClick
-                  ? () => this.props.onFileClick(data.data.key)
+                  ? () => this.props.onFileClick(data.data)
                   : null
               }
             />

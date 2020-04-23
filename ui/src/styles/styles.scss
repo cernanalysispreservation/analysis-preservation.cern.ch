@@ -94,6 +94,14 @@ label {
   transition: width 0.3s;
 }
 
+.grommet {
+  input[type="button"],
+  input[type="submit"],
+  button:not(.grommetux-button) {
+    border: 0;
+    padding: "2px 6px";
+  }
+}
 // xsmall
 @media only screen and (min-width: 320px) {
   .md-row {
@@ -150,5 +158,88 @@ label {
     display: flex;
     flex: 1;
     flex-direction: row !important;
+  }
+}
+
+.grommet [role="tablist"] button:not(.grommetux-button) {
+  border: 0 !important;
+  padding: 0 !important;
+  flex: 0 !important;
+  width: 10px !important;
+  min-width: 17px !important;
+
+  &:focus {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+  }
+}
+
+#draft-tabs > div {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  .viewer-layout-container {
+    background-color: #666;
+    border: 0;
+  }
+  .viewer-layout-toolbar {
+    padding: 0;
+    height: 40px;
+    display: flex;
+
+    .viewer-toolbar {
+      // flex: 1;
+      // display: flex;
+      justify-content: "center";
+      background-color: #fff;
+    }
+
+    .viewer-toolbar-item {
+      // justify-content: "center";
+      // align-content: "center";
+      // align-items: "center";
+      max-width: 60px;
+      display: flex;
+
+      input[type="button"],
+      input[type="submit"],
+      button:not(.grommetux-button) {
+        border: 0;
+        padding: 2px 6px;
+        border-radius: 0;
+        min-width: 40px;
+      }
+
+      input {
+        background-color: #fff;
+        border-radius: 0;
+        text-align: center;
+        padding: 0;
+        min-width: 60px;
+        max-width: 60px;
+        color: #666;
+      }
+
+      .viewer-zoom-popover-target-scale {
+        color: #666;
+      }
+
+      .viewer-icon {
+        height: 12px;
+        width: 12px;
+      }
+    }
+  }
+
+  > div:nth-child(2) {
+    display: flex;
+    flex: 1;
+
+    > [role="tabpanel"] {
+      width: 100%;
+      padding: 0;
+    }
   }
 }

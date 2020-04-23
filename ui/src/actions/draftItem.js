@@ -20,6 +20,10 @@ export const GENERAL_TITLE_ERROR = "GENERAL_TITLE_ERROR";
 
 export const INIT_FORM = "INIT_FORM";
 
+export const DRAFTS_ITEM_TABS = "DRAFTS_ITEM_TABS";
+export const DRAFTS_ITEM_TABS_ACTIVE_INDEX = "DRAFTS_ITEM_TABS_ACTIVE_INDEX";
+export const DRAFTS_ITEM_TABS_CLOSE = "DRAFTS_ITEM_TABS_CLOSE";
+
 export const DRAFTS_ITEM_REQUEST = "DRAFTS_ITEM_REQUEST";
 export const DRAFTS_ITEM_SUCCESS = "DRAFTS_ITEM_SUCCESS";
 export const DRAFTS_ITEM_ERROR = "DRAFTS_ITEM_ERROR";
@@ -57,6 +61,21 @@ export const REMOVE_LOADING = "REMOVE_LOADING";
 export const CLEAR_ERROR_SUCCESS = "CLEAR_ERROR_SUCCESS";
 
 export const FORM_DATA_CHANGE = "FORM_DATA_CHANGE";
+
+export const draftItemTabsChange = tab => ({
+  type: DRAFTS_ITEM_TABS,
+  tab
+});
+
+export const draftItemTabsChangeActiveIndex = tab => ({
+  type: DRAFTS_ITEM_TABS_ACTIVE_INDEX,
+  tab
+});
+
+export const draftItemTabsClose = tab => ({
+  type: DRAFTS_ITEM_TABS_CLOSE,
+  tab
+});
 
 export const draftsItemRequest = () => ({ type: DRAFTS_ITEM_REQUEST });
 export const draftsItemSuccess = (draft_id, draft) => ({

@@ -10,9 +10,11 @@ import BookIcon from "grommet/components/icons/base/Book";
 import NoteIcon from "grommet/components/icons/base/Note";
 import Box from "grommet/components/Box";
 
-// import PreviewUpload from "./PreviewUpload";
-
 import FileTree from "./FileTree";
+import { connect } from "react-redux";
+
+// Actions
+import { draftItemTabsChange } from "../../..//actions/draftItem";
 
 class DepositFilesList extends React.Component {
   constructor(props) {
@@ -35,11 +37,20 @@ class DepositFilesList extends React.Component {
     );
   }
 
+  _onFileClick = ({ key }) => {
+    this.props.draftItemTabsChange(
+      `/drafts/${this.props.draftId}/files/${key}`
+    );
+  };
+
   render() {
     return [
       <FileManager key="filesManager" files={this.props.files} />,
       <Box key="filesList" style={{ paddingLeft: "3px", paddingRight: "10px" }}>
-        <FileTree files={this.props.files.toJS()} />
+        <FileTree
+          files={this.props.files.toJS()}
+          onFileClick={this._onFileClick}
+        />
       </Box>
       // <PreviewUpload key="_file_previewer" />
     ];
@@ -47,7 +58,24 @@ class DepositFilesList extends React.Component {
 }
 
 DepositFilesList.propTypes = {
-  files: PropTypes.object
+  files: PropTypes.object,
+  draftId: PropTypes.string,
+  draftItemTabsChange: PropTypes.func
 };
 
-export default DepositFilesList;
+function mapDispatchToProps(dispatch) {
+  return {
+    draftItemTabsChange: tab => dispatch(draftItemTabsChange(tab))
+  };
+}
+
+function mapStateToProps(state) {
+  return {
+    draftId: state.draftItem.get("id")
+  };
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DepositFilesList);

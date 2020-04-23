@@ -16,7 +16,8 @@ import TrashIcon from "grommet/components/icons/base/Trash";
 // Actions
 import {
   getDraftByIdAndInitForm,
-  toggleActionsLayer
+  toggleActionsLayer,
+  draftItemTabsChange
 } from "../../actions/draftItem";
 
 import ShareIcon from "grommet/components/icons/base/Share";
@@ -49,7 +50,11 @@ class DraftsItemIndex extends React.Component {
       >
         <Box className="md-row" flex>
           <ReactTooltip />
-          <Anchor path={`/drafts/${draft_id}/edit`} data-tip="Edit metadata">
+          <Anchor
+            onClick={() =>
+              this.props.draftItemTabsChange(`/drafts/${draft_id}/edit`)
+            }
+          >
             <Box
               justify="center"
               align="center"
@@ -67,7 +72,9 @@ class DraftsItemIndex extends React.Component {
             </Box>
           </Anchor>
           <Anchor
-            path={`/drafts/${draft_id}/integrations`}
+            onClick={() =>
+              this.props.draftItemTabsChange(`/drafts/${draft_id}/integrations`)
+            }
             data-tip="Connect your repositories"
           >
             <Box
@@ -87,7 +94,9 @@ class DraftsItemIndex extends React.Component {
             </Box>
           </Anchor>
           <Anchor
-            path={`/drafts/${draft_id}/workflows`}
+            onClick={() =>
+              this.props.draftItemTabsChange(`/drafts/${draft_id}/workflows`)
+            }
             data-tip="Run workflows - in BETA soon"
             disabled
           >
@@ -108,7 +117,9 @@ class DraftsItemIndex extends React.Component {
             </Box>
           </Anchor>
           <Anchor
-            path={`/drafts/${draft_id}/settings`}
+            onClick={() =>
+              this.props.draftItemTabsChange(`/drafts/${draft_id}/settings`)
+            }
             data-tip="Share with others"
           >
             <Box
@@ -166,7 +177,8 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     getDraftById: id => dispatch(getDraftByIdAndInitForm(id)),
-    toggleActionsLayer: type => dispatch(toggleActionsLayer(type))
+    toggleActionsLayer: type => dispatch(toggleActionsLayer(type)),
+    draftItemTabsChange: tab => dispatch(draftItemTabsChange(tab))
   };
 }
 

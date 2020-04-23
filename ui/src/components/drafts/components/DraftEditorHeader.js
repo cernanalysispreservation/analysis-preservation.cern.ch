@@ -19,6 +19,7 @@ import {
 } from "../../../actions/draftItem";
 import { withRouter } from "react-router";
 import { formErrorsChange } from "../../../actions/common";
+import { Label, Paragraph } from "grommet";
 
 class DraftEditorHeader extends React.Component {
   // checks if the value is empty undefined or null
@@ -187,6 +188,14 @@ class DraftEditorHeader extends React.Component {
 
     return (
       <Box flex={true} wrap={false} direction="row">
+        <Box flex={true} justify="center">
+          <Label size="small" uppercase={true}>
+            Metadata
+          </Label>
+          <Paragraph size="small" margin="none">
+            Fill in the information the forrm to preserve a complete analysis
+          </Paragraph>
+        </Box>
         <Box flex={true} justify="center" align="end">
           <DraftMessage
             key="draft-message"

@@ -2,18 +2,11 @@ import React from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 
-import { Switch, Route, withRouter } from "react-router-dom";
+import { withRouter } from "react-router-dom";
 
 import { Box } from "grommet";
 
 import DraftHeader from "./components/DraftHeader";
-
-// Draft containers
-import DraftIntegrations from "./components/DraftIntegrations";
-import DraftWorkflows from "../workflows";
-import DraftSettings from "./components/DepositSettings";
-import DraftPreview from "./DraftPreview";
-import DraftEditor from "./DraftEditor";
 
 import Sidebar from "./components/DepositSidebar";
 
@@ -23,6 +16,7 @@ import PermissionDenied from "../errors/403";
 import { getDraftByIdAndInitForm } from "../../actions/draftItem";
 
 import DraftsItemNav from "./DraftsItemNav";
+import DraftItemTabs from "./DraftItemTabs";
 
 class DraftsItemIndex extends React.Component {
   constructor(props) {
@@ -57,37 +51,8 @@ class DraftsItemIndex extends React.Component {
         <DraftHeader formRef={this.formRef} />
         <Box flex={true} direction="row">
           <DraftsItemNav />
-
-          <Box flex={true} direction="row" className="lg-column">
-            <Box flex={true} colorIndex="light-1" style={{ margin: "5px" }}>
-              <Switch>
-                <Route
-                  exact
-                  path={`/drafts/:draft_id`}
-                  component={DraftPreview}
-                />
-                <Route
-                  path={`/drafts/:draft_id/edit`}
-                  render={props => (
-                    <DraftEditor {...props} formRef={this.formRef} />
-                  )}
-                />} />
-                <Route
-                  path={`/drafts/:draft_id/settings`}
-                  component={DraftSettings}
-                />
-                <Route
-                  path={`/drafts/:draft_id/integrations`}
-                  component={DraftIntegrations}
-                />
-                <Route
-                  path={`/drafts/:draft_id/workflows`}
-                  render={props => (
-                    <DraftWorkflows draft_id={draft_id} {...props} />
-                  )}
-                />
-              </Switch>
-            </Box>
+          <Box flex={true} direction="row">
+            <DraftItemTabs formRef={this.formRef} />
             <Sidebar />
           </Box>
         </Box>

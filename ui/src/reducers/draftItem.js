@@ -1,4 +1,4 @@
-import { Map, Set, fromJS } from "immutable";
+import { Map, Set, OrderedSet, fromJS } from "immutable";
 
 import * as commonActions from "../actions/common"; // Common Actions
 import * as draftItemActions from "../actions/draftItem"; // Drafts Actions
@@ -8,6 +8,8 @@ import * as workflowsActions from "../actions/workflows"; // Workflows Actions
 const initialState = Map({
   errors: [],
   schemaErrors: [],
+  activeTab: 0,
+  tabs: OrderedSet([]),
   formErrors: Set([]),
   actionsLayer: false,
   actionsLayerType: null,
@@ -59,6 +61,32 @@ export default function draftsReducer(state = initialState, action) {
       return initialState;
     case draftItemActions.CLEAR_ERROR_SUCCESS:
       return state.set("errors", []);
+    case draftItemActions.DRAFTS_ITEM_TABS: {
+      let _tabs = state.get("tabs").add(action.tab);
+      let active_tab = _tabs.toJS().indexOf(action.tab);
+      return state
+        .set("tabs", _tabs)
+        .set("activeTab", active_tab > -1 ? active_tab : 0);
+    }
+    case draftItemActions.DRAFTS_ITEM_TABS_CLOSE: {
+      let _tabs = state.get("tabs");
+      let closing_tab = _tabs.toJS()[action.tab];
+      _tabs = _tabs.delete(closing_tab);
+      return state
+        .set("tabs", _tabs)
+        .set(
+          "activeTab",
+          state.get("activeTab") == closing_tab
+            ? state.get("activeTab") - 1
+            : state.get("activeTab")
+        );
+    }
+    case draftItemActions.DRAFTS_ITEM_TABS_ACTIVE_INDEX: {
+      let _tabs = state.get("tabs");
+      let active_tab = _tabs.toJS().indexOf(action.tab);
+      let _tabs_size = state.get("tabs").size;
+      return state.set("activeTab", action.tab);
+    }
     case commonActions.FORM_ERRORS:
       return state.set("formErrors", Set(action.errors));
     case commonActions.FETCH_SCHEMA_ERROR:
