@@ -12,4 +12,4 @@ blueprint = Blueprint('cap_services',
                       url_prefix='/services'
                       )
 
-from . import zenodo, cern, orcid, status_checks, ror, cds, latex  # noqa
+from . import zenodo, cern, orcid, status_checks, ror, cds, latex, notebook  # noqa

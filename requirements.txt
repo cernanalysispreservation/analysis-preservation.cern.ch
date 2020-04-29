@@ -124,6 +124,7 @@ maxminddb-geolite2==2018.703  # via invenio-accounts
 maxminddb==1.4.1          # via maxminddb-geolite2
 msgpack-python==0.5.6     # via invenio-celery
 node-semver==0.1.1        # via invenio-assets
+notebooktoall==0.2.3
 oauthlib==2.1.0           # via flask-oauthlib, invenio-oauth2server, requests-oauthlib
 ordereddict==1.1          # via invenio-query-parser
 passlib==1.7.1            # via flask-security, invenio-accounts

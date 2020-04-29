@@ -28,12 +28,15 @@ import Code from "grommet/components/icons/base/Code";
 import CSSIcon from "grommet/components/icons/base/StandardsCss3";
 import PlatformReactjs from "grommet/components/icons/base/PlatformReactjs";
 import Cli from "grommet/components/icons/base/Cli";
+import Scorecard from "grommet/components/icons/base/Scorecard";
+import ViewIcon from "grommet/components/icons/base/View";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 import { toggleFilePreviewEdit } from "../../../actions/draftItem";
 
 import prettyBytes from "pretty-bytes";
 import { deleteFileByUri } from "../../../actions/files";
+import axios from "axios";
 
 const uploadStatusMap = {
   uploading: "disabled",
@@ -50,9 +53,13 @@ class FileItem extends React.Component {
     };
   }
 
-  _getIcon(mimetype) {
+  _getIcon(filename, mimetype) {
     if (!mimetype) {
       return <NoteIcon type="status" size="xsmall" />;
+    }
+
+    if (filename.endsWith(".ipynb")) {
+      return <Scorecard type="status" size="xsmall" />;
     }
 
     let type, subtype;
@@ -133,7 +140,7 @@ class FileItem extends React.Component {
             onClick={this.props.action}
             responsive={false}
           >
-            <Box justify="center">{this._getIcon(file.mimetype)}</Box>
+            <Box justify="center">{this._getIcon(file.key, file.mimetype)}</Box>
             <Box
               justify="center"
               flex={true}
@@ -214,6 +221,28 @@ class FileItem extends React.Component {
                 )
               }
             />
+            {this.props.filename.endsWith(".ipynb") ? (
+              <Anchor
+                size="small"
+                icon={<ViewIcon size="xsmall" />}
+                label={<Label size="small">Render Notebook</Label>}
+                onClick={() => {
+                  let uri = `/api/services/notebook`;
+                  axios
+                    .post(uri, {
+                      pid: this.props.match.params.draft_id,
+                      name: this.props.filename
+                    })
+                    .then(resp => {
+                      let wnd = window.open("", "", "_blank");
+                      wnd.document.write(resp.data.notebook);
+                    })
+                    .catch(error => {
+                      throw { error };
+                    });
+                }}
+              />
+            ) : null}
           </Box>
         ) : null}
       </Box>

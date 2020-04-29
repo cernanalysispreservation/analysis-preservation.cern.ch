@@ -70,7 +70,12 @@ class FileTree extends React.Component {
     let allFiles = {
       children: filter(
         this.state.data.children,
-        item => item.name != "repositories"
+        item => item.name !== "repositories" && !item.name.endsWith(".ipynb")
+      )
+    };
+    let allNotebooks = {
+      children: filter(this.state.data.children, item =>
+        item.name.endsWith(".ipynb")
       )
     };
     return (
@@ -107,6 +112,23 @@ class FileTree extends React.Component {
         ) : (
           <Box flex={true} pad="small" justify="center" align="center">
             No repositories added yet
+          </Box>
+        )}
+        <HorizontalWithText
+          text="All Notebooks"
+          background={this.props.background}
+          color={this.props.color}
+        />
+        {allNotebooks.children && allNotebooks.children.length > 0 ? (
+          <TreeNode
+            data={allNotebooks}
+            onDirectoryClick={this.props.onDirectoryClick}
+            onFileClick={this.props.onFileClick}
+            root
+          />
+        ) : (
+          <Box flex={true} pad="small" justify="center" align="center">
+            No notebooks added yet
           </Box>
         )}
       </Box>
