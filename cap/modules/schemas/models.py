@@ -69,6 +69,7 @@ class Schema(db.Model):
     patch = db.Column(db.Integer, unique=False, nullable=False, default=0)
 
     experiment = db.Column(db.String(128), unique=False, nullable=True)
+    config = db.Column(json_type, default=lambda: dict(), nullable=False)
 
     deposit_schema = db.Column(json_type,
                                default=lambda: dict(),
