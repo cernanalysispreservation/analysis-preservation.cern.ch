@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of CERN Analysis Preservation Framework.
-# Copyright (C) 2017 CERN.
+# Copyright (C) 2016 CERN.
 #
 # CERN Analysis Preservation Framework is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License as
@@ -21,11 +21,22 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-"""Schemas module."""
+
+"""CAP Schemas."""
 
 from __future__ import absolute_import, print_function
 
-from .cli import schemas, validate
-from .ext import CAPSchema
+from .cli import schema
 
-__all__ = ('CAPSchema', )
+
+class CAPSchema(object):
+    """CAP schemas extension."""
+
+    def __init__(self, app=None):
+        """Extension initialization."""
+        if app:
+            self.init_app(app)
+
+    def init_app(self, app):
+        """Flask application initialization."""
+        app.cli.add_command(schema)

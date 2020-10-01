@@ -25,6 +25,12 @@
 
 from itertools import groupby
 
+import click
+from invenio_accounts.models import Role
+from invenio_access.models import ActionRoles
+from invenio_db import db
+from sqlalchemy.exc import IntegrityError, DatabaseError
+
 from .models import Schema
 from .permissions import ReadSchemaPermission
 
@@ -74,3 +80,48 @@ def get_indexed_schemas_for_user(latest=True):
         schemas = _filter_only_latest(schemas)
 
     return schemas
+
+
+def _allow(action, arg, id):
+    """Allow action for schema processor."""
+    db.session.add(
+        ActionRoles.allow(action, argument=arg, role_id=id)
+    )
+
+
+def _deny(action, arg, id):
+    """Deny action for schema processor."""
+    db.session.add(
+        ActionRoles.deny(action, argument=arg, role_id=id)
+    )
+
+
+def _remove(action, arg, id):
+    """Remove action for schema processor."""
+    ActionRoles.query_by_action(action, argument=arg)\
+        .filter(ActionRoles.role_id == id)\
+        .delete(synchronize_session=False)
+
+
+def process_action(schema_action, schema_name, actions_roles, allowed_actions):
+    """Permission process action."""
+    schema_actions = {
+        'allow': _allow,
+        'deny': _deny,
+        'remove': _remove
+    }
+
+    processor = schema_actions[schema_action]
+    try:
+        with db.session.begin_nested():
+            for _action, _role in actions_roles:
+                processor(allowed_actions[_action],
+                          schema_name,
+                          Role.query.filter_by(name=_role).one().id)
+
+    except IntegrityError:
+        raise click.ClickException(
+            'DB Error occurred during the assignment of actions to roles.')
+
+    db.session.commit()
+    click.secho('Process finished successfully.', fg='green')

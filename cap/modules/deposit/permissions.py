@@ -37,6 +37,9 @@ from cap.modules.records.permissions import RecordFilesPermission
 from cap.modules.schemas.models import Schema
 from cap.modules.schemas.permissions import ReadSchemaPermission
 from cap.modules.schemas.resolvers import resolve_schema_by_url
+from cap.modules.schemas.permissions import deposit_schema_read_action, \
+    deposit_schema_update_action, deposit_schema_admin_action, \
+    deposit_schema_clone_action, deposit_schema_review_action
 from cap.modules.experiments.permissions import cms_pag_convener_action
 
 from .errors import WrongJSONSchemaError
@@ -90,7 +93,9 @@ class DepositPermission(Permission):
         "admin": deposit_admin_need,
     }
 
-    def __init__(self, deposit, action, extra_needs=None):
+    def __init__(self, deposit, action,
+                 schema_needs_action=None,
+                 extra_needs=None):
         """Constructor.
 
         Args:
@@ -105,6 +110,9 @@ class DepositPermission(Permission):
         if action in self.actions:
             _needs.add(self.actions[action](deposit))
 
+        if schema_needs_action:
+            _needs.add(schema_needs_action(deposit.schema.name))
+
         super(DepositPermission, self).__init__(*_needs)
 
 
@@ -112,29 +120,27 @@ class CreateDepositPermission(Permission):
     """Deposit create permission."""
     def __init__(self, record):
         """Initialize state."""
-        _needs = set()
-
         data = request.get_json(force=True)
-        _needs.update(self._get_schema_needs(data))
+        _needs = self.get_schema_access(data)
 
         super(CreateDepositPermission, self).__init__(*_needs)
 
-    def _get_schema_needs(self, deposit):
+    @staticmethod
+    def get_schema_access(deposit):
         """Create deposit permissions are based on schema's permissions."""
         if '$schema' in deposit:
             try:
                 schema = resolve_schema_by_url(deposit['$schema'])
             except JSONSchemaNotFound:
-                raise WrongJSONSchemaError('Schema {} doesnt exist.'.format(
-                    deposit['$schema']))
+                raise WrongJSONSchemaError(
+                    f'Schema {deposit["$schema"]} doesnt exist.')
 
         elif '$ana_type' in deposit:
             try:
                 schema = Schema.get_latest(deposit['$ana_type'])
             except JSONSchemaNotFound:
                 raise WrongJSONSchemaError(
-                    'Schema with name {} doesnt exist.'.format(
-                        deposit['$ana_type']))
+                    f'Schema with name {deposit["$ana_type"]} doesnt exist.')
 
         else:
             raise WrongJSONSchemaError(
@@ -147,48 +153,56 @@ class ReadDepositPermission(DepositPermission):
     """Deposit read permission."""
     def __init__(self, record):
         """Initialize state."""
-        extra_needs = self._get_schema_needs(record, 'read')
-        super(ReadDepositPermission, self).__init__(record, 'read',
-                                                    extra_needs)
+        extra_needs = self.get_schema_needs_for_questionnaire(record)
 
-    def _get_schema_needs(self, deposit, action):
+        super(ReadDepositPermission, self).__init__(
+            record, 'read', deposit_schema_read_action, extra_needs)
+
+    @staticmethod
+    def get_schema_needs_for_questionnaire(record):
         """Create deposit permissions are based on schema's permissions."""
+        _needs = set()
 
-        if "/records/cms-stats-questionnaire" in deposit.get('$schema'):
-            _needs = set()
+        if record.schema.name == 'cms-stats-questionnaire':
             _needs.add(cms_pag_convener_action(None))
 
-            wg = deposit.get("analysis_context", {}).get("wg")
+            wg = record.get("analysis_context", {}).get("wg")
             if wg:
                 _needs.add(cms_pag_convener_action(wg.lower()))
 
-            return _needs
+        return _needs
 
 
 class UpdateDepositPermission(DepositPermission):
     """Deposit update permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(UpdateDepositPermission, self).__init__(record, 'update')
+        super(UpdateDepositPermission, self).__init__(
+            record, 'update', deposit_schema_update_action)
 
 
 class AdminDepositPermission(DepositPermission):
     """Deposit admin permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(AdminDepositPermission, self).__init__(record, 'admin')
+        super(AdminDepositPermission, self).__init__(
+            record, 'admin', deposit_schema_admin_action)
 
 
 class CloneDepositPermission(DepositPermission):
     """Clone deposit permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(CloneDepositPermission, self).__init__(record, 'read')
+        super(CloneDepositPermission, self).__init__(
+            record, 'read', deposit_schema_clone_action)
 
 
-class ReviewDepositPermission(ReadDepositPermission):
+class ReviewDepositPermission(DepositPermission):
     """Review deposit permission."""
-    pass
+    def __init__(self, record):
+        """Initialize state."""
+        super(ReviewDepositPermission, self).__init__(
+            record, 'read', deposit_schema_review_action)
 
 
 class DepositFilesPermission(Permission):

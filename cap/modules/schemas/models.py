@@ -27,7 +27,8 @@ import re
 from datetime import datetime
 
 from flask import current_app
-from invenio_access.models import ActionSystemRoles, ActionUsers
+from invenio_accounts.models import Role
+from invenio_access.models import ActionSystemRoles, ActionUsers, ActionRoles
 from invenio_access.permissions import authenticated_user
 from invenio_cache import current_cache
 from invenio_db import db
@@ -36,6 +37,7 @@ from invenio_search import current_search
 from invenio_search import current_search_client as es
 from six.moves.urllib.parse import urljoin
 from sqlalchemy import UniqueConstraint, event
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import import_string
@@ -222,6 +224,23 @@ class Schema(db.Model):
                                          user=user))
         db.session.flush()
 
+    def get_schema_permissions(self):
+        """
+        Retrieve the permissions provided by the schema config,
+        as they were inserted in the db.
+        """
+        results = {}
+        action_roles = ActionRoles.query.filter(
+            ActionRoles.argument == self.name,
+            ActionRoles.action.like("%-schema-%")
+        ).all()
+
+        zipped_action_roles = [(a.action, a.role.name) for a in action_roles]
+
+        for k, v in zipped_action_roles:
+            results.setdefault(k, []).append(v)
+        return results
+
     @classmethod
     def get_latest(cls, name):
         """Get the latest version of schema with given name."""
@@ -288,6 +307,27 @@ def create_index(index_name, mapping_body, aliases):
                 }]})
 
 
+def add_permissions_from_schema(permissions, name):
+    """Add permissions found in the schema's config."""
+    access_actions = current_app.extensions['invenio-access'].actions
+    try:
+        for action in permissions.keys():
+            roles = permissions[action]
+
+            for role in roles:
+                _action = access_actions[action]
+                _role = Role.query.filter_by(name=role).first()
+                _permission = ActionRoles.allow(
+                    _action,
+                    argument=name,
+                    role_id=_role.id
+                )
+
+                db.session.add(_permission)
+    except IntegrityError:
+        db.session.rollback()
+
+
 @event.listens_for(Schema, 'after_insert')
 def after_insert_schema(target, value, schema):
     """On schema insert, create corresponding indexes and aliases in ES."""
@@ -300,6 +340,11 @@ def after_insert_schema(target, value, schema):
         # invenio search needs it
         mappings_imp = current_app.config.get('SEARCH_GET_MAPPINGS_IMP')
         current_cache.delete_memoized(import_string(mappings_imp))
+
+    if schema.config:
+        permissions = schema.config.get('permissions', None)
+        if permissions:
+            add_permissions_from_schema(permissions, schema.name)
 
 
 @event.listens_for(Schema, 'after_delete')

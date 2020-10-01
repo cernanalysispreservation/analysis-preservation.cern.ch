@@ -29,6 +29,8 @@ from invenio_jsonschemas.errors import JSONSchemaNotFound
 from invenio_search import current_search
 from pytest import mark, raises
 
+from conftest import add_role_to_user, _datastore
+
 
 def test_when_schema_with_same_name_and_version_raises_IntegrityError(db):
     with raises(IntegrityError):
@@ -304,3 +306,28 @@ def test_on_save_mapping_is_created_and_index_name_added_to_mappings_map(
     assert 'deposits-records-cms-schema-v1.0.0' not in current_search.mappings.keys(
     )
     assert 'records-cms-schema-v1.0.0' not in current_search.mappings.keys()
+
+
+def test_on_save_permissions_are_stored_and_can_be_retrieved(db, users):
+    user = users['cms_user']
+    _datastore.find_or_create_role('test-users@cern.ch')
+    _datastore.find_or_create_role('test-other-users@cern.ch')
+
+    add_role_to_user(user, 'test-users@cern.ch')
+    add_role_to_user(user, 'test-other-users@cern.ch')
+
+    schema = Schema(name='test-schema',
+                    experiment='CMS',
+                    config={
+                        'permissions': {
+                            'deposit-schema-read': ['test-users@cern.ch', 'test-other-users@cern.ch'],
+                            'deposit-schema-update': ['test-users@cern.ch']
+                        }
+                    })
+    db.session.add(schema)
+    db.session.commit()
+
+    assert schema.get_schema_permissions() == {
+        'deposit-schema-read': ['test-users@cern.ch', 'test-other-users@cern.ch'],
+        'deposit-schema-update': ['test-users@cern.ch']
+    }

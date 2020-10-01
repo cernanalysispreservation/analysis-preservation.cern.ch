@@ -42,6 +42,41 @@ SchemaReadActionNeed = partial(ParameterizedActionNeed, 'schema-object-read')
 SchemaAdminActionNeed = partial(ParameterizedActionNeed, 'schema-object-admin')
 
 
+def schema_needs_factory(_type, action):
+    """Schema Needs factory."""
+    return action_factory(f'{_type}-schema-{action}', parameter=True)
+
+
+# deposit actions
+deposit_schema_read_action = schema_needs_factory('deposit', 'read')
+deposit_schema_read_action_all = deposit_schema_read_action(None)
+
+deposit_schema_update_action = schema_needs_factory('deposit', 'update')
+deposit_schema_update_action_all = deposit_schema_update_action(None)
+
+deposit_schema_admin_action = schema_needs_factory('deposit', 'admin')
+deposit_schema_admin_action_all = deposit_schema_admin_action(None)
+
+deposit_schema_clone_action = schema_needs_factory('deposit', 'clone')
+deposit_schema_clone_action_all = deposit_schema_clone_action(None)
+
+deposit_schema_review_action = schema_needs_factory('deposit', 'review')
+deposit_schema_review_action_all = deposit_schema_review_action(None)
+
+# record actions
+record_schema_read_action = schema_needs_factory('record', 'read')
+record_schema_read_action_all = record_schema_read_action(None)
+
+record_schema_update_action = schema_needs_factory('record', 'update')
+record_schema_update_action_all = record_schema_update_action(None)
+
+record_schema_admin_action = schema_needs_factory('record', 'admin')
+record_schema_admin_action_all = record_schema_admin_action(None)
+
+record_schema_delete_action = schema_needs_factory('record', 'delete')
+record_schema_delete_action_all = record_schema_delete_action(None)
+
+
 class ReadSchemaPermission(Permission):
     """Schema read permission."""
 

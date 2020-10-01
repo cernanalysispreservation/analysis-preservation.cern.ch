@@ -28,7 +28,11 @@ from functools import partial
 from flask import request
 from invenio_access.permissions import ParameterizedActionNeed, Permission
 
-from cap.modules.experiments.permissions import exp_need_factory
+from cap.modules.schemas.permissions import exp_need_factory, \
+    record_schema_admin_action, record_schema_delete_action,\
+    record_schema_read_action, record_schema_update_action
+from cap.modules.schemas.resolvers import resolve_schema_by_url
+
 
 RecordReadActionNeed = partial(ParameterizedActionNeed, 'record-read')
 """Action need for reading a record."""
@@ -72,17 +76,27 @@ class RecordPermission(Permission):
         "admin": record_admin_need,
     }
 
-    def __init__(self, record, action):
+    def __init__(self, record, action,
+                 schema_needs_action=None,
+                 extra_needs=None):
         """Constructor.
 
         Args:
-            deposit: deposit to which access is requested.
+            record: record to which access is requested.
         """
         _needs = set()
         _needs.add(self.actions['admin'](record))
 
+        if extra_needs:
+            _needs.update(extra_needs)
+
         if action in self.actions:
             _needs.add(self.actions[action](record))
+
+        if schema_needs_action:
+            _needs.add(schema_needs_action(
+                resolve_schema_by_url(record['$schema']).name
+            ))
 
         super(RecordPermission, self).__init__(*_needs)
 
@@ -100,30 +114,32 @@ class ReadRecordPermission(RecordPermission):
     """Record read permission."""
     def __init__(self, record):
         """Initialize state."""
-        self._needs = set()
-
-        super(ReadRecordPermission, self).__init__(record, 'read')
+        super(ReadRecordPermission, self).__init__(
+            record, 'read', record_schema_read_action)
 
 
 class UpdateRecordPermission(RecordPermission):
     """Record update permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(UpdateRecordPermission, self).__init__(record, 'update')
+        super(UpdateRecordPermission, self).__init__(
+            record, 'update', record_schema_update_action)
 
 
 class DeleteRecordPermission(RecordPermission):
     """Record delete permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(DeleteRecordPermission, self).__init__(record, 'delete')
+        super(DeleteRecordPermission, self).__init__(
+            record, 'delete', record_schema_delete_action)
 
 
 class AdminRecordPermission(RecordPermission):
     """Record admin permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(AdminRecordPermission, self).__init__(record, 'admin')
+        super(AdminRecordPermission, self).__init__(
+            record, 'admin', record_schema_admin_action)
 
 
 def read_permission_factory(record):
