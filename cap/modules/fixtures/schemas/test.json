@@ -1,0 +1,145 @@
+{
+  "name": "test-analysis",
+  "version": "0.0.1",
+  "fullname": "Test Analysis",
+  "experiment": "test",
+  "is_indexed": true,
+  "use_deposit_as_record": true,
+  "deposit_schema": {
+    "description": "Test Analysis Schema",
+    "title": "Test Analysis",
+    "additionalProperties": false,
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+      "_buckets": {
+        "$ref":
+          "https://analysispreservation.cern.ch/schemas/deposits/records/buckets-v0.0.1.json"
+      },
+      "control_number": {
+        "type": "string"
+      },
+      "basic_info": {
+        "title": "Test Basic Information",
+        "id": "basic_info",
+        "type": "object",
+        "properties": {
+          "analysis_title": {
+            "type": "string",
+            "title": "Test Analysis Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Test Description"
+          }
+        }
+      },
+      "_files": {
+        "$ref":
+          "https://analysispreservation.cern.ch/schemas/deposits/records/file-v0.0.1.json"
+      },
+      "$ana_type": {
+        "type": "string"
+      },
+      "_experiment": {
+        "type": "string"
+      },
+      "_fetched_from": {
+        "type": "string"
+      },
+      "_user_edited": {
+        "type": "boolean"
+      },
+      "_access": {
+        "$ref":
+          "https://analysispreservation.cern.ch/schemas/deposits/records/access-v0.0.1.json"
+      },
+      "_deposit": {
+        "$ref":
+          "https://analysispreservation.cern.ch/schemas/deposits/records/deposit-v0.0.1.json"
+      },
+      "$schema": {
+        "type": "string"
+      },
+      "general_title": {
+        "type": "string"
+      }
+    }
+  },
+  "deposit_mapping": {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "lowercase_whitespace_analyzer": {
+            "type": "custom",
+            "tokenizer": "whitespace",
+            "filter": ["lowercase"]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "alice-analysis-v0.0.1": {
+        "_all": {
+          "enabled": true,
+          "analyzer": "lowercase_whitespace_analyzer"
+        },
+        "properties": {
+          "_deposit": {
+            "type": "object",
+            "properties": {
+              "created_by": {
+                "type": "integer",
+                "copy_to": "created_by"
+              },
+              "status": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword"
+                  }
+                },
+                "copy_to": "status"
+              }
+            }
+          },
+          "_experiment": {
+            "type": "text"
+          },
+          "_fetched_from": {
+            "type": "text",
+            "copy_to": "fetched_from"
+          },
+          "_user_edited": {
+            "type": "boolean",
+            "copy_to": "user_edited"
+          },
+          "_created": {
+            "type": "date",
+            "copy_to": "created"
+          },
+          "_updated": {
+            "type": "date",
+            "copy_to": "updated"
+          },
+          "created": {
+            "type": "date"
+          }
+        }
+      }
+    }
+  },
+  "deposit_options": {
+    "ui:options": {
+      "display": "grid",
+      "size": "xlarge",
+      "align": "center",
+      "full": true,
+      "view": {
+        "vertical": true,
+        "sidebarColor": "grey-5-a"
+      }
+    },
+    "ui:object": "tabView"
+  }
+}

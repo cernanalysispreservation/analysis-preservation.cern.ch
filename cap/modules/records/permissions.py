@@ -76,9 +76,14 @@ class RecordPermission(Permission):
         "admin": record_admin_need,
     }
 
-    def __init__(self, record, action,
-                 schema_needs_action=None,
-                 extra_needs=None):
+    schema_actions = {
+        "read": record_schema_read_action,
+        "update": record_schema_update_action,
+        "delete": record_schema_delete_action,
+        "admin": record_schema_admin_action,
+    }
+
+    def __init__(self, record, action, extra_needs=None):
         """Constructor.
 
         Args:
@@ -93,8 +98,8 @@ class RecordPermission(Permission):
         if action in self.actions:
             _needs.add(self.actions[action](record))
 
-        if schema_needs_action:
-            _needs.add(schema_needs_action(
+        if action in self.schema_actions:
+            _needs.add(self.schema_actions[action](
                 resolve_schema_by_url(record['$schema']).name
             ))
 
@@ -114,32 +119,28 @@ class ReadRecordPermission(RecordPermission):
     """Record read permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(ReadRecordPermission, self).__init__(
-            record, 'read', record_schema_read_action)
+        super(ReadRecordPermission, self).__init__(record, 'read')
 
 
 class UpdateRecordPermission(RecordPermission):
     """Record update permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(UpdateRecordPermission, self).__init__(
-            record, 'update', record_schema_update_action)
+        super(UpdateRecordPermission, self).__init__(record, 'update')
 
 
 class DeleteRecordPermission(RecordPermission):
     """Record delete permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(DeleteRecordPermission, self).__init__(
-            record, 'delete', record_schema_delete_action)
+        super(DeleteRecordPermission, self).__init__(record, 'delete')
 
 
 class AdminRecordPermission(RecordPermission):
     """Record admin permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(AdminRecordPermission, self).__init__(
-            record, 'admin', record_schema_admin_action)
+        super(AdminRecordPermission, self).__init__(record, 'admin')
 
 
 def read_permission_factory(record):

@@ -41,9 +41,6 @@ if [[ -z "${DEBUG}" ]]; then
   curl -XDELETE http://localhost:9200/_all
 fi
 
-# install schemas in db
-cap fixtures schemas
-
 # install demo users
 cap users create info@inveniosoftware.org -a --password infoinfo
 
@@ -73,3 +70,11 @@ cap access allow cms-access role cms-members@cern.ch
 cap access allow lhcb-access role lhcb-general@cern.ch
 cap access allow alice-access role alice-member@cern.ch
 cap access allow atlas-access role atlas-active-members-all@cern.ch
+
+# test user (with no privileges)
+cap users create test@inveniosoftware.org -a --password testtest
+cap roles create test-users@cern.ch
+cap roles add test@inveniosoftware.org test-users@cern.ch
+
+# install schemas in db at the end, so that all the roles exist
+cap fixtures schemas

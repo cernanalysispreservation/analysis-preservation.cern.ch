@@ -21,13 +21,16 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+from flask_security import login_user
+from invenio_access.models import ActionRoles
+from invenio_accounts.models import Role
 
 from cap.modules.schemas.cli import add_schema_from_fixture
 from cap.modules.schemas.models import Schema
-from cap.modules.schemas.permissions import (AdminSchemaPermission,
-                                             ReadSchemaPermission)
-from cap.modules.schemas.utils import get_indexed_schemas_for_user
-from flask_security import login_user
+from cap.modules.schemas.permissions import AdminSchemaPermission, ReadSchemaPermission
+from cap.modules.schemas.utils import get_indexed_schemas_for_user, process_action
+
+from conftest import add_role_to_user
 
 
 def test_add_schema_from_fixture_when_schema_does_not_exist_create_new_one(
@@ -168,3 +171,67 @@ def test_get_indexed_schemas_for_user_when_latest(app, db, users):
     schemas = get_indexed_schemas_for_user(latest=True)
 
     assert schemas == [latest_schema1, latest_schema2]
+
+
+# PERMISSIONS CLI UTILS
+
+def test_allow_util(app, db, users, create_schema):
+    user = users['cms_user']
+    add_role_to_user(user, 'test-users@cern.ch')
+    _schema = create_schema('test-schema', experiment='CMS')
+
+    db.session.add(_schema)
+    db.session.commit()
+
+    with app.app_context():
+        process_action('allow', 'test-schema',
+                       [('deposit-schema-read', 'test-users@cern.ch')])
+
+    action_roles = ActionRoles.query.filter_by(argument='test-schema').all()
+    role = Role.query.filter_by(name='test-users@cern.ch').one()
+
+    assert len(action_roles) == 1
+    assert action_roles[0].exclude is False
+    assert action_roles[0].action == 'deposit-schema-read'
+    assert action_roles[0].role_id == role.id
+
+
+def test_deny_util(app, db, users, create_schema):
+    user = users['cms_user']
+    add_role_to_user(user, 'test-users@cern.ch')
+    _schema = create_schema('test-schema', experiment='CMS')
+
+    db.session.add(_schema)
+    db.session.commit()
+
+    with app.app_context():
+        process_action('deny', 'test-schema',
+                       [('deposit-schema-read', 'test-users@cern.ch')])
+
+    action_roles = ActionRoles.query.filter_by(argument='test-schema').all()
+    role = Role.query.filter_by(name='test-users@cern.ch').one()
+
+    assert len(action_roles) == 1
+    assert action_roles[0].exclude is True
+    assert action_roles[0].action == 'deposit-schema-read'
+    assert action_roles[0].role_id == role.id
+
+
+def test_remove_util(app, db, users, create_schema):
+    user = users['cms_user']
+    add_role_to_user(user, 'test-users@cern.ch')
+    _schema = create_schema('test-schema', experiment='CMS')
+
+    db.session.add(_schema)
+    db.session.commit()
+
+    with app.app_context():
+        # first give access
+        process_action('allow', 'test-schema',
+                       [('deposit-schema-read', 'test-users@cern.ch')])
+        # then remove it
+        process_action('remove', 'test-schema',
+                       [('deposit-schema-read', 'test-users@cern.ch')])
+
+    action_roles = ActionRoles.query.filter_by(argument='test-schema').all()
+    assert len(action_roles) == 0

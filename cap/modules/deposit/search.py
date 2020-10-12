@@ -28,7 +28,7 @@ from elasticsearch_dsl import Q, TermsFacet
 from flask import g
 from flask_login import current_user
 from flask_principal import RoleNeed
-from invenio_access.models import Role
+from invenio_access.models import Role, ActionRoles
 from invenio_search import RecordsSearch
 from invenio_search.api import DefaultFilter
 
@@ -52,13 +52,28 @@ def deposits_filter():
     if admin_permission_factory(None).can():
         return Q('term', **{'_deposit.status': 'draft'})
 
-    roles = [role.id for role in Role.query.all()
-             if RoleNeed(role) in g.identity.provides]
+    roles = [
+        role.id for role in Role.query.all()
+        if RoleNeed(role) in g.identity.provides
+    ]
+
+    # we need to get the schemas in order to access deposits that have
+    # been given through cli permissions
+    schemas = [
+        result.argument for result in ActionRoles.query.filter(
+            ActionRoles.action == 'deposit-schema-read',
+            ActionRoles.role_id.in_(roles)).all()
+    ]
 
     q = (Q('multi_match', query=g.identity.id,
            fields=[
                '_access.deposit-read.users',
                '_access.deposit-admin.users'
+           ]) |
+         Q('bool',
+           should=[
+               Q('query_string', query=f'{schema}-*', default_field='_type')
+               for schema in schemas
            ]) |
          Q('terms', **{'_access.deposit-read.roles': roles}) |
          Q('terms', **{'_access.deposit-admin.roles': roles})

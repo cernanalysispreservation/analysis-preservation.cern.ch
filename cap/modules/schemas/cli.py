@@ -44,10 +44,10 @@ from cap.modules.fixtures.cli import fixtures
 from cap.modules.schemas.models import Schema
 from cap.modules.schemas.resolvers import resolve_schema_by_url,\
     resolve_schema_by_name_and_version, schema_name_to_url
-from cap.modules.schemas.utils import process_action
+from cap.modules.schemas.utils import process_action, actions_from_type
 
 
-@click.command()
+@fixtures.command()
 @click.option('--permissions', '-p',
               required=True,
               help='Permission actions to be removed from roles.'
@@ -56,10 +56,15 @@ from cap.modules.schemas.utils import process_action
               required=True,
               help='Role name(s) that access will be removed from.'
                    ' Accepts multiple options.')
-@click.option('--record',
-              is_flag=True,
-              help='Select if the permissions will be removed for a deposit '
-                   'or a record. Default: deposit.')
+# deposit / record / schema
+@click.option('--deposit', '_type',
+              flag_value='deposit',
+              default=True)
+@click.option('--record', '_type',
+              flag_value='record')
+@click.option('--schema', '_type',
+              flag_value='schema')
+# allow / remove / deny
 @click.option('--allow', 'schema_action',
               flag_value='allow',
               default=True)
@@ -69,22 +74,23 @@ from cap.modules.schemas.utils import process_action
               flag_value='remove')
 @click.argument('schema-name')
 @with_appcontext
-def schema(schema_name, permissions, roles, record, schema_action):
+def permissions(schema_name, permissions, roles, _type, schema_action):
     """
     Schema permission command group. Allows/Denies/Removes certain actions
-    to roles, in order to have access to a schema.
-    Use:
-        cap schema -p read,update -r test-users@cern.ch --allow SCHEMA_NAME
-        cap schema -p read -r test-users@cern.ch --record --deny SCHEMA_NAME
-        cap schema -p read -r test-users@cern.ch --record --remove SCHEMA_NAME
+    to roles, in order to have access to a deposit/record/schema.
+    Examples:
+        cap fixtures permissions
+            -p read,admin -r test-users@cern.ch --allow --deposit SCHEMA_NAME
+            -p read -r test-users@cern.ch --deny --deposit SCHEMA_NAME
+            -p read -r test-users@cern.ch --allow --record SCHEMA_NAME
+            -p read,admin -r test-users@cern.ch --allow --schema SCHEMA_NAME
     """
-    type_ = 'record' if record else 'deposit'
-    permissions = permissions.split(',')
+    perms = permissions.split(',')
     roles = roles.split(',')
 
     # create the correct action names, and
     # check if action is subscribed and can be used
-    requested_actions = [f'{type_}-schema-{perm}' for perm in permissions]
+    requested_actions = actions_from_type(_type, perms)
     allowed_actions = current_app.extensions['invenio-access'].actions
 
     for action in requested_actions:
@@ -98,9 +104,9 @@ def schema(schema_name, permissions, roles, record, schema_action):
         except NoResultFound:
             raise click.BadParameter(f'Role with name {role} not found.')
 
+    # create all combinations of actions and roles
     actions_roles = list(itertools.product(requested_actions, roles))
-    process_action(schema_action, schema_name,
-                   actions_roles, allowed_actions)
+    process_action(schema_action, schema_name, actions_roles)
 
 
 @fixtures.command()

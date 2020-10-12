@@ -93,9 +93,13 @@ class DepositPermission(Permission):
         "admin": deposit_admin_need,
     }
 
-    def __init__(self, deposit, action,
-                 schema_needs_action=None,
-                 extra_needs=None):
+    schema_actions = {
+        "read": deposit_schema_read_action,
+        "update": deposit_schema_update_action,
+        "admin": deposit_schema_admin_action,
+    }
+
+    def __init__(self, deposit, action, extra_needs=None):
         """Constructor.
 
         Args:
@@ -110,8 +114,8 @@ class DepositPermission(Permission):
         if action in self.actions:
             _needs.add(self.actions[action](deposit))
 
-        if schema_needs_action:
-            _needs.add(schema_needs_action(deposit.schema.name))
+        if action in self.schema_actions:
+            _needs.add(self.schema_actions[action](deposit.schema.name))
 
         super(DepositPermission, self).__init__(*_needs)
 
@@ -156,7 +160,7 @@ class ReadDepositPermission(DepositPermission):
         extra_needs = self.get_schema_needs_for_questionnaire(record)
 
         super(ReadDepositPermission, self).__init__(
-            record, 'read', deposit_schema_read_action, extra_needs)
+            record, 'read', extra_needs)
 
     @staticmethod
     def get_schema_needs_for_questionnaire(record):
@@ -177,32 +181,28 @@ class UpdateDepositPermission(DepositPermission):
     """Deposit update permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(UpdateDepositPermission, self).__init__(
-            record, 'update', deposit_schema_update_action)
+        super(UpdateDepositPermission, self).__init__(record, 'update')
 
 
 class AdminDepositPermission(DepositPermission):
     """Deposit admin permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(AdminDepositPermission, self).__init__(
-            record, 'admin', deposit_schema_admin_action)
+        super(AdminDepositPermission, self).__init__(record, 'admin')
 
 
 class CloneDepositPermission(DepositPermission):
     """Clone deposit permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(CloneDepositPermission, self).__init__(
-            record, 'read', deposit_schema_clone_action)
+        super(CloneDepositPermission, self).__init__(record, 'read')
 
 
 class ReviewDepositPermission(DepositPermission):
     """Review deposit permission."""
     def __init__(self, record):
         """Initialize state."""
-        super(ReviewDepositPermission, self).__init__(
-            record, 'read', deposit_schema_review_action)
+        super(ReviewDepositPermission, self).__init__(record, 'read')
 
 
 class DepositFilesPermission(Permission):

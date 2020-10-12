@@ -76,6 +76,10 @@ record_schema_admin_action_all = record_schema_admin_action(None)
 record_schema_delete_action = schema_needs_factory('record', 'delete')
 record_schema_delete_action_all = record_schema_delete_action(None)
 
+# schema actions
+schema_read_action_all = SchemaReadActionNeed(None)
+schema_admin_action_all = SchemaAdminActionNeed(None)
+
 
 class ReadSchemaPermission(Permission):
     """Schema read permission."""

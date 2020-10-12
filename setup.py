@@ -148,6 +148,11 @@ setup(
             'cap.modules.schemas.permissions:record_schema_admin_action_all',
             'record_schema_delete = '
             'cap.modules.schemas.permissions:record_schema_delete_action_all',
+            # schema actions
+            'schema_object_read = '
+            'cap.modules.schemas.permissions:schema_read_action_all',
+            'schema_object_admin = '
+            'cap.modules.schemas.permissions:schema_admin_action_all',
         ],
         'invenio_base.api_apps': [
             'cap_access = cap.modules.access.ext:CAPAccess',
@@ -158,7 +163,6 @@ setup(
             'cap_xrootd = cap.modules.xrootd.ext:CapXRootD',
             'cap_auth = cap.modules.auth.ext:CAPOAuth',
             'cap_mail = cap.modules.mail.ext:CAPMail',
-            'cap_schema = cap.modules.schemas.ext:CAPSchema',
         ],
         'invenio_base.api_blueprints': [
             'cap = cap.views:blueprint',

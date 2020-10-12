@@ -26,10 +26,11 @@
 from itertools import groupby
 
 import click
+from flask import current_app
 from invenio_accounts.models import Role
 from invenio_access.models import ActionRoles
 from invenio_db import db
-from sqlalchemy.exc import IntegrityError, DatabaseError
+from sqlalchemy.exc import IntegrityError
 
 from .models import Schema
 from .permissions import ReadSchemaPermission
@@ -82,6 +83,19 @@ def get_indexed_schemas_for_user(latest=True):
     return schemas
 
 
+def actions_from_type(_type, perms):
+    """
+    Get user-made action names depending on the type. When the type is record
+    or deposit, the user should also get schema-read access.
+    """
+    if _type == 'record':
+        return [f'record-schema-{perm}' for perm in perms]
+    elif _type == 'deposit':
+        return [f'deposit-schema-{perm}' for perm in perms]
+    else:
+        return [f'schema-object-{perm}' for perm in perms]
+
+
 def _allow(action, arg, id):
     """Allow action for schema processor."""
     db.session.add(
@@ -103,25 +117,33 @@ def _remove(action, arg, id):
         .delete(synchronize_session=False)
 
 
-def process_action(schema_action, schema_name, actions_roles, allowed_actions):
-    """Permission process action."""
+def process_action(schema_action, schema_name, actions_roles):
+    """
+    Permission process action. The schema_argument can be either a schema name
+    or a schema id.
+    """
+    allowed_actions = current_app.extensions['invenio-access'].actions
     schema_actions = {
         'allow': _allow,
         'deny': _deny,
         'remove': _remove
     }
-
+    schema = Schema.get_latest(schema_name)
     processor = schema_actions[schema_action]
-    try:
-        with db.session.begin_nested():
-            for _action, _role in actions_roles:
-                processor(allowed_actions[_action],
-                          schema_name,
-                          Role.query.filter_by(name=_role).one().id)
 
-    except IntegrityError:
-        raise click.ClickException(
-            'DB Error occurred during the assignment of actions to roles.')
+    # check for kind of action, in order to use the correct argument
+    # schema actions need id, deposit/record actions need name
+    for _action, _role in actions_roles:
+        try:
+            with db.session.begin_nested():
+                role_id = Role.query.filter_by(name=_role).one().id
+                schema_argument = schema.id \
+                    if _action.startswith('schema') else schema_name
+                processor(allowed_actions[_action], schema_argument, role_id)
+            db.session.commit()
+        except IntegrityError:
+            click.secho(
+                f'Error during the assignment of {_action} to {_role}. '
+                f'Combination already exists.', fg='red')
 
-    db.session.commit()
-    click.secho('Process finished successfully.', fg='green')
+    click.secho('Process finished.', fg='green')
