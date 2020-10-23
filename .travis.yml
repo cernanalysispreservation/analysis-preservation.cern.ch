@@ -52,19 +52,16 @@ before_install:
   - "travis_retry pip install kwalitee --pre"
   - "echo ${TRAVIS_COMMIT_RANGE}"
   - "travis_retry pip install --upgrade pip setuptools==45.3.0 py"
-  - "travis_retry pip install twine wheel requirements-builder"
-  - "cat requirements.txt > .travis-lowest-requirements.txt"
+  - "travis_retry pip install twine wheel requirements-builder pipenv"
 
 install:
   - cd ui/cap-react && yarn install
   - cd ../..
-  - "travis_retry pip install -r .travis-${REQUIREMENTS}-requirements.txt"
-  - "travis_retry pip install -e .[all,docs,tests,ldap]"
-  - "travis_retry pip install -r requirements-local-forks.txt"
+  - "travis_retry pipenv install --dev"
+  - "travis_retry pipenv run pip install -e ."
 
 before_script:
   - sleep 15
-  - travis_retry pip install kwalitee GitPython --pre
 
 script:
-  - "./run-tests.sh"
+  - "pipenv run ./run-tests.sh"
