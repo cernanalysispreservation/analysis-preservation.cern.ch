@@ -27,6 +27,7 @@
 from __future__ import absolute_import, print_function
 
 import json
+import time
 
 from flask import current_app
 from werkzeug.local import LocalProxy
@@ -178,7 +179,7 @@ def test_add_permissions_for_user_that_doesnt_exist_in_ldap_returns_400(
         'message'] == 'User with this mail does not exist in LDAP.'
 
 
-def test_add_permissions_when_permission_already_exist_returns_400(
+def test_add_permissions_when_permission_already_exist_returns_201(
     client, users, auth_headers_for_superuser, create_deposit, json_headers):
     owner = users['cms_user']
     pid = create_deposit(owner, 'test-v1.0.0')['_deposit']['id']
@@ -196,11 +197,13 @@ def test_add_permissions_when_permission_already_exist_returns_400(
         ]),
     )
 
-    assert resp.status_code == 400
-    assert resp.json['message'] == 'Permission already exist.'
+    assert resp.status_code == 201
+
+    resp = client.get('/deposits/', headers=auth_headers_for_superuser)
+    assert owner.email in resp.json['hits']['hits'][0]['access']['deposit-read']['users']
 
 
-def test_add_permissions_when_permission_doesnt_exist_returns_400(
+def test_add_permissions_when_permission_doesnt_exist_returns_201(
     client, users, auth_headers_for_superuser, create_deposit, json_headers):
     owner, other_user = users['cms_user'], users['cms_user2']
     pid = create_deposit(owner, 'test-v1.0.0')['_deposit']['id']
@@ -218,9 +221,49 @@ def test_add_permissions_when_permission_doesnt_exist_returns_400(
         ]),
     )
 
-    assert resp.status_code == 400
-    assert resp.json['message'] == 'Permission does not exist.'
+    assert resp.status_code == 201
 
+
+def test_add_multiple_permissions_with_one_failing_adds_the_others(
+    client, users, auth_headers_for_superuser, create_deposit, json_headers):
+    owner, other_user = users['cms_user'], users['cms_user2']
+    third_user = users['lhcb_user']
+    pid = create_deposit(owner, 'test-v1.0.0')['_deposit']['id']
+
+    resp = client.post(
+        f'/deposits/{pid}/actions/permissions',
+        headers=auth_headers_for_superuser + json_headers,
+        data=json.dumps([
+            {
+                'email': owner.email,  # this should fail, the rest should work
+                'type': 'user',
+                'op': 'add',
+                'action': 'deposit-read'
+            },
+            {
+                'email': other_user.email,
+                'type': 'user',
+                'op': 'add',
+                'action': 'deposit-read'
+            },
+            {
+                'email': third_user.email,
+                'type': 'user',
+                'op': 'add',
+                'action': 'deposit-read'
+            }
+        ]),
+    )
+
+    assert resp.status_code == 201
+    time.sleep(1)
+
+    resp = client.get('/deposits/', headers=auth_headers_for_superuser)
+    read_users = resp.json['hits']['hits'][0]['access']['deposit-read']['users']
+
+    assert owner.email in read_users
+    assert other_user.email in read_users
+    assert third_user.email in read_users
 
 @mark.skip('to discuss if this should be done this way')
 def test_add_permissions_when_add_admin_permissions_add_all_the_others_as_well(
@@ -242,10 +285,8 @@ def test_add_permissions_when_add_admin_permissions_add_all_the_others_as_well(
     )
 
 
-def test_add_ermissions_gives_permissions_for_user(client, users,
-                                                   auth_headers_for_user,
-                                                   create_deposit,
-                                                   json_headers):
+def test_add_permissions_gives_permissions_for_user(
+        client, users, auth_headers_for_user, create_deposit, json_headers):
     owner, other_user = users['cms_user'], users['cms_user2']
     pid = create_deposit(owner, 'test-v1.0.0')['_deposit']['id']
 
@@ -481,8 +522,10 @@ def test_change_permissions_for_egroup_is_not_case_sensitive(
         ]),
     )
 
-    assert resp.status_code == 400
-    assert resp.json['message'] == 'Permission already exist.'
+    assert resp.status_code == 201
+
+    resp = client.get('/deposits/', headers=auth_headers_for_user(owner))
+    assert owner.email in resp.json['hits']['hits'][0]['access']['deposit-read']['users']
 
     resp = client.post(
         f'/deposits/{pid}/actions/permissions',
@@ -535,8 +578,10 @@ def test_change_permissions_for_user_is_not_case_sensitive(
         ]),
     )
 
-    assert resp.status_code == 400
-    assert resp.json['message'] == 'Permission already exist.'
+    assert resp.status_code == 201
+
+    resp = client.get('/deposits/', headers=auth_headers_for_user(owner))
+    assert owner.email in resp.json['hits']['hits'][0]['access']['deposit-read']['users']
 
     resp = client.post(
         f'/deposits/{pid}/actions/permissions',
