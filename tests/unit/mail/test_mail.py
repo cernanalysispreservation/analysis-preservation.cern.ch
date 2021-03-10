@@ -23,7 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 """Tests for mail."""
 from pytest import mark, raises
-from cap.modules.mail.utils import send_mail_on_publish, create_and_send
+from cap.modules.mail.post import send_mail_on_publish, create_and_send
 
 
 def test_create_and_send_no_recipients_fails(app):

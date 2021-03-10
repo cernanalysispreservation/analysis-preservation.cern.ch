@@ -5,6 +5,76 @@
   "experiment":"CMS",
   "is_indexed":true,
   "use_deposit_as_record":true,
+  "config": {
+    "reviewable": true,
+    "notifications": {
+      "actions": {
+        "publish": {
+          "email_subject": "CMS Statistics Committee",
+          "message": {
+            "default": "Hello World! ",
+            "func": "get_cms_stat_message"
+          },
+          "recipients": {
+            "func": "get_cms_stat_recipients",
+            "owner": true,
+            "current_user": true,
+            "conditions": [
+              {
+                "path": "parton_distribution_functions",
+                "if": ["exists"],
+                "values": [true],
+                "op": "and",
+                "mail": "pdf-forum-placeholder@cern.ch"
+              },
+              {
+                "path": "multivariate_discrximinants.use_of_centralized_cms_apps.options",
+                "if": ["exists", "is_not_in"],
+                "values": [true, "No"],
+                "op": "and",
+                "mail": "cms-conveners-placeholder@cern.ch"
+              },
+              {
+                "path": "multivariate_discriminants.mva_use",
+                "if": ["equals"],
+                "values": ["Yes"],
+                "op": "and",
+                "mail": "cms-conveners-placeholder@cern.ch"
+              },
+              {
+                "path": "ml_app_use",
+                "if": ["exists"],
+                "values": [true],
+                "op": "and",
+                "mail": "cms-conveners-placeholder@cern.ch"
+              },
+              {
+                "path": "ml_survey.options",
+                "if": ["equals"],
+                "values": ["Yes"],
+                "op": "and",
+                "mail": "cms-conveners-placeholder@cern.ch"
+              }
+            ],
+            "default": [
+              "some-recipient-placeholder@cern.ch"
+            ]
+          }
+        },
+        "review": {
+          "email_subject": "CMS Questionnaire",
+          "message": {
+            "func": "get_review_message"
+          },
+          "recipients": {
+            "func": "get_review_recipients",
+            "owner": true,
+            "current_user": true
+          }
+        }
+      }
+    }
+  },
   "deposit_schema":{
     "additionalProperties":false,
     "$schema":"http://json-schema.org/draft-04/schema#",

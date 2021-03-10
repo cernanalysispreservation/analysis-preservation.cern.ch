@@ -67,12 +67,8 @@ class ReviewUpdatePayload(Schema):
 
 class Reviewable(object):
     def schema_is_reviewable(self):
-        schema = self.get("$schema", None)
-
-        if "questionnaire" in schema:
-            return True
-        else:
-            return False
+        config = self.schema.config
+        return config.get('reviewable', False)
 
     def create_review(self, data):
         new_review, errors = ReviewCreatePayload().load(data=data)

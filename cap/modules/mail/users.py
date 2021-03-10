@@ -22,6 +22,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+from flask_login import current_user
+
 from invenio_access.models import ActionUsers
 from invenio_accounts.models import User
 from invenio_oauthclient.models import RemoteAccount
@@ -65,3 +67,13 @@ def get_users_by_record(depid, role=None):
                                          action=f'deposit-{role}').all()
 
     return set(au.user.email for au in action_users)
+
+
+# Mail specific actions
+def get_current_user(record):
+    return current_user.email
+
+
+def get_record_owner(record):
+    owner = record['_deposit']['owners'][0]
+    return User.query.filter_by(id=owner).one().email

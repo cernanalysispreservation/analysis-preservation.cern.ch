@@ -90,3 +90,69 @@ Each schema is directly provided or created with the support of collaboration ph
 Every schema change is versioned so that it can adapt to changes in the data or other components provided by the collaborations. This practice also ensures the that the integrity of the older analysis records is maintained.
 
 Depending on the preference and work environment of the researcher, analysis information can be created and edited through a [project-submission-form](./tutorials.md#the-cap-form) on the web interface or via the [project-rest-api](./api.md).
+
+# Schema Configuration
+
+The new versions of CAP schemas support extended configuration options. The user is allowed to add any number of
+hardcoded options, which then can be used at will, to define certain tasks. Some examples:
+
+- `reviewable`: shows if the analysis type is reviewable
+- `notifications`: an extended JSON that provides a lot of options regarding notifications/mails
+
+The `notifications` field has a variety of options, that change the mails/notifications sent to users.
+Let's explain how they work:
+
+### Structure
+
+The structure followed is something like the following:
+
+      "config": {
+        "notifications": {
+          "actions": {
+            "publish": {
+              "email_subject": "CMS Statistics Committee",
+              "message": {
+                "default": "Hello World! ",
+                "func": "get_cms_stat_message"
+              },
+              "recipients": {
+                "func": "get_cms_stat_recipients",
+                "owner": true,
+                "current_user": true,
+                "conditions": [
+                  {
+                    "path": "foo.bar",
+                    "if": ["exists"],
+                    "values": [true],
+                    "op": "and",
+                    "mail": "test@cern.ch"
+                  }
+                ],
+                "default": [
+                  "some-recipient-placeholder@cern.ch"
+                ]
+              }
+            }
+          }
+        }
+      }
+
+The `notifications` are differentiated on the `actions` they are supposed to trigger, 
+e.g. the `publish` action can be triggered when publishing an analysis. From there, 
+specific actions can be taken regarding messages, or recipients.
+
+- `conditions`: adding recipients if a certain case is True in the data
+- `default`: default recipients, hardcoded
+- `func`: a function that adds recipients based on more complicated cases. All the functions are
+  saved in the `mail.custom` package.
+
+The `conditions` are functions that return a boolean result based on the requirements. In
+the example above, we check if the path `foo.bar` exists in the data. The supported cases are:
+
+- `exists`
+- `equals`
+- `is_in`
+- `is_not_in`
+
+More complicated cases should be implemented as a `func`. The `owner` and `current_user`
+are fields that return the owner of the analysis, and the current user that triggers the mail, respectively.

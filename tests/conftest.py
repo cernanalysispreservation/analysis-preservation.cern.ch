@@ -129,7 +129,8 @@ def default_config():
                 MAIL_DEFAULT_SENDER="analysis-preservation-support@cern.ch",
                 CMS_STATS_COMMITEE_AND_PAGS={'key': {'contacts': []}},
                 PDF_FORUM_MAIL='pdf-forum-test@cern0.ch',
-                CONVENERS_ML_MAIL='ml-conveners-test@cern0.ch')
+                CONVENERS_ML_MAIL='ml-conveners-test@cern0.ch',
+                CMS_HYPERNEWS_EMAIL_FORMAT='hn-cms-{}@cern0.ch')
 
 
 @pytest.fixture(scope='session')
@@ -260,6 +261,7 @@ def create_schema(db, clear_caches):
     """Returns function to add a schema to db."""
     def _add_schema(name,
                     deposit_schema=None,
+                    config=None,
                     is_indexed=True,
                     use_deposit_as_record=True,
                     version="1.0.0",
@@ -277,6 +279,7 @@ def create_schema(db, clear_caches):
                             is_indexed=is_indexed,
                             use_deposit_as_record=use_deposit_as_record,
                             deposit_schema=deposit_schema or default_json,
+                            config=config,
                             **kwargs)
             db.session.add(schema)
             db.session.commit()
