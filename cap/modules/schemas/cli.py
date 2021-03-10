@@ -23,23 +23,90 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 """CAP Schema cli."""
 
+import itertools
 import json
 import os
 
 import click
+from flask import current_app
 from flask_cli import with_appcontext
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
+
+from invenio_accounts.models import Role
 from invenio_db import db
 from invenio_jsonschemas.errors import JSONSchemaNotFound
 from invenio_search import current_search_client
-from sqlalchemy.exc import IntegrityError
 
 from cap.cli import MutuallyExclusiveOption
 from cap.modules.deposit.errors import DepositValidationError
 from cap.modules.fixtures.cli import fixtures
-from cap.modules.records.api import CAPRecord
 from cap.modules.schemas.models import Schema
 from cap.modules.schemas.resolvers import resolve_schema_by_url,\
     resolve_schema_by_name_and_version, schema_name_to_url
+from cap.modules.schemas.utils import process_action, actions_from_type
+
+
+@fixtures.command()
+@click.option('--permissions', '-p',
+              required=True,
+              help='Permission actions to be removed from roles.'
+                   ' Accepts multiple options.')
+@click.option('--roles', '-r',
+              required=True,
+              help='Role name(s) that access will be removed from.'
+                   ' Accepts multiple options.')
+# deposit / record / schema
+@click.option('--deposit', '_type',
+              flag_value='deposit',
+              default=True)
+@click.option('--record', '_type',
+              flag_value='record')
+@click.option('--schema', '_type',
+              flag_value='schema')
+# allow / remove / deny
+@click.option('--allow', 'schema_action',
+              flag_value='allow',
+              default=True)
+@click.option('--deny', 'schema_action',
+              flag_value='deny')
+@click.option('--remove', 'schema_action',
+              flag_value='remove')
+@click.argument('schema-name')
+@with_appcontext
+def permissions(schema_name, permissions, roles, _type, schema_action):
+    """
+    Schema permission command group. Allows/Denies/Removes certain actions
+    to roles, in order to have access to a deposit/record/schema.
+    Examples:
+        cap fixtures permissions
+            -p read,admin -r test-users@cern.ch --allow --deposit SCHEMA_NAME
+            -p read -r test-users@cern.ch --deny --deposit SCHEMA_NAME
+            -p read -r test-users@cern.ch --allow --record SCHEMA_NAME
+            -p read,admin -r test-users@cern.ch --allow --schema SCHEMA_NAME
+    """
+    perms = permissions.split(',')
+    roles = roles.split(',')
+
+    # create the correct action names, and
+    # check if action is subscribed and can be used
+    requested_actions = actions_from_type(_type, perms)
+    allowed_actions = current_app.extensions['invenio-access'].actions
+
+    for action in requested_actions:
+        if action not in allowed_actions.keys():
+            raise click.BadParameter(f'Action {action} is not registered.')
+
+    # check if roles exist
+    for role in roles:
+        try:
+            Role.query.filter_by(name=role).one()
+        except NoResultFound:
+            raise click.BadParameter(f'Role with name {role} not found.')
+
+    # create all combinations of actions and roles
+    actions_roles = list(itertools.product(requested_actions, roles))
+    process_action(schema_action, schema_name, actions_roles)
 
 
 @fixtures.command()
@@ -99,6 +166,8 @@ def validate(schema_url, ana_type, ana_version, compare_with,
 
     # differentiate between drafts/published
     from cap.modules.deposit.api import CAPDeposit
+    from cap.modules.records.api import CAPRecord
+
     if status == 'draft':
         search_path = 'deposits-records'
         cap_record_class = CAPDeposit
@@ -178,8 +247,7 @@ def schemas(dir):
                         add_schema_from_fixture(data=json_content)
                     except ValueError:
                         click.secho(
-                            "Not valid json in {} file".format(fullpath),
-                            fg='red')
+                            f"Not valid json in {fullpath} file", fg='red')
                         continue
 
 
@@ -194,8 +262,7 @@ def add_schema_from_fixture(data=None):
                 try:
                     schema = Schema.get(name=data['name'],
                                         version=data['version'])
-                    click.secho('{} already exist in the db.'.format(
-                        str(name)))
+                    click.secho(f'{str(name)} already exist in the db.')
                     return
 
                 except JSONSchemaNotFound:
@@ -206,10 +273,9 @@ def add_schema_from_fixture(data=None):
                 schema.add_read_access_for_all_users()
 
     except IntegrityError:
-        click.secho('Error occured during adding {} to the db. \n'.format(
-            str(name)),
-                    fg='red')
+        click.secho(
+            f'Error occurred during adding {str(name)} to the db.\n', fg='red')
         return
 
     db.session.commit()
-    click.secho('{} has been added.'.format(str(name)), fg='green')
+    click.secho(f'{str(name)} has been added.', fg='green')

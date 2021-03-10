@@ -228,3 +228,21 @@ def test_add_and_remove_egroup_permissions_set_access_object_properly_and_update
         argument=str(deposit.id),
         role_id=egroup.id,
     ).all()
+
+
+def test_create_deposit_check_if_reviewable(users, create_schema, create_deposit):
+    owner = users['cms_user']
+    schema_reviewable = create_schema(
+        'review-schema',
+        experiment='CMS',
+        config={
+          'reviewable': True
+        })
+
+    schema_not_reviewable = create_schema('non-review-schema', experiment='CMS')
+
+    deposit_reviewable = create_deposit(owner, 'review-schema', experiment='CMS')
+    deposit_not_reviewable = create_deposit(owner, 'non-review-schema', experiment='CMS')
+
+    assert deposit_reviewable.schema_is_reviewable()
+    assert not deposit_not_reviewable.schema_is_reviewable()

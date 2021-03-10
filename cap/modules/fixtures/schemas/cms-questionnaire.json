@@ -5,6 +5,9 @@
   "experiment":"CMS",
   "is_indexed":true,
   "use_deposit_as_record":true,
+  "config": {
+    "reviewable": true
+  },
   "deposit_schema":{
     "additionalProperties":false,
     "$schema":"http://json-schema.org/draft-04/schema#",

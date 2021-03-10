@@ -131,6 +131,31 @@ setup(
             'cap.modules.experiments.permissions:alice_access_action',
             'atlas_access = '
             'cap.modules.experiments.permissions:atlas_access_action',
+            # deposit actions
+            'deposit_schema_read = '
+            'cap.modules.schemas.permissions:deposit_schema_read_action_all',
+            'deposit_schema_update = '
+            'cap.modules.schemas.permissions:deposit_schema_update_action_all',
+            'deposit_schema_admin = '
+            'cap.modules.schemas.permissions:deposit_schema_admin_action_all',
+            'deposit_schema_clone = '
+            'cap.modules.schemas.permissions:deposit_schema_clone_action_all',
+            'deposit_schema_review = '
+            'cap.modules.schemas.permissions:deposit_schema_review_action_all',
+            # record actions
+            'record_schema_read = '
+            'cap.modules.schemas.permissions:record_schema_read_action_all',
+            'record_schema_update = '
+            'cap.modules.schemas.permissions:record_schema_update_action_all',
+            'record_schema_admin = '
+            'cap.modules.schemas.permissions:record_schema_admin_action_all',
+            'record_schema_delete = '
+            'cap.modules.schemas.permissions:record_schema_delete_action_all',
+            # schema actions
+            'schema_object_read = '
+            'cap.modules.schemas.permissions:schema_read_action_all',
+            'schema_object_admin = '
+            'cap.modules.schemas.permissions:schema_admin_action_all',
         ],
         'invenio_base.api_apps': [
             'cap_access = cap.modules.access.ext:CAPAccess',

@@ -28,7 +28,11 @@ from functools import partial
 from flask import request
 from invenio_access.permissions import ParameterizedActionNeed, Permission
 
-from cap.modules.experiments.permissions import exp_need_factory
+from cap.modules.schemas.permissions import exp_need_factory, \
+    record_schema_admin_action, record_schema_delete_action,\
+    record_schema_read_action, record_schema_update_action
+from cap.modules.schemas.resolvers import resolve_schema_by_url
+
 
 RecordReadActionNeed = partial(ParameterizedActionNeed, 'record-read')
 """Action need for reading a record."""
@@ -72,17 +76,32 @@ class RecordPermission(Permission):
         "admin": record_admin_need,
     }
 
-    def __init__(self, record, action):
+    schema_actions = {
+        "read": record_schema_read_action,
+        "update": record_schema_update_action,
+        "delete": record_schema_delete_action,
+        "admin": record_schema_admin_action,
+    }
+
+    def __init__(self, record, action, extra_needs=None):
         """Constructor.
 
         Args:
-            deposit: deposit to which access is requested.
+            record: record to which access is requested.
         """
         _needs = set()
         _needs.add(self.actions['admin'](record))
 
+        if extra_needs:
+            _needs.update(extra_needs)
+
         if action in self.actions:
             _needs.add(self.actions[action](record))
+
+        if action in self.schema_actions:
+            _needs.add(self.schema_actions[action](
+                resolve_schema_by_url(record['$schema']).name
+            ))
 
         super(RecordPermission, self).__init__(*_needs)
 
@@ -100,8 +119,6 @@ class ReadRecordPermission(RecordPermission):
     """Record read permission."""
     def __init__(self, record):
         """Initialize state."""
-        self._needs = set()
-
         super(ReadRecordPermission, self).__init__(record, 'read')
 
 
