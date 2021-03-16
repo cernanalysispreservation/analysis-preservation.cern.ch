@@ -171,7 +171,9 @@ def test_get_records_default_serializer(client, superuser,
         'metadata': {
             'basic_info': {
                 'analysis_number': 'dream_team',
-            }
+            },
+            'collection': 'cms-analysis',
+            'collection_version': '1.0.0'
         },
         # TOFIX shouldnt be deposit.files but record.files here!
         'files': [{

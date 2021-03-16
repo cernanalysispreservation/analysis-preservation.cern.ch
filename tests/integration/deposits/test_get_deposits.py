@@ -185,7 +185,9 @@ def test_get_deposits_with_basic_json_serializer_returns_serialized_deposit_prop
             'basic_info': {
                 'people_info': [{}],
                 'analysis_number': 'dream_team'
-            }
+            },
+            'collection': 'cms',
+            'collection_version': '1.0.0'
         },
         'pid': deposit['_deposit']['id'],
         'updated': metadata.updated.strftime('%Y-%m-%dT%H:%M:%S.%f+00:00'),
@@ -267,7 +269,9 @@ def test_get_deposit_with_default_serializer(client, users,
         'metadata': {
             'basic_info': {
                 'analysis_number': 'dream_team'
-            }
+            },
+            'collection': 'cms-analysis',
+            'collection_version': '1.0.0'
         },
         'labels': [],
         'files': [{
@@ -386,11 +390,10 @@ def test_get_deposits_with_facets(client, users, auth_headers_for_user, create_d
     aggs = resp.json['aggregations']
 
     assert sorted(aggs.keys()) == sorted([
-        'facet_accelerator_parameters', 'facet_cadi_status', 'facet_cms_working_group',
+        'facet_accelerator_parameters', 'facet_cadi_status', 'facet_cms_working_group', 'facet_collection',
         'facet_collision_system', 'facet_final_states', 'facet_further_search_categorisation',
         'facet_further_search_categorisation_heavy_ion', 'facet_interpretation',
-        'facet_next_deadline_date', 'facet_physics_theme', 'facet_sm_analysis_characteristics',
-        'facet_type', 'particles'
+        'facet_next_deadline_date', 'facet_physics_theme', 'facet_sm_analysis_characteristics', 'particles'
     ])
 
 
@@ -490,11 +493,11 @@ def test_get_deposits_with_facets_get_types_and_versions(
                       headers=auth_headers_for_user(user) + [('Accept', 'application/basic+json')])
 
     assert resp.json['hits']['total'] == 2
-    assert resp.json['aggregations']['facet_type']['buckets'] == [{
+    assert resp.json['aggregations']['facet_collection']['buckets'] == [{
         'doc_count': 2,
-        'facet_type_version': {
-            'buckets': [{'doc_count': 1, 'key': 'v1.0.0'},
-                        {'doc_count': 1, 'key': 'v2.0.0'}],
+        'facet_collection_version': {
+            'buckets': [{'doc_count': 1, 'key': '1.0.0'},
+                        {'doc_count': 1, 'key': '2.0.0'}],
             'doc_count_error_upper_bound': 0,
             'sum_other_doc_count': 0
         },
@@ -507,6 +510,7 @@ def test_get_deposits_with_facets_get_types_doesnt_confuse_naming(
     # make sure that the naming of schemas doesnt confuse search, e.g. test-analysis facet
     # is giving different results from test-ana facet, although they have the same prefix
     user = users['cms_user']
+    headers = auth_headers_for_user(user) + [('Accept', 'application/basic+json')]
 
     create_schema('test-analysis', experiment='CMS')
     create_deposit(user, 'test-analysis',
@@ -525,24 +529,129 @@ def test_get_deposits_with_facets_get_types_doesnt_confuse_naming(
     time.sleep(1)
 
     # total should be 3
-    resp = client.get('/deposits/',
-                      headers=auth_headers_for_user(user) + [('Accept', 'application/basic+json')])
+    resp = client.get('/deposits/', headers=headers)
     assert resp.json['hits']['total'] == 3
 
     # test-ana should return 2 results
-    url = '/deposits/?q=&type=test-ana&sort=mostrecent'
-    resp = client.get(url, headers=auth_headers_for_user(user) + [('Accept', 'application/basic+json')])
+    url = '/deposits/?q=&collection=test-ana&sort=mostrecent'
+    resp = client.get(url, headers=headers)
 
     assert resp.status_code == 200
     assert resp.json['hits']['total'] == 2
 
     # test-analysis should return 1 result
-    url = '/deposits/?q=&type=test-analysis&sort=mostrecent'
-    resp = client.get(url, headers=auth_headers_for_user(user) + [('Accept', 'application/basic+json')])
+    url = '/deposits/?q=&collection=test-analysis&sort=mostrecent'
+    resp = client.get(url, headers=headers)
 
     assert resp.status_code == 200
     assert resp.json['hits']['total'] == 1
 
+
+def test_get_deposits_query_combinations_of_collections_and_versions(
+        client, users, auth_headers_for_user, json_headers, create_deposit, create_schema):
+    user = users['cms_user']
+    headers = auth_headers_for_user(user) + [('Accept', 'application/basic+json')]
+    analyzer_settings = {
+        "settings": {
+            "analysis": {
+                "analyzer": {
+                    "lowercase_whitespace_analyzer": {
+                        "type": "custom",
+                        "tokenizer": "whitespace",
+                        "filter": ["lowercase"]
+                    }
+                }
+            }
+        }
+    }
+
+
+    # test1 schema
+    create_schema('test1', experiment='CMS', deposit_mapping=analyzer_settings)
+    create_deposit(user, 'test1',
+                   {"$schema": "https://analysispreservation.cern.ch/schemas/deposits/records/test1-v1.0.0.json"},
+                   experiment='CMS')
+
+    create_schema('test1', experiment='CMS', version='2.0.0', deposit_mapping=analyzer_settings)
+    create_deposit(user, 'test1',
+                   {"$schema": "https://analysispreservation.cern.ch/schemas/deposits/records/test1-v2.0.0.json"},
+                   experiment='CMS')
+
+
+    # test2 schema
+    create_schema('test2', experiment='CMS', deposit_mapping=analyzer_settings)
+    create_deposit(user, 'test2',
+                   {"$schema": "https://analysispreservation.cern.ch/schemas/deposits/records/test2-v1.0.0.json"},
+                   experiment='CMS')
+    create_deposit(user, 'test2',
+                   {"$schema": "https://analysispreservation.cern.ch/schemas/deposits/records/test2-v1.0.0.json"},
+                   experiment='CMS')
+
+    create_schema('test2', experiment='CMS', version='2.0.0', deposit_mapping=analyzer_settings)
+    create_deposit(user, 'test2',
+                   {"$schema": "https://analysispreservation.cern.ch/schemas/deposits/records/test2-v2.0.0.json"},
+                   experiment='CMS')
+
+    import time
+    time.sleep(1)
+
+    # test1 should return 2 results (total)
+    url = '/deposits/?q=&collection=test1&sort=mostrecent'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 2
+
+    # test1 version 1, should return 1 result
+    url = '/deposits/?q=&collection=test1&collection_version=1.0.0&sort=mostrecent'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 1
+
+    # test2 should return 3 results (total)
+    url = '/deposits/?q=&collection=test2&sort=mostrecent'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 3
+
+    # test2 version 2, should return 1 result
+    url = '/deposits/?q=&collection=test1&collection_version=2.0.0&sort=mostrecent'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 1
+
+    # combinations - different collections + versions AS QUERIES
+    # test1
+    url = '/deposits/?q=collection%3Atest1'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 2
+
+    # test1 - version 2
+    url = '/deposits/?q=collection%3Atest1%20AND%20collection_version%3A1.0.0'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 1
+
+    # test1 - version 2 OR test2
+    url = '/deposits/?q=%28collection%3Atest1%20AND%20collection_version%3A2.0.0%29%20OR%20collection%3Atest2'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 4
+
+    # test1 - version 2 OR test2 - version 1
+    url = '/deposits/?q=%28collection%3Atest1%20AND%20collection_version%3A2.0.0%29%20' \
+          'OR%20%28collection%3Atest2%20AND%20collection_version%3A1.0.0%29'
+    resp = client.get(url, headers=headers)
+
+    assert resp.status_code == 200
+    assert resp.json['hits']['total'] == 3
 
 
 def test_get_deposits_with_facets_non_empty_buckets_dates(

@@ -264,15 +264,15 @@ RECORDS_REST_SORT_OPTIONS.update(DEPOSIT_REST_SORT_OPTIONS)
 # for aggregations, only ones starting with facet_ will be displayed on a page
 CAP_FACETS = {
     'aggs': {
-        'facet_type': {
+        'facet_collection': {
             'terms': {
-                'size': 30,
-                'script': 'doc.containsKey("_type") ? doc["_type"].value?.substring(0,doc["_type"].value.lastIndexOf("-v")) : null'  # noqa
+                'size': 50,
+                'field': 'collection.keyword'
             },
             'aggs': {
-                'facet_type_version': {
+                'facet_collection_version': {
                     'terms': {
-                        'script': 'doc.containsKey("_type") ? doc["_type"].value?.substring(doc["_type"].value.lastIndexOf("-v") + 1, doc["_type"].value.length()) : null'  # noqa
+                        'field': 'collection_version.keyword'
                     }
                 },
             },
@@ -391,8 +391,9 @@ CAP_FACETS = {
         },
     },
     'post_filters': {
-        'type': regex_filter('_type'),
-        'type_version': terms_filter('_type'),
+        'collection': terms_filter('collection.keyword'),
+        'collection_version': terms_filter('collection_version.keyword'),
+
         'cms_working_group': prefix_filter('basic_info.cadi_id'),
         'cadi_status': terms_filter('cadi_info.status'),
         'next_deadline_date': range_filter(

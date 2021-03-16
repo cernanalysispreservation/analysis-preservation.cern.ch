@@ -13,3 +13,4 @@ reana-commons==0.6.0
 # Install invenio-records from last commit before 1.1.0 version release
 -e git+git://github.com/inveniosoftware/invenio-records.git@a5d4efb1e1466aa571aeef013d699dca1452f7cd#egg=invenio-records
 -e git+https://github.com/celery/celery.git@6ccdc7b9f8e02d21275e923dccc7ccb9185e6153#egg=celery
+-e git+git://github.com/Lilykos/invenio-indexer.git@cap-indexer-update#egg=invenio-indexer
