@@ -431,55 +431,36 @@ class CAPDeposit(Deposit, Reviewable):
         }]
 
         """
-        with db.session.begin_nested():
-            for obj in data:
-                if obj['type'] == 'user':
-                    try:
-                        user = get_existing_or_register_user(obj['email'])
-                    except DoesNotExistInLDAP:
-                        raise UpdateDepositPermissionsError(
-                            'User with this mail does not exist in LDAP.')
+        for obj in data:
+            if obj['type'] == 'user':
+                try:
+                    user = get_existing_or_register_user(obj['email'])
+                except DoesNotExistInLDAP:
+                    raise UpdateDepositPermissionsError(
+                        'User with this mail does not exist in LDAP.')
 
-                    if obj['op'] == 'add':
-                        try:
-                            self._add_user_permissions(user, [obj['action']],
-                                                       db.session)
-                        except IntegrityError:
-                            raise UpdateDepositPermissionsError(
-                                'Permission already exist.')
+                if obj['op'] == 'add':
+                    self._add_user_permissions(
+                        user, [obj['action']], db.session)
+                elif obj['op'] == 'remove':
+                    self._remove_user_permissions(
+                        user, [obj['action']], db.session)
 
-                    elif obj['op'] == 'remove':
-                        try:
-                            self._remove_user_permissions(
-                                user, [obj['action']], db.session)
-                        except NoResultFound:
-                            raise UpdateDepositPermissionsError(
-                                'Permission does not exist.')
+            elif obj['type'] == 'egroup':
+                try:
+                    role = get_existing_or_register_role(obj['email'])
+                except DoesNotExistInLDAP:
+                    raise UpdateDepositPermissionsError(
+                        'Egroup with this mail does not exist in LDAP.')
 
-                elif obj['type'] == 'egroup':
-                    try:
-                        role = get_existing_or_register_role(obj['email'])
-                    except DoesNotExistInLDAP:
-                        raise UpdateDepositPermissionsError(
-                            'Egroup with this mail does not exist in LDAP.')
-
-                    if obj['op'] == 'add':
-                        try:
-                            self._add_egroup_permissions(
-                                role, [obj['action']], db.session)
-                        except IntegrityError:
-                            raise UpdateDepositPermissionsError(
-                                'Permission already exist.')
-                    elif obj['op'] == 'remove':
-                        try:
-                            self._remove_egroup_permissions(
-                                role, [obj['action']], db.session)
-                        except NoResultFound:
-                            raise UpdateDepositPermissionsError(
-                                'Permission does not exist.')
+                if obj['op'] == 'add':
+                    self._add_egroup_permissions(
+                        role, [obj['action']], db.session)
+                elif obj['op'] == 'remove':
+                    self._remove_egroup_permissions(
+                        role, [obj['action']], db.session)
 
         self.commit()
-
         return self
 
     @preserve(result=False, fields=PRESERVE_FIELDS)
@@ -508,45 +489,65 @@ class CAPDeposit(Deposit, Reviewable):
     def _add_user_permissions(self, user, permissions, session):
         """Adds permissions for user for this deposit."""
         for permission in permissions:
-            session.add(
-                ActionUsers.allow(DEPOSIT_ACTIONS_NEEDS(self.id)[permission],
-                                  user=user))
+            try:
+                session.add(
+                    ActionUsers.allow(
+                        DEPOSIT_ACTIONS_NEEDS(self.id)[permission],
+                        user=user)
+                )
+                session.flush()
+            except IntegrityError:
+                session.rollback()
 
-            session.flush()
-
-            self['_access'][permission]['users'].append(user.id)
+            if user.id not in self['_access'][permission]['users']:
+                self['_access'][permission]['users'].append(user.id)
 
     def _remove_user_permissions(self, user, permissions, session):
         """Remove permissions for user for this deposit."""
         for permission in permissions:
-            session.delete(
-                ActionUsers.query.filter(ActionUsers.action == permission,
-                                         ActionUsers.argument == str(self.id),
-                                         ActionUsers.user_id == user.id).one())
-            session.flush()
+            try:
+                session.delete(
+                    ActionUsers.query.filter(
+                        ActionUsers.action == permission,
+                        ActionUsers.argument == str(self.id),
+                        ActionUsers.user_id == user.id).one()
+                )
+                session.flush()
+            except NoResultFound:
+                session.rollback()
 
-            self['_access'][permission]['users'].remove(user.id)
+            if user.id in self['_access'][permission]['users']:
+                self['_access'][permission]['users'].remove(user.id)
 
     def _add_egroup_permissions(self, egroup, permissions, session):
         for permission in permissions:
-            session.add(
-                ActionRoles.allow(DEPOSIT_ACTIONS_NEEDS(self.id)[permission],
-                                  role=egroup))
-            session.flush()
+            try:
+                session.add(
+                    ActionRoles.allow(
+                        DEPOSIT_ACTIONS_NEEDS(self.id)[permission],
+                        role=egroup)
+                )
+                session.flush()
+            except IntegrityError:
+                session.rollback()
 
             if egroup.id not in self['_access'][permission]['roles']:
                 self['_access'][permission]['roles'].append(egroup.id)
 
     def _remove_egroup_permissions(self, egroup, permissions, session):
         for permission in permissions:
-            session.delete(
-                ActionRoles.query.filter(
-                    ActionRoles.action == permission,
-                    ActionRoles.argument == str(self.id),
-                    ActionRoles.role_id == egroup.id).one())
-            session.flush()
+            try:
+                session.delete(
+                    ActionRoles.query.filter(
+                        ActionRoles.action == permission,
+                        ActionRoles.argument == str(self.id),
+                        ActionRoles.role_id == egroup.id).one())
+                session.flush()
+            except NoResultFound:
+                session.rollback()
 
-            self['_access'][permission]['roles'].remove(egroup.id)
+            if egroup.id in self['_access'][permission]['roles']:
+                self['_access'][permission]['roles'].remove(egroup.id)
 
     def _add_experiment_permissions(self, experiment, permissions):
         """Add read permissions to everybody assigned to experiment."""
