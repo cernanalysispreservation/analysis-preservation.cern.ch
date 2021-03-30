@@ -803,7 +803,7 @@ LOGGING_SENTRY_CELERY = True
 
 
 def get_cms_stats_questionnaire_contacts():
-    file = os.environ.get('CMS_STATS_COMMITEE_AND_PAGS_FILE_LOCATION', "")
+    file = os.environ.get('CMS_STATS_COMMITTEE_AND_PAGS_FILE_LOCATION', "")
 
     try:
         with open(file, 'r') as fp:
