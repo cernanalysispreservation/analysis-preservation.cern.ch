@@ -18,6 +18,7 @@ export const CURRENT_UPDATE_CONFIG = "CURRENT_UPDATE_CONFIG";
 export const CURRENT_UPDATE_PATH = "CURRENT_UPDATE_PATH";
 export const CURRENT_UPDATE_SCHEMA_PATH = "CURRENT_UPDATE_SCHEMA_PATH";
 export const CURRENT_UPDATE_UI_SCHEMA_PATH = "CURRENT_UPDATE_UI_SCHEMA_PATH";
+import { fromJS } from "immutable";
 
 export function schemaError(error) {
   return {
@@ -173,9 +174,7 @@ export function updateByPath(path, value) {
 
 export function addByPath({ schema: path, uiSchema: uiPath }, data) {
   return function(dispatch, getState) {
-    let schema = getState()
-      .schemaWizard.getIn(["current", "schema", ...path])
-      .toJS();
+    let schema = getState().schemaWizard.getIn(["current", "schema", ...path]);
 
     let _path = path;
     let _uiPath = uiPath;
@@ -184,18 +183,30 @@ export function addByPath({ schema: path, uiSchema: uiPath }, data) {
       .toString(36)
       .substring(2, 8)}`;
 
-    if (schema.type) {
-      if (schema.type == "object") {
-        if (!schema.properties) schema.properties = {};
+    if (schema.has("type")) {
+      if (schema.get("type") === "object") {
+        if (!schema.has("properties")) {
+          schema = schema.set("properties", {});
+        }
         _path = [...path, "properties", random_name];
         _uiPath = [...uiPath, random_name];
-      } else if (schema.type == "array") {
-        if (!schema.items) schema.items = {};
+      } else if (schema.get("type") === "array") {
+        if (!schema.has("items")) {
+          schema = schema.set("items", {});
+        }
         _path = [...path, "items"];
         _uiPath = [...uiPath, "items"];
       }
 
-      dispatch(updateByPath({ schema: _path, uiSchema: _uiPath }, data));
+      dispatch(
+        updateByPath(
+          { schema: _path, uiSchema: _uiPath },
+          {
+            schema: fromJS(data.schema),
+            uiSchema: fromJS(data.uiSchema)
+          }
+        )
+      );
     }
   };
 }
@@ -216,55 +227,84 @@ export function addProperty(path, key) {
 }
 
 // delete item from schema and uiSchema
-export function deleteByPath(item) {
+export function deleteByPath(ourPath) {
   return function(dispatch, getState) {
-    const { path, uiPath } = item;
-    const uiItemToDelete = uiPath.pop();
+    let path = ourPath.getIn(["path"]);
+    let uiPath = ourPath.getIn(["uiPath"]);
 
     // ********* schema **********
-    let itemToDelete = path.pop();
+    let itemToDelete = path.last();
+
+    path = path.pop();
+
     // if the last item is items then pop again since it is an array, in order to fetch the proper id
-    itemToDelete = itemToDelete === "items" ? path.pop() : itemToDelete;
+    if (itemToDelete === "items") {
+      itemToDelete = path.last();
+      path = path.pop();
+    }
 
-    let schema = getState()
-      .schemaWizard.getIn(["current", "schema", ...path])
-      .toJS();
+    let schemaPath = path.valueSeq().toArray();
 
-    delete schema[itemToDelete];
+    let schema = getState().schemaWizard.getIn([
+      "current",
+      "schema",
+      ...schemaPath
+    ]);
+
+    schema = schema.delete(itemToDelete);
 
     // ********* uiSchema **********
-    let uiSchema = getState()
-      .schemaWizard.getIn(["current", "uiSchema", ...uiPath])
-      .toJS();
 
-    delete uiSchema[uiItemToDelete];
+    let uiItemToDelete = uiPath.last();
+    uiPath = uiPath.pop();
 
-    if (uiSchema["ui:order"]) {
-      // remove the itemToDelete from the ui:order
-      uiSchema["ui:order"] = uiSchema["ui:order"].filter(
-        item => item !== uiItemToDelete
-      );
+    let schemaUIPath = uiPath.valueSeq().toArray();
+
+    let uiSchema = getState().schemaWizard.getIn([
+      "current",
+      "uiSchema",
+      ...schemaUIPath
+    ]);
+
+    uiSchema = uiSchema.delete(uiItemToDelete);
+    if (uiSchema.get("ui:order") && uiSchema.get("ui:order").size > 0) {
+      let newUiOrder = uiSchema
+        .get("ui:order")
+        .filter(item => item !== uiItemToDelete);
+      uiSchema = uiSchema.set("ui:order", newUiOrder);
     }
 
     // ********* update changes **********
     dispatch(
-      updateByPath({ schema: path, uiSchema: uiPath }, { schema, uiSchema })
+      updateByPath(
+        { schema: schemaPath, uiSchema: schemaUIPath },
+        { schema, uiSchema }
+      )
     );
     dispatch(enableCreateMode());
   };
 }
 
 // update the id field of a property
-export function renameIdByPath(item, newName) {
+export function renameIdByPath(newName, pathToItem) {
   return function(dispatch, getState) {
-    const path = item.path;
-    const uiPath = item.uiPath;
+    let path = pathToItem.get("path");
 
-    let itemToDelete = path.pop();
-    // if the last item is items then pop again since it is an array, in order to fetch the proper id
-    itemToDelete = itemToDelete === "items" ? path.pop() : itemToDelete;
+    let itemToDelete = path.last();
+    path = path.pop();
 
-    const uiItemToDelete = uiPath.pop();
+    if (itemToDelete === "items") {
+      itemToDelete = path.last();
+      path = path.pop();
+    }
+
+    let schemaPath = path.valueSeq().toArray();
+
+    let uiPath = pathToItem.get("uiPath");
+    const uiItemToDelete = uiPath.last();
+    uiPath = uiPath.pop();
+
+    let schemaUIPath = uiPath.valueSeq().toArray();
 
     // check if the new id is empty or exact same with the current id
     if (newName === itemToDelete || newName === "") {
@@ -277,17 +317,22 @@ export function renameIdByPath(item, newName) {
     }
 
     // navigate to the correct path
-    let schema = getState()
-      .schemaWizard.getIn(["current", "schema", ...path])
-      .toJS();
-    let uiSchema = getState()
-      .schemaWizard.getIn(["current", "uiSchema", ...uiPath])
-      .toJS();
+    let schema = getState().schemaWizard.getIn([
+      "current",
+      "schema",
+      ...schemaPath
+    ]);
+
+    let uiSchema = getState().schemaWizard.getIn([
+      "current",
+      "uiSchema",
+      ...schemaUIPath
+    ]);
 
     // ********* schema **********
-    let keys = Object.keys(schema);
+
     // make sure that the new name is unique among sibling widgets
-    if (keys.includes(newName)) {
+    if (schema.has(newName)) {
       cogoToast.error("The id should be unique, this name already exists", {
         position: "top-center",
         bar: { size: "0" },
@@ -296,35 +341,39 @@ export function renameIdByPath(item, newName) {
       return;
     }
 
-    // create new obj with the information and then delete the old one
-    schema[newName] = schema[itemToDelete];
-    delete schema[itemToDelete];
+    schema = schema.set(newName, schema.get(itemToDelete));
+    schema = schema.delete(itemToDelete);
 
     // ********* uiSchema **********
-    if (!uiSchema["ui:order"]) {
-      uiSchema["ui:order"] = [];
-    }
-    // update the uiOrder array
-    let pos = uiSchema["ui:order"].indexOf(uiItemToDelete);
-    if (pos > -1) {
-      uiSchema["ui:order"][pos] = newName;
+    if (!uiSchema.has("ui:order")) {
+      uiSchema = uiSchema.set("ui:order", []);
     }
 
-    if (uiSchema[uiItemToDelete]) {
-      uiSchema[newName] = uiSchema[uiItemToDelete];
+    // update the uiOrder array
+    if (uiSchema.get("ui:order").includes(uiItemToDelete)) {
+      let valueIndex = uiSchema.get("ui:order").indexOf(uiItemToDelete);
+      let newUiOrder = uiSchema.get("ui:order").set(valueIndex, newName);
+      uiSchema = uiSchema.set("ui:order", newUiOrder);
     }
-    // remove from the uiSchema
-    delete uiSchema[uiItemToDelete];
+
+    if (uiSchema.includes(uiItemToDelete)) {
+      let val = uiSchema.get(uiItemToDelete);
+      uiSchema = uiSchema.set(newName, val);
+      uiSchema = uiSchema.delete(uiItemToDelete);
+    }
 
     // ********* update changes **********
     dispatch(
-      updateByPath({ schema: path, uiSchema: uiPath }, { schema, uiSchema })
+      updateByPath(
+        { schema: schemaPath, uiSchema: schemaUIPath },
+        { schema: schema, uiSchema: uiSchema }
+      )
     );
 
     dispatch(
       selectProperty({
-        schema: [...path, newName],
-        uiSchema: [...uiPath, newName]
+        schema: [...schemaPath, newName],
+        uiSchema: [...schemaUIPath, newName]
       })
     );
   };

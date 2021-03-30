@@ -16,9 +16,9 @@ const renderPath = (pathToUpdate, rename) => {
   let content;
   let result = [];
 
-  let path = pathToUpdate.getIn(["path"]).toJS();
+  let path = pathToUpdate.getIn(["path"]);
 
-  path &&
+  path.size > 0 &&
     path.map(item => {
       if (result.length == 0) {
         if (item == "properties") content = "{ } root";
@@ -63,7 +63,7 @@ const renderPath = (pathToUpdate, rename) => {
             hoverTitle
             value={prev}
             emptyValue={prev}
-            onUpdate={value => rename(pathToUpdate.toJS(), value)}
+            onUpdate={value => rename(value, pathToUpdate)}
           />
         }
       />
@@ -84,13 +84,12 @@ class PropertyEditor extends React.Component {
         <DeleteModal
           show={this.state.showDeleteLayer}
           text={this.props.path
-            .toJS()
-            .path.filter(item => item != "properties" && item != "items")
-            .map(item => item)
-            .join(" > ")}
+            .getIn(["path"])
+            .filter(item => item !== "properties" && item !== "items")
+            .join(">")}
           onClose={() => this.setState({ showDeleteLayer: false })}
           onDelete={() => {
-            this.props.deleteByPath(this.props.path.toJS());
+            this.props.deleteByPath(this.props.path);
             this.setState({ showDeleteLayer: false });
           }}
         />
