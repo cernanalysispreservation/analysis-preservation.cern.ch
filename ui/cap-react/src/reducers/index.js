@@ -10,6 +10,7 @@ import dashboard from "./dashboard";
 import workflows from "./workflows";
 import status from "./status";
 import schemaWizard from "./schemaWizard";
+import schemaWizardCurrent from "./schemaWizardCurrent";
 
 const rootReducer = history =>
   combineReducers({
@@ -22,6 +23,7 @@ const rootReducer = history =>
     workflows,
     status,
     schemaWizard,
+    schemaWizardCurrent,
     router: connectRouter(history)
   });
 

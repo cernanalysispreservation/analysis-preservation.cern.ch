@@ -76,7 +76,7 @@ HoverBox.propTypes = {
 };
 
 const mapStateToProps = state => ({
-  schema: state.schemaWizard.getIn(["current", "schema"])
+  schema: state.schemaWizardCurrent.present.getIn(["current", "schema"])
 });
 
 export default connect(

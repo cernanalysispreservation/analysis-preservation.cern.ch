@@ -98,6 +98,7 @@
     "redux-promise": "0.6.0",
     "redux-promises": "1.0.0",
     "redux-thunk": "2.3.0",
+    "redux-undo": "1.0.1",
     "reselect": "^3.0.1",
     "searchkit": "2.3.0",
     "styled-components": "4.4.1"

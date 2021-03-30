@@ -5,8 +5,8 @@ import { selectProperty } from "../../../actions/schemaWizard";
 
 function mapStateToProps(state) {
   return {
-    schema: state.schemaWizard.getIn(["current", "schema"]),
-    uiSchema: state.schemaWizard.getIn(["current", "uiSchema"])
+    schema: state.schemaWizardCurrent.present.getIn(["current", "schema"]),
+    uiSchema: state.schemaWizardCurrent.present.getIn(["current", "uiSchema"])
   };
 }
 

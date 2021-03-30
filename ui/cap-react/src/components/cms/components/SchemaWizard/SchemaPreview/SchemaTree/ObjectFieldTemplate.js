@@ -24,7 +24,6 @@ const ObjectFieldTemplate = function(props) {
             name: prop.name,
             prop: prop
           };
-
           temp.push(item);
         });
         setCards(temp);
@@ -53,16 +52,37 @@ const ObjectFieldTemplate = function(props) {
           });
 
           let propss;
-          props.properties.map(item => {
-            if (item.name === differentItem) propss = item;
+          let propssIndex;
+          props.properties.map((item, index) => {
+            if (item.name === differentItem) {
+              propss = item;
+              propssIndex = index;
+            }
           });
 
-          let item = {
-            id: diffIndex + 1,
-            name: differentItem,
-            prop: propss
-          };
-          cards[diffIndex] = item;
+          if (diffIndex) {
+            cards[diffIndex].name = differentItem;
+            cards[diffIndex].prop = propss;
+          }
+          if (propss && !diffIndex) {
+            let item = {
+              name: propss.name,
+              prop: propss,
+              id: propssIndex + 1
+            };
+            cards.splice(propssIndex, 0, item);
+            let tempUiCards = [];
+            let d = [];
+            cards.map(card => {
+              if (!tempUiCards.includes(card.name)) {
+                tempUiCards.push(card.name);
+                d.push(card);
+              }
+            });
+            d.map((item, index) => (item.id = index + 1));
+            setCards(d);
+            return;
+          }
           setCards(cards);
         } else {
           cards.map((card, index) => {
@@ -80,10 +100,7 @@ const ObjectFieldTemplate = function(props) {
   useEffect(
     () => {
       let uiCards = cards.map(item => item.name);
-      let uiProperties = props.properties.map(item => item.name);
       let { ...rest } = props.uiSchema;
-
-      uiCards = uiProperties.length < uiCards.length ? uiProperties : uiCards;
 
       props.onUiSchemaChange(
         props.formContext.uiSchema.length > 0 ? props.formContext.uiSchema : [],
@@ -93,7 +110,22 @@ const ObjectFieldTemplate = function(props) {
         }
       );
     },
-    [props.properties, cards]
+    [cards]
+  );
+  useEffect(
+    () => {
+      let uiProperties = props.properties.map(item => item.name);
+      let { ...rest } = props.uiSchema;
+
+      props.onUiSchemaChange(
+        props.formContext.uiSchema.length > 0 ? props.formContext.uiSchema : [],
+        {
+          ...rest,
+          "ui:order": [...uiProperties, "*"]
+        }
+      );
+    },
+    [props.properties]
   );
 
   // create a new array to keep track of the changes in the order
@@ -124,6 +156,7 @@ const ObjectFieldTemplate = function(props) {
     },
     [cards]
   );
+
   if (props.idSchema.$id == "root") {
     return (
       <Box>

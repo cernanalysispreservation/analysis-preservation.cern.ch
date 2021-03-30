@@ -10,8 +10,12 @@ function mapStateToProps(state) {
   return {
     // propKey: state.schemaWizard.getIn(["field", "propKey"]),
     path: state.schemaWizard.getIn(["field"]),
-    schema: state.schemaWizard.getIn(["current", "schema", ...(_path || [])]),
-    uiSchema: state.schemaWizard.getIn([
+    schema: state.schemaWizardCurrent.present.getIn([
+      "current",
+      "schema",
+      ...(_path || [])
+    ]),
+    uiSchema: state.schemaWizardCurrent.present.getIn([
       "current",
       "uiSchema",
       ...(_uiPath || [])

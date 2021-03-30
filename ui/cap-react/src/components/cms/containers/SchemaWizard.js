@@ -5,10 +5,10 @@ import { getSchema } from "../../../actions/schemaWizard";
 
 function mapStateToProps(state) {
   return {
-    current: state.schemaWizard.get("current"),
+    current: state.schemaWizardCurrent.present.get("current"),
     field: state.schemaWizard.get("field"),
     loader: state.schemaWizard.get("loader"),
-    schema: state.schemaWizard.getIn(["current", "schema"])
+    schema: state.schemaWizardCurrent.present.getIn(["current", "schema"])
   };
 }
 

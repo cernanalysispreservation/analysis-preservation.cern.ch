@@ -30,6 +30,12 @@ class CustomizeField extends React.Component {
     };
   }
 
+  componentDidUpdate() {
+    if (!this.props.schema && !this.props.uiSchema) {
+      this.props.enableCreateMode();
+    }
+  }
+
   _onSchemaChange = data => {
     this.setState({ schema: data.formData }, () => {
       this.props.onSchemaChange(
@@ -238,7 +244,8 @@ CustomizeField.propTypes = {
   path: PropTypes.array,
   deleteByPath: PropTypes.func,
   optionsSchema: PropTypes.object,
-  renameId: PropTypes.func
+  renameId: PropTypes.func,
+  enableCreateMode: PropTypes.func
 };
 
 export default CustomizeField;

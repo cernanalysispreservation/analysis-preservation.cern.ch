@@ -3,9 +3,6 @@ import { Map, fromJS } from "immutable";
 import {
   SCHEMA_INIT,
   CURRENT_UPDATE_CONFIG,
-  CURRENT_UPDATE_PATH,
-  CURRENT_UPDATE_SCHEMA_PATH,
-  CURRENT_UPDATE_UI_SCHEMA_PATH,
   PROPERTY_SELECT,
   CREATE_MODE_ENABLE,
   ADD_PROPERTY,
@@ -15,10 +12,6 @@ import {
 } from "../actions/schemaWizard";
 
 const initialState = Map({
-  current: fromJS({
-    schema: {},
-    uiSchema: {}
-  }),
   initial: fromJS({
     schema: {},
     uiSchema: {}
@@ -36,7 +29,6 @@ export default function schemaReducer(state = initialState, action) {
       return initialState.set("loader", true);
     case SCHEMA_INIT:
       return state
-        .set("current", fromJS(action.data))
         .set("initial", fromJS(action.data))
         .set("config", action.configs)
         .set("loader", false);
@@ -49,12 +41,7 @@ export default function schemaReducer(state = initialState, action) {
         Map({ path: action.path, type: "new" })
       );
     case ADD_PROPERTY:
-      return state
-        .setIn(
-          ["current", "schema", ...action.path, "properties", action.key],
-          fromJS({})
-        )
-        .set("propKeyEditor", null);
+      return state.set("propKeyEditor", null);
     case PROPERTY_SELECT:
       return state.set(
         "field",
@@ -65,26 +52,6 @@ export default function schemaReducer(state = initialState, action) {
       );
     case CREATE_MODE_ENABLE:
       return state.set("field", null);
-    case CURRENT_UPDATE_PATH:
-      return state
-        .setIn(
-          ["current", "uiSchema", ...action.path.uiSchema],
-          fromJS(action.value.uiSchema)
-        )
-        .setIn(
-          ["current", "schema", ...action.path.schema],
-          fromJS(action.value.schema)
-        );
-    case CURRENT_UPDATE_SCHEMA_PATH:
-      return state.setIn(
-        ["current", "schema", ...action.path],
-        fromJS(action.value)
-      );
-    case CURRENT_UPDATE_UI_SCHEMA_PATH:
-      return state.setIn(
-        ["current", "uiSchema", ...action.path],
-        fromJS(action.value)
-      );
     case CURRENT_UPDATE_CONFIG:
       return state.set("config", action.config);
     default:

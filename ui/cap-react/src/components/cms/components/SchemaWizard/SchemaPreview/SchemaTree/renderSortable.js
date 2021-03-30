@@ -5,6 +5,7 @@ const RenderSortable = (parent, card, i, moveCard) => {
   if (card === undefined || card.prop === undefined) {
     return null;
   }
+
   return (
     <SortableBox
       parent={parent}
