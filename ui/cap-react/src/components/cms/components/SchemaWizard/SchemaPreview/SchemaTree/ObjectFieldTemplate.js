@@ -85,13 +85,16 @@ const ObjectFieldTemplate = function(props) {
 
       uiCards = uiProperties.length < uiCards.length ? uiProperties : uiCards;
 
-      props.onUiSchemaChange(
-        props.formContext.uiSchema.length > 0 ? props.formContext.uiSchema : [],
-        {
-          ...rest,
-          "ui:order": [...uiCards, "*"]
-        }
-      );
+      !props.formContext.dependencyForm &&
+        props.onUiSchemaChange(
+          props.formContext.uiSchema.length > 0
+            ? props.formContext.uiSchema
+            : [],
+          {
+            ...rest,
+            "ui:order": [...uiCards, "*"]
+          }
+        );
     },
     [props.properties, cards]
   );
@@ -128,7 +131,13 @@ const ObjectFieldTemplate = function(props) {
     return (
       <Box>
         {cards.map((card, i) =>
-          RenderSortable(props.formContext.uiSchema, card, i, moveCard)
+          RenderSortable(
+            props.formContext.uiSchema,
+            card,
+            i,
+            moveCard,
+            props.formContext.dependencyForm
+          )
         )}
       </Box>
     );

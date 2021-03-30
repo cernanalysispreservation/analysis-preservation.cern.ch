@@ -10,22 +10,6 @@ import Button from "../../../partials/Button";
 class SelectContentType extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      recommended: [
-        {
-          schemaId: "cms-analysis",
-          schemaVersion: "0.0.1"
-        },
-        {
-          schemaId: "lhcb",
-          schemaVersion: "0.0.1"
-        },
-        {
-          schemaId: "alice-analysis",
-          schemaVersion: "0.0.1"
-        }
-      ]
-    };
   }
 
   render() {
@@ -56,7 +40,7 @@ class SelectContentType extends React.Component {
                   onClick={that.props.select.bind(
                     this,
                     item.get("deposit_group"),
-                    "0.0.1"
+                    undefined
                   )}
                   text={item.get("name")}
                   background="#e6e6e6"

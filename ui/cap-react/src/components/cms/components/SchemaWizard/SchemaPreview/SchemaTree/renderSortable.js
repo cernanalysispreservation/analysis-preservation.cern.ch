@@ -1,7 +1,7 @@
 import React from "react";
 import SortableBox from "./SortableBox";
 
-const RenderSortable = (parent, card, i, moveCard) => {
+const RenderSortable = (parent, card, i, moveCard, dependencyProp) => {
   if (card === undefined || card.prop === undefined) {
     return null;
   }
@@ -13,6 +13,7 @@ const RenderSortable = (parent, card, i, moveCard) => {
       id={card.id}
       text={card.name}
       moveCard={moveCard}
+      dependencyProp={dependencyProp}
     >
       {card.prop.content}
     </SortableBox>

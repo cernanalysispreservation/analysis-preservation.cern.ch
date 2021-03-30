@@ -11,7 +11,8 @@ import {
   AiOutlineCloudDownload,
   AiOutlineBorderTop,
   AiOutlineContainer,
-  AiOutlineFile
+  AiOutlineFile,
+  AiOutlinePullRequest
 } from "react-icons/ai";
 
 import {
@@ -127,6 +128,10 @@ class SchemaTreeItem extends React.Component {
           ) : null}
           {this.props.schema ? (
             <Box direction="row" align="center" wrap={false} flex={false}>
+              {this.props.current &&
+                this.props.path &&
+                this.props.current.getIn([...this.props.path.schema]).toJS()
+                  .dependencies && <AiOutlinePullRequest />}
               {this.props.schema.type == "object" &&
               !this.shouldBoxAcceptChildren(this.props.uiSchema) ? (
                 <Box
@@ -167,8 +172,13 @@ SchemaTreeItem.propTypes = {
   colorIndex: PropTypes.string,
   display: PropTypes.bool,
   updateDisplay: PropTypes.func,
-  uiSchema: PropTypes.object
+  uiSchema: PropTypes.object,
+  current: PropTypes.object
 };
+
+const mapStateToProps = state => ({
+  current: state.schemaWizard.getIn(["current", "schema"])
+});
 
 function mapDispatchToProps(dispatch) {
   return {
@@ -176,7 +186,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 export default connect(
-  state => state,
+  mapStateToProps,
   mapDispatchToProps
 )(SchemaTreeItem);
 

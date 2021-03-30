@@ -35,7 +35,10 @@ class SchemaTree extends React.Component {
           widgets={widgets}
           validate={_validate}
           noHtml5Validate={true}
-          formContext={{ schema: [], uiSchema: [] }}
+          formContext={{
+            schema: [],
+            uiSchema: []
+          }}
         >
           <span />
         </Form>

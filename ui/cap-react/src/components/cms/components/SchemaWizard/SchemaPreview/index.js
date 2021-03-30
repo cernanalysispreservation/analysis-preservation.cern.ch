@@ -29,7 +29,7 @@ class SchemaPreview extends React.Component {
                 fontSize: "1.3m"
               }}
             >
-              {this.props.schema && this.props.schema.get("title") || "Root"}
+              {(this.props.schema && this.props.schema.get("title")) || "Root"}
             </Box>
           </Box>
           <SchemaTree key="schemaTree" />

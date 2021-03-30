@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import SchemaTreeItem from "./SchemaTreeItem";
 
 const TextWidget = props => {
-  const { formContext, rawErrors } = props;
+  const { formContext, rawErrors = [{}] } = props;
 
   let path = {
     schema: [...formContext.schema, ...(rawErrors[0].schema || [])],

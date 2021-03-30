@@ -117,9 +117,9 @@ export function createContentType(content_type) {
   };
 }
 
-export function selectContentType(id) {
+export function selectContentType(id, version) {
   return function(dispatch) {
-    dispatch(getSchema(id));
+    dispatch(getSchema(id, version));
     dispatch(push(`/cms/edit`));
   };
 }
@@ -129,6 +129,7 @@ export function selectFieldType(path, change) {
     dispatch(updateByPath(path, change));
   };
 }
+
 export function updateCurrentSchemaWithField(schema) {
   return function(dispatch, getState) {
     let state = getState().schemaWizard;
