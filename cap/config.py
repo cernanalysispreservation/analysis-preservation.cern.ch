@@ -819,7 +819,7 @@ PDF_FORUM_MAIL = os.environ.get("CAP_PDF_FORUM_MAIL")
 CONVENERS_ML_MAIL = os.environ.get("CAP_CONVENERS_ML_MAIL")
 CONVENERS_ML_JIRA_MAIL = os.environ.get("CAP_CONVENERS_ML_JIRA_MAIL")
 CMS_HYPERNEWS_EMAIL_FORMAT = os.environ.get("CAP_CMS_HYPERNEWS_EMAIL_FORMAT")
-CMS_STATS_COMMITEE_AND_PAGS = get_cms_stats_questionnaire_contacts()
+CMS_STATS_COMMITTEE_AND_PAGS = get_cms_stats_questionnaire_contacts()
 
 CMS_KEYWORDS_SPREADSHEET = os.environ.get("CAP_CMS_KEYWORDS_SPREADSHEET")
 

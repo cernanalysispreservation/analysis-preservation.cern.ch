@@ -11,7 +11,7 @@
       "actions": {
         "publish": {
           "subject": {
-            "default": "CMS Statistics Committee"
+             "func": "get_cms_stat_subject"
           },
           "message": {
             "func": "get_cms_stat_message"
@@ -64,7 +64,7 @@
         },
         "review": {
           "subject": {
-            "default": "CMS Questionnaire"
+            "func": "get_review_subject"
           },
           "message": {
             "func": "get_review_message"
