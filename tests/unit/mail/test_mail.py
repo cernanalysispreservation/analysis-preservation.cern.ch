@@ -38,10 +38,32 @@ def test_create_and_send_no_recipients_fails(app):
 
 @patch('cap.modules.mail.utils.current_user')
 def test_send_mail_published(mock_user, app, users, create_deposit, create_schema, client, auth_headers_for_user):
+    config = {
+        "notifications": {
+            "actions": {
+                "publish": {
+                    "subject": {"func": "get_cms_stat_subject"},
+                    "message": {"func": "get_cms_stat_message"},
+                    "recipients": {
+                        "func": "get_cms_stat_recipients",
+                        "owner": True,
+                        "current_user": True,
+                        "conditions": [{
+                            "path": "ml_app_use",
+                            "if": ["exists"],
+                            "values": [True],
+                            "op": "and",
+                            "mails": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
+                        }]
+                    }
+                }
+            }
+        }
+    }
     mock_user.email = 'test@cern.ch'
     user = users['cms_user']
 
-    create_schema('cms-stats-questionnaire', experiment='CMS', version="0.0.1")
+    create_schema('cms-stats-questionnaire', experiment='CMS', version="0.0.1", config=config)
 
     with app.app_context():
         with app.extensions['mail'].record_messages() as outbox:
