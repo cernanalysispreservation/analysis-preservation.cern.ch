@@ -136,8 +136,6 @@ class FileItem extends React.Component {
       year: "numeric"
     };
 
-    let versions = this.props.versions.toJS();
-
     return file ? (
       <Box
         key={file.key}
@@ -239,8 +237,8 @@ class FileItem extends React.Component {
                   <Spinning />
                 </Box>
               ) : (
-                versions
-                  .filter(item => item.key === this.props.filename)
+                this.props.versions
+                  .filter(item => item.get("key") === this.props.filename)
                   .map((item, index) => (
                     <Box
                       margin={{ vertical: "small" }}
@@ -255,11 +253,11 @@ class FileItem extends React.Component {
                     >
                       <Box direction="row" responsive={false} align="center">
                         <Box margin={{ right: "small" }}>
-                          {this._getIcon(item.mimetype)}
+                          {this._getIcon(item.get("mimetype"))}
                         </Box>
-                        {item.checksum}
+                        {item.get("checksum")}
                       </Box>
-                      <Box style={{ opacity: item.is_head ? 1 : 0 }}>
+                      <Box style={{ opacity: item.get("is_head") ? 1 : 0 }}>
                         <Tag
                           text="latest"
                           color={{
@@ -270,7 +268,7 @@ class FileItem extends React.Component {
                         />
                       </Box>
                       <Box>
-                        {new Date(item.created).toLocaleString(
+                        {new Date(item.get("created")).toLocaleString(
                           "en-GB",
                           timeOptions
                         )}
@@ -279,13 +277,15 @@ class FileItem extends React.Component {
                       <Box>{prettyBytes(parseInt(file.size))}</Box>
                       <Box
                         onClick={() =>
-                          this.downloadVersionFile(item.links.self)
+                          this.downloadVersionFile(
+                            item.get("links").get("self")
+                          )
                         }
                       />
                       <Box>
                         <Anchor
                           icon={<DownloadIcon size="xsmall" />}
-                          href={item.links.self}
+                          href={item.get("links").get("self")}
                           download
                         />
                       </Box>

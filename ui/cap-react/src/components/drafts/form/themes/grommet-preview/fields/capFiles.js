@@ -18,8 +18,7 @@ class CapField extends React.Component {
       ? `/api/files/${bucket_id}/${this.props.formData}`
       : `${this.props.links.bucket}/${this.props.formData}`;
 
-    let keys = Object.keys(this.props.files.toJS());
-    let missedFileError = !keys.includes(this.props.formData);
+    let missedFileError = !this.props.files.has(this.props.formData);
 
     return (
       <Box

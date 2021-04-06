@@ -172,7 +172,6 @@ DraftEditor.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    all: state.draftItem.toJS(),
     schemaId: state.draftItem.get("schema"),
     draft_id: state.draftItem.get("id"),
     // schemasLoading: state.draftItem.getIn(["current_item", "schemasLoading"]),

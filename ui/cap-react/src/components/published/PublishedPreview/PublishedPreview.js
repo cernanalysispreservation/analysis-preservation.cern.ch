@@ -124,7 +124,7 @@ class PublishedPreview extends React.Component {
           {this.props.schemas ? (
             <Box flex={true}>
               <FormHeader
-                title={this.props.metadata.toJS().general_title}
+                title={this.props.metadata.get("general_title")}
                 tags={this.getTagsList()}
                 reviewAnchor={
                   this.props.canReview && (

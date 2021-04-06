@@ -33,7 +33,6 @@ let ArrayUtils = function(props) {
 
   let update = dropIndex => {
     let _formErrors = formErrors
-      .toJS()
       .filter(errorPath => !errorPath.startsWith(`${propId}_${dropIndex}`))
       .map(errorPath => {
         if (errorPath.startsWith(propId)) {

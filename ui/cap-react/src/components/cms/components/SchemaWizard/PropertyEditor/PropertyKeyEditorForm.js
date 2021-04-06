@@ -4,10 +4,11 @@ import { Box, Heading } from "grommet";
 import { AiOutlineUp, AiOutlineDown } from "react-icons/ai";
 import Form from "../../../../drafts/form/GrommetForm";
 import fieldTypes from "../../utils/fieldTypes";
+import { Map } from "immutable";
 
 const PropertyKeyEditorForm = ({
-  uiSchema = {},
-  schema = {},
+  uiSchema = Map({}),
+  schema = Map({}),
   formData = {},
   onChange = null,
   optionsSchemaObject,
@@ -21,25 +22,30 @@ const PropertyKeyEditorForm = ({
   // in case we can not define the type of the element from the uiSchema,
   // extract the type from the schema
   if (
-    !uiSchema ||
-    (!uiSchema["ui:widget"] && !uiSchema["ui:field"] && !uiSchema["ui:object"])
+    uiSchema.size === 0 ||
+    (!uiSchema.has("ui:widget") &&
+      !uiSchema.has("ui:field") &&
+      !uiSchema.has("ui:object"))
   ) {
-    type = schema.type === "string" ? "text" : schema.type;
+    type = schema.get("type") === "string" ? "text" : schema.get("type");
   } else {
-    if (uiSchema["ui:widget"]) {
-      type = uiSchema["ui:widget"];
+    if (uiSchema.has("ui:widget")) {
+      type = uiSchema.get("ui:widget");
     }
-    if (uiSchema["ui:field"]) {
-      type = uiSchema["ui:field"];
+    if (uiSchema.has("ui:field")) {
+      type = uiSchema.get("ui:field");
       if (
-        uiSchema["ui:field"] === "idFetcher" &&
-        uiSchema["ui:servicesList"].length < 3
+        uiSchema.get("ui:field") === "idFetcher" &&
+        uiSchema.get("ui:servicesList").size < 3
       ) {
-        type = uiSchema["ui:servicesList"][0].value;
+        type = uiSchema
+          .get("ui:servicesList")
+          .first()
+          .get("value");
       }
     }
-    if (uiSchema["ui:object"]) {
-      type = uiSchema["ui:object"];
+    if (uiSchema.has("ui:object")) {
+      type = uiSchema.get("ui:object");
     }
   }
 
