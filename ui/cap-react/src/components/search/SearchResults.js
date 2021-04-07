@@ -20,49 +20,21 @@ class SearchResults extends React.Component {
   }
 
   render() {
-    return this.props.results.length > 0 ? (
+    const timeOptions = {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    };
+    return this.props.results.size > 0 ? (
       <Box colorIndex="light-2">
         <List className="search_result_box">
           {this.props.results.map((item, index) => {
-            // let rights = "";
-
-            let {
-              id,
-              // is_owner,
-              // can_admin,
-              // can_update,
-              updated,
-              status,
-              labels,
-              created,
-              created_by = null,
-              metadata = {}
-            } = item;
-
-            let {
-              general_title: general_title,
-              basic_info: { abstract: abstract } = {}
-            } = metadata;
-
-            const timeOptions = {
-              day: "numeric",
-              month: "long",
-              year: "numeric"
-            };
-
-            const getTitle = () => {
-              let title =
-                !general_title || general_title.trim() === ""
-                  ? "Untitled Document"
-                  : general_title;
-              return title;
-            };
-
-            // if (!is_owner && (can_update || can_admin)) rights = "contributor";
-            // else if (is_owner) rights = "owner";
-
             return (
-              <ListItem key={`${id}-${index}`} separator="none" pad="none">
+              <ListItem
+                key={`${item.get("id")}-${index}`}
+                separator="none"
+                pad="none"
+              >
                 <Box
                   colorIndex="light-1"
                   margin={{ vertical: "small" }}
@@ -79,8 +51,8 @@ class SearchResults extends React.Component {
                       <Anchor
                         path={
                           status === "published"
-                            ? `/published/${id}`
-                            : `/drafts/${id}`
+                            ? `/published/${item.get("id")}`
+                            : `/drafts/${item.get("id")}`
                         }
                         style={{ textDecoration: "none", color: "#666" }}
                         reverse
@@ -91,7 +63,11 @@ class SearchResults extends React.Component {
                           size="medium"
                           style={{ color: "rgb(0,0,0)" }}
                         >
-                          {getTitle()}
+                          {item.hasIn(["metadata", "general_title"]) &&
+                          item.getIn(["metadata", "general_title"]).trim() !==
+                            ""
+                            ? item.getIn(["metadata", "general_title"])
+                            : "No title provided"}
                         </Label>
                         <AiOutlineLink
                           size="18px"
@@ -115,7 +91,10 @@ class SearchResults extends React.Component {
                   </Box>
                   <Box>
                     <Label margin="none" size="small">
-                      {new Date(created).toLocaleString("en-GB", timeOptions)}
+                      {new Date(item.get("created")).toLocaleString(
+                        "en-GB",
+                        timeOptions
+                      )}
                     </Label>
                     <Box
                       flex={false}
@@ -124,20 +103,24 @@ class SearchResults extends React.Component {
                       margin={{ top: "small" }}
                       responsive={false}
                     >
-                      {labels.map((item, index) => {
-                        return (
-                          <Box key={index} style={{ margin: "2px 4px 2px 0" }}>
-                            <Tag text={item} />
-                          </Box>
-                        );
-                      })}
+                      {item.has("labels") &&
+                        item.get("labels").map((item, index) => {
+                          return (
+                            <Box
+                              key={index}
+                              style={{ margin: "2px 4px 2px 0" }}
+                            >
+                              <Tag text={item} />
+                            </Box>
+                          );
+                        })}
                     </Box>
                   </Box>
 
-                  {abstract && (
+                  {item.hasIn(["metadata", "basic_info", "abstract"]) && (
                     <Box margin={{ top: "small" }}>
                       <Truncate lines={2} ellipsis={<span>...</span>}>
-                        {abstract}
+                        {item.getIn(["metadata", "basic_info", "abstract"])}
                       </Truncate>
                     </Box>
                   )}
@@ -153,7 +136,7 @@ class SearchResults extends React.Component {
                       justify="center"
                       responsive={false}
                     >
-                      {created_by && (
+                      {item.has("created_by") && (
                         <React.Fragment>
                           <AiOutlineMail size="14px" />
                           <Label
@@ -164,7 +147,7 @@ class SearchResults extends React.Component {
                               marginLeft: "5px"
                             }}
                           >
-                            {created_by.email}
+                            {item.getIn(["created_by", "email"])}
                           </Label>
                         </React.Fragment>
                       )}
@@ -175,9 +158,13 @@ class SearchResults extends React.Component {
                         size="small"
                         style={{ color: "rgba(0,0,0,0.5)" }}
                       >
-                        {updated && (
+                        {item.has("updated") && (
                           <React.Fragment>
-                            Updated <TimeAgo date={updated} minPeriod="60" />
+                            Updated{" "}
+                            <TimeAgo
+                              date={item.get("updated")}
+                              minPeriod="60"
+                            />
                           </React.Fragment>
                         )}
                       </Label>
@@ -194,7 +181,7 @@ class SearchResults extends React.Component {
 }
 
 SearchResults.propTypes = {
-  results: PropTypes.array.isRequired,
+  results: PropTypes.object.isRequired,
   history: PropTypes.object.isRequired,
   userId: PropTypes.string,
   size: PropTypes.string,

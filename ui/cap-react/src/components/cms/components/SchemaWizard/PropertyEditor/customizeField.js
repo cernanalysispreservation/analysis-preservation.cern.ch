@@ -115,6 +115,7 @@ class CustomizeField extends React.Component {
                   onClick={() => this.sizeChange(size)}
                   className={
                     this.props.uiSchema &&
+                    this.props.uiSchema.has("ui:options") &&
                     this.props.uiSchema.get("ui:options").size > 0 &&
                     this.props.uiSchema.getIn(["ui:options", "size"]) ===
                       size &&
@@ -153,6 +154,7 @@ class CustomizeField extends React.Component {
                   onClick={() => this.alignChange(align)}
                   className={
                     this.props.uiSchema &&
+                    this.props.uiSchema.has("ui:options") &&
                     this.props.uiSchema.get("ui:options").size > 0 &&
                     this.props.uiSchema.getIn(["ui:options", "align"]) ===
                       align &&

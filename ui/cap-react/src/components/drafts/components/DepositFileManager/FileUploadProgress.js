@@ -17,8 +17,8 @@ class FileManager extends React.Component {
         <Box flex={true}>
           {this.props.filesToUpload &&
             this.props.filesToUpload.size > 0 &&
-            this.props.filesToUpload.mapKeys(file => (
-              <FileUploadProgressItem key={file} file_key={file} />
+            this.props.filesToUpload.map(file => (
+              <FileUploadProgressItem key={file} file_key={file.key} />
             ))}
         </Box>
       </Box>

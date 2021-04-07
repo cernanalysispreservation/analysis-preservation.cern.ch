@@ -278,14 +278,14 @@ class FileItem extends React.Component {
                       <Box
                         onClick={() =>
                           this.downloadVersionFile(
-                            item.get("links").get("self")
+                            item.getIn(["links", "self"])
                           )
                         }
                       />
                       <Box>
                         <Anchor
                           icon={<DownloadIcon size="xsmall" />}
-                          href={item.get("links").get("self")}
+                          href={item.getIn(["links", "self"])}
                           download
                         />
                       </Box>
