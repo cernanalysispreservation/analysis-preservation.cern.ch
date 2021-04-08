@@ -33,7 +33,7 @@ export function fetchDashboard() {
         dispatch(dashboardQuerySuccess(results));
       })
       .catch(error => {
-        dispatch(dashboardQueryError(error));
+        dispatch(dashboardQueryError({...error.response}));
       });
   };
 }

@@ -809,14 +809,11 @@ export function getDraftByIdAndInitForm(draft_id) {
         if (bucket_link) dispatch(getBucketByUri(bucket_link));
       })
       .catch(error => {
-        const e = error.response
-          ? error.response.data
-          : {
+        let  e = error.response|| {
               status: 400,
               message:
                 "Something went wrong with your request. Please try again"
             };
-
         dispatch(draftsItemError(e));
       });
   };
