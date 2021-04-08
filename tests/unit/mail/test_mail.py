@@ -28,7 +28,7 @@ from pytest import raises
 from mock import patch
 
 from invenio_deposit.signals import post_action
-from cap.modules.mail.utils import create_and_send
+from cap.modules.mail.tasks import create_and_send
 
 
 def test_create_and_send_no_recipients_fails(app):
@@ -36,7 +36,7 @@ def test_create_and_send_no_recipients_fails(app):
         create_and_send(None, None, 'Test subject', [])
 
 
-@patch('cap.modules.mail.utils.current_user')
+@patch('cap.modules.mail.users.current_user')
 def test_send_mail_published(mock_user, app, users, create_deposit, create_schema, client, auth_headers_for_user):
     config = {
         "notifications": {
@@ -102,7 +102,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit, create_schem
             # message
             assert 'Title: test analysis' in hypernews_mail.body
             assert 'Submitted by test@cern.ch' in hypernews_mail.body
-            assert f'Questionnaire URL : http://analysispreservation.cern.ch/published/{resp.json["recid"]}' \
+            assert f'Questionnaire URL: http://analysispreservation.cern.ch/published/{resp.json["recid"]}' \
                    in hypernews_mail.body
             assert 'https://cms.cern.ch/iCMS/analysisadmin/cadi?ancode=ABC-11-111' in hypernews_mail.body
             # recipients
@@ -113,7 +113,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit, create_schem
             # message
             assert 'Title: test analysis' in standard_mail.html
             assert 'Submitted by test@cern.ch' in standard_mail.html
-            assert f'Questionnaire URL : http://analysispreservation.cern.ch/published/{resp.json["recid"]}' \
+            assert f'Questionnaire URL: http://analysispreservation.cern.ch/published/{resp.json["recid"]}' \
                    in standard_mail.html
             assert 'https://cms.cern.ch/iCMS/analysisadmin/cadi?ancode=ABC-11-111' in standard_mail.html
             # recipients
@@ -123,7 +123,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit, create_schem
             assert 'hn-cms-ABC-11-111@cern0.ch' not in standard_mail.bcc
 
 
-@patch('cap.modules.mail.utils.current_user')
+@patch('cap.modules.mail.users.current_user')
 def test_send_mail_published_with_signal_failure(
         mock_user, app, users, create_deposit, create_schema, client, auth_headers_for_user, json_headers):
     mock_user.email = 'test@cern.ch'

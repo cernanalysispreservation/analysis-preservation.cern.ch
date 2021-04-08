@@ -52,7 +52,6 @@ from werkzeug.local import LocalProxy
 from cap.modules.deposit.errors import DisconnectWebhookError, FileUploadError
 from cap.modules.deposit.validators import NoRequiredValidator
 from cap.modules.experiments.permissions import exp_need_factory
-from cap.modules.mail.post import post_action_notifications
 from cap.modules.records.api import CAPRecord
 from cap.modules.records.errors import get_error_path
 from cap.modules.repos.errors import GitError

@@ -22,45 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 import re
-
-from .custom.utils import create_analysis_url
 from .tasks import create_and_send
-from .attributes import generate_recipients, generate_message, generate_subject
-
-
-def post_action_notifications(action=None, deposit=None, host_url=None):
-    """
-    Notification through mail, after specified deposit actions.
-    The procedure followed to get the recipients will be described here:
-
-    - according to the action name, we retrieve the schema config, and try to
-      get the recipients
-    - first we retrieve the config-related recipients, and then through custom
-      functions, any additional ones
-    - similar procedure for the messages, subjects
-    - send mails, according to the different actions
-    """
-    action_config = deposit.schema.config.get('notifications', {}) \
-        .get('actions', {}) \
-        .get(action)
-
-    if not action_config:
-        return
-
-    recipients = generate_recipients(deposit, action_config)
-    if recipients:
-        message = generate_message(deposit, host_url, action_config)
-        subject = generate_subject(deposit, action_config)
-
-        if action == "publish":
-            recid, record = deposit.fetch_published()
-            send_mail_on_publish(recid.pid_value, host_url, record.revision_id,
-                                 message, subject, recipients)
-
-        if action == "review":
-            analysis_url = create_analysis_url(deposit)
-            send_mail_on_review(analysis_url, host_url,
-                                message, subject, recipients)
 
 
 def send_mail_on_publish(recid, url, revision,

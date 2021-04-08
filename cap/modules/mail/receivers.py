@@ -23,38 +23,42 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 from flask import request
 
-from .utils import NOTIFICATION_RECEPIENT, generate_notification_attrs, \
-    send_mail_on_review, send_mail_on_publish, create_analysis_url
+from .custom.utils import create_analysis_url
+from .attributes import generate_recipients, generate_message, generate_subject
+from .post import send_mail_on_publish, send_mail_on_review
 
 
 def post_action_notifications(sender, action=None, pid=None, deposit=None):
-    """Method to run after a deposit action ."""
-    schema = deposit.get("$schema")
-    recipients_config = NOTIFICATION_RECEPIENT.get(schema, {}).get(action)
-    host_url = request.host_url
+    """
+    Notification through mail, after specified deposit actions.
+    The procedure followed to get the recipients will be described here:
 
-    if recipients_config:
-        subject, message, recipients = generate_notification_attrs(
-            deposit, host_url, recipients_config)
+    - according to the action name, we retrieve the schema config, and try to
+      get the recipients
+    - first we retrieve the config-related recipients, and then through custom
+      functions, any additional ones
+    - similar procedure for the messages, subjects
+    - send mails, according to the different actions
+    """
+    action_config = deposit.schema.config.get('notifications', {}) \
+        .get('actions', {}) \
+        .get(action)
 
-        if recipients:
-            if action == "publish":
-                recid, record = deposit.fetch_published()
+    if not action_config:
+        return
 
-                send_mail_on_publish(
-                    recid.pid_value,
-                    record.revision_id,
-                    host_url,
-                    recipients,
-                    message,
-                    subject_prefix=subject)
+    recipients = generate_recipients(deposit, action_config)
+    if recipients:
+        host_url = request.host_url
+        message = generate_message(deposit, host_url, action_config)
+        subject = generate_subject(deposit, action_config)
 
-            if action == "review":
-                analysis_url = create_analysis_url(deposit)
+        if action == "publish":
+            recid, record = deposit.fetch_published()
+            send_mail_on_publish(recid.pid_value, host_url, record.revision_id,
+                                 message, subject, recipients)
 
-                send_mail_on_review(
-                    analysis_url,
-                    host_url,
-                    recipients,
-                    message,
-                    subject_prefix=subject)
+        if action == "review":
+            analysis_url = create_analysis_url(deposit)
+            send_mail_on_review(analysis_url, host_url,
+                                message, subject, recipients)

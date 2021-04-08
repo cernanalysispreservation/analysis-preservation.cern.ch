@@ -22,11 +22,11 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-import cap.modules.mail.custom.recipients as custom_recipients
-import cap.modules.mail.custom.messages as custom_messages
-import cap.modules.mail.custom.subjects as custom_subjects
+from .custom import recipients as custom_recipients
+from .custom import messages as custom_messages
+from .custom import subjects as custom_subjects
 
-from cap.modules.mail.conditions import CONDITION_METHODS
+from .conditions import CONDITION_METHODS
 
 
 def get_recipients_from_config(record, config):
