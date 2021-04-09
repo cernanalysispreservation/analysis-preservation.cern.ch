@@ -178,7 +178,6 @@ class DepositAccess extends React.Component {
 
 DepositAccess.propTypes = {
   match: PropTypes.object,
-  getDraftById: PropTypes.func,
   loading: PropTypes.bool,
   draft_id: PropTypes.string,
   draft: PropTypes.object,
@@ -200,7 +199,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    // getDraftById: (id, fet) => dispatch(getDraftById(id, fet)),
     handlePermissions: (draft_id, type, email, action, operation) =>
       dispatch(handlePermissions(draft_id, type, email, action, operation))
   };

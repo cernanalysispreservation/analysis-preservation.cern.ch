@@ -187,7 +187,6 @@ class DraftsItemNav extends React.Component {
 }
 
 DraftsItemNav.propTypes = {
-  getDraftById: PropTypes.func,
   match: PropTypes.object.isRequired,
   status: PropTypes.string,
   formErrors: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),

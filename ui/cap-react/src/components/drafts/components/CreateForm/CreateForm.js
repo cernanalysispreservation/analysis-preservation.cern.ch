@@ -131,7 +131,6 @@ CreateForm.propTypes = {
 
 const mapStateToProps = state => ({
   id: state.draftItem.get("id"),
-  errors: state.draftItem.get("errors"),
   metadata: state.draftItem.get("metadata"),
   formData: state.draftItem.get("formData"),
   contentTypes: state.auth.getIn(["currentUser", "depositGroups"])

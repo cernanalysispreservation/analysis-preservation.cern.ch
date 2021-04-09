@@ -14,7 +14,6 @@ const Wrapper = styled.div`
   border-radius: 3px;
   padding: ${props => props.padding};
   display: flex;
-
   align-items: center;
 
   ${({ type }) =>

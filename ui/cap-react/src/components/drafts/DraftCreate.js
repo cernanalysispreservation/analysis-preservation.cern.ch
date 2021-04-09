@@ -19,7 +19,6 @@ class DraftCreate extends React.Component {
 DraftCreate.propTypes = {
   contentTypes: PropTypes.object,
   toggle: PropTypes.func,
-  createDraft: PropTypes.func,
   formData: PropTypes.object,
   metadata: PropTypes.object
 };
