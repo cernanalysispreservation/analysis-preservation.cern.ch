@@ -21,44 +21,62 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from flask import request
+from flask import current_app, request
 
-from .custom.utils import create_analysis_url
-from .attributes import generate_recipients, generate_message, generate_subject
-from .post import send_mail_on_publish, send_mail_on_review
+from .attributes import generate_recipients, generate_message,\
+    generate_subject, generate_template
+from .tasks import create_and_send
+from .utils import create_analysis_url
 
 
 def post_action_notifications(sender, action=None, pid=None, deposit=None):
     """
     Notification through mail, after specified deposit actions.
-    The procedure followed to get the recipients will be described here:
+    The procedure followed to get the mail attrs will be described here:
 
-    - according to the action name, we retrieve the schema config, and try to
-      get the recipients
-    - first we retrieve the config-related recipients, and then through custom
-      functions, any additional ones
-    - similar procedure for the messages, subjects
-    - send mails, according to the different actions
+    - Get the config for the action that triggered the receiver.
+    - Through the configuration, retrieve the recipients, subject, template
+      and message, and render them when needed.
+    - Create the message and mail contexts (attributes), and pass them to
+      the `create_and_send` task.
     """
-    action_config = deposit.schema.config.get('notifications', {}) \
+    sender = current_app.config.get('MAIL_DEFAULT_SENDER')
+    action_configs = deposit.schema.config.get('notifications', {}) \
         .get('actions', {}) \
-        .get(action)
+        .get(action, [])
 
-    if not action_config:
-        return
+    for config in action_configs:
+        recipients, recipients_type = generate_recipients(deposit, config)
+        subject = generate_subject(deposit, config, action)
 
-    recipients = generate_recipients(deposit, action_config)
-    if recipients:
-        host_url = request.host_url
-        message = generate_message(deposit, host_url, action_config)
-        subject = generate_subject(deposit, action_config)
+        if not recipients:
+            current_app.logger.error(
+                f'Mail Error from {sender} with subject: {subject}.\n'
+                f'Empty recipient list.')
+
+        message = generate_message(deposit, config, action)
+        template, template_type = generate_template(deposit, config, action)
+
+        mail_ctx = {
+            'sender': sender,
+            'subject': subject,
+            recipients_type: recipients
+        }
 
         if action == "publish":
             recid, record = deposit.fetch_published()
-            send_mail_on_publish(recid.pid_value, host_url, record.revision_id,
-                                 message, subject, recipients)
+            msg_ctx = dict(recid=recid.pid_value,
+                           revision=record.revision_id,
+                           url=request.host_url,
+                           message=message)
 
         if action == "review":
             analysis_url = create_analysis_url(deposit)
-            send_mail_on_review(analysis_url, host_url,
-                                message, subject, recipients)
+            msg_ctx = dict(analysis_url=analysis_url,
+                           url=request.host_url,
+                           message=message)
+
+        create_and_send.delay(
+            template, msg_ctx, mail_ctx,
+            type=template_type
+        )

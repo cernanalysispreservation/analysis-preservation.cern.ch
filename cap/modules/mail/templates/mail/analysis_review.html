@@ -6,7 +6,7 @@
 
     {% if message %}
         <hr/>
-        <p>{{message}}</p>
+        <p>{{ message | safe }}</p>
     {% endif %}
 {% endblock %}
 

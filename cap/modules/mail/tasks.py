@@ -32,31 +32,13 @@ from invenio_mail.api import TemplatedMessage
                  'max_retries': 3,
                  'countdown': 10
              })
-def create_and_send(template, ctx, subject, recipients,
-                    sender=None, type=None):
+def create_and_send(template, ctx, mail_ctx, type=None):
     if not current_app.config['CAP_SEND_MAIL']:
         return
 
-    sender = sender or current_app.config.get('MAIL_DEFAULT_SENDER')
-    try:
-        assert recipients
+    if type == "plain":
+        msg = TemplatedMessage(template_body=template, ctx=ctx, **mail_ctx)
+    else:
+        msg = TemplatedMessage(template_html=template, ctx=ctx, **mail_ctx)
 
-        if type == "plain":
-            msg = TemplatedMessage(template_body=template,
-                                   ctx=ctx,
-                                   **dict(sender=sender,
-                                          bcc=recipients,
-                                          subject=subject))
-        else:
-            msg = TemplatedMessage(template_html=template,
-                                   ctx=ctx,
-                                   **dict(sender=sender,
-                                          bcc=recipients,
-                                          subject=subject))
-        current_app.extensions['mail'].send(msg)
-
-    except AssertionError:
-        current_app.logger.error(
-            f'Mail Error from {sender} with subject: {subject}.\n'
-            f'Empty recipient list.')
-        raise AssertionError
+    current_app.extensions['mail'].send(msg)

@@ -22,19 +22,11 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+from flask_principal import RoleNeed
+from invenio_access.permissions import Permission
+
 from .users import get_record_owner, get_current_user
-
-
-def path_value_equals(element, JSON):
-    """Given a string path, retrieve the JSON item."""
-    paths = element.split(".")
-    data = JSON
-    try:
-        for i in range(0, len(paths)):
-            data = data[paths[i]]
-    except KeyError:
-        return None
-    return data
+from .utils import path_value_equals
 
 
 def equals(record, path, value):
@@ -57,6 +49,10 @@ def is_not_in(record, path, value):
     return True if data and value not in data else False
 
 
+def has_permission(record, path, value):
+    return Permission(RoleNeed(value)).can()
+
+
 CONDITION_METHODS = {
     # conditions
     'equals': equals,
@@ -66,5 +62,8 @@ CONDITION_METHODS = {
 
     # flags
     'owner': get_record_owner,
-    'current_user': get_current_user
+    'current_user': get_current_user,
+
+    # mail
+    'has_permission': has_permission
 }

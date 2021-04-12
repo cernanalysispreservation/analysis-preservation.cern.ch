@@ -22,35 +22,29 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from flask import current_app
+from flask import current_app, request
 
-from .utils import create_base_message
 from ..users import get_record_owner, get_current_user
+from ..utils import create_analysis_url
 
 
-def get_cms_stat_message(record, host_url, config=None):
-    """Message func for cms questionnaire."""
-    committee_pags = current_app.config.get("CMS_STATS_COMMITTEE_AND_PAGS")
+def create_questionnaire_url(record, config):
+    return f"{request.host_url}{create_analysis_url(record)}\n"
+
+
+def get_submitter_mail(record, config):
+    return get_current_user(record)
+
+
+def get_reviewer_mail(record, config):
+    return get_record_owner(record)
+
+
+def get_reviewer_params(record, config):
+    """Retrieve reviewer parameters according to the working group."""
+    committee_pags = current_app.config.get("CMS_STATS_COMMITEE_AND_PAGS")
     working_group = record.get('analysis_context', {}).get('wg')
-    submitter_mail = get_current_user(record)
 
-    reviewer_params = committee_pags.get(working_group, {}).get("params", {}) \
-        if working_group and committee_pags \
-        else {}
-
-    message = create_base_message(record, host_url, reviewer_params)
-    message += f"Submitted by {submitter_mail}."
-
-    return message
-
-
-def get_review_message(record, host_url, config=None):
-    """Message func for review."""
-    # owner and reviewer mail
-    owner_mail = get_record_owner(record)
-    reviewer_mail = get_current_user(record)
-
-    message = create_base_message(record, host_url)
-    message += f"Submitted by {owner_mail}, and reviewed by {reviewer_mail}."
-
-    return message
+    if working_group and committee_pags:
+        return committee_pags.get(working_group, {}).get("params", {})
+    return {}

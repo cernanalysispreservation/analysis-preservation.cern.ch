@@ -22,54 +22,14 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-import re
 from flask import current_app
-
-from .utils import check_for_permission
 
 
 def get_cms_stat_recipients(record, config=None):
-    """
-    Adds hypernews mail, if the cadi-id is well-formed.
-    Also adds PAGS committee data from JSON file.
-    """
-    hypernews_mail = current_app.config.get("CMS_HYPERNEWS_EMAIL_FORMAT")
-    cadi_regex = current_app.config.get("CADI_REGEX")
-    committee_pags = current_app.config.get("CMS_STATS_COMMITTEE_AND_PAGS")
-
+    """Adds PAGS committee data from JSON file."""
+    committee_pags = current_app.config.get("CMS_STATS_COMMITEE_AND_PAGS")
     working_group = record.get('analysis_context', {}).get('wg')
-    recipients = committee_pags.get(working_group, {}).get("contacts", []) \
-        if working_group and committee_pags \
-        else []
 
-    cadi_id = record.get('analysis_context', {}).get('cadi_id')
-
-    if cadi_id and re.match(cadi_regex, cadi_id):
-        recipients.append(hypernews_mail.format(cadi_id))
-
-    return recipients
-
-
-def get_review_recipients(record, config=None):
-    """Adds hypernews mail, if the cadi-id is well-formed."""
-    hypernews_mail = current_app.config.get("CMS_HYPERNEWS_EMAIL_FORMAT")
-    cadi_regex = current_app.config.get("CADI_REGEX")
-
-    recipients = []
-    cadi_id = record.get('analysis_context', {}).get('cadi_id')
-
-    # if CADI ID mail Hypernews if review from admin reviewer (stat committee)
-    if cadi_id:
-        cms_stats_committee_email = current_app.config.get(
-            "CMS_STATS_QUESTIONNAIRE_ADMIN_ROLES")
-
-        # check that current user is a aon reviewer
-        if cms_stats_committee_email and \
-                check_for_permission(cms_stats_committee_email):
-            # mail for reviews - Hypernews
-            # should be sent to hn-cms-<cadi-id>@cern.ch if
-            # well-formed cadi id
-            if re.match(cadi_regex, cadi_id) and hypernews_mail:
-                recipients.append(hypernews_mail.format(cadi_id))
-
-    return recipients
+    if working_group and committee_pags:
+        return committee_pags.get(working_group, {}).get("contacts", [])
+    return []

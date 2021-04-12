@@ -4,80 +4,267 @@
   "fullname":"CMS Statistics Questionnaire",
   "experiment":"CMS",
   "is_indexed":true,
-  "use_deposit_as_record":true,
   "config": {
     "reviewable": true,
     "notifications": {
       "actions": {
-        "publish": {
-          "subject": {
-             "func": "get_cms_stat_subject"
-          },
-          "message": {
-            "func": "get_cms_stat_message"
-          },
-          "recipients": {
-            "func": "get_cms_stat_recipients",
-            "owner": true,
-            "current_user": true,
-            "conditions": [
-              {
-                "path": "parton_distribution_functions",
-                "if": ["exists"],
-                "values": [true],
-                "op": "and",
-                "mails": ["pdf-forum-placeholder@cern.ch"]
-              },
-              {
-                "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
-                "if": ["exists", "is_not_in"],
-                "values": [true, "No"],
-                "op": "and",
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
-              },
-              {
-                "path": "multivariate_discriminants.mva_use",
-                "if": ["equals"],
-                "values": ["Yes"],
-                "op": "and",
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
-              },
-              {
-                "path": "ml_app_use",
-                "if": ["exists"],
-                "values": [true],
-                "op": "and",
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
-              },
-              {
-                "path": "ml_survey.options",
-                "if": ["equals"],
-                "values": ["Yes"],
-                "op": "and",
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+        "publish": [
+          {
+            "subject": {
+              "template": "mail/subject/subject_published.html",
+              "ctx": {
+                "cadi_id": {
+                  "type": "path",
+                  "path": "analysis_context.cadi_id"
+                },
+                "revision": {
+                  "type": "path",
+                  "path": "_deposit.pid.revision_id"
+                }
               }
-            ],
-            "default": [
-              "some-recipient-placeholder@cern.ch"
-            ]
+            },
+            "message": {
+              "template": "mail/message/message_published.html",
+              "ctx": {
+                "cadi_id": {
+                  "type": "path",
+                  "path": "analysis_context.cadi_id"
+                },
+                "title": {
+                  "type": "path",
+                  "path": "general_title"
+                },
+                "questionnaire_url": {
+                  "type": "method",
+                  "method": "create_questionnaire_url"
+                },
+                "reviewer_params": {
+                  "type": "method",
+                  "method": "get_reviewer_params"
+                },
+                "submitter_mail": {
+                  "type": "method",
+                  "method": "get_submitter_mail"
+                }
+              }
+            },
+            "recipients": {
+              "func": "get_cms_stat_recipients",
+              "owner": true,
+              "current_user": true,
+              "conditions": [{
+                "op": "and",
+                "checks": [{
+                  "path": "parton_distribution_functions",
+                  "if": "exists",
+                  "value": true
+                }],
+                "mails": ["pdf-forum-placeholder@cern.ch"]
+              }, {
+                "op": "and",
+                "checks": [{
+                  "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
+                  "if": "exists",
+                  "value": true
+                }, {
+                  "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
+                  "if": "is_not_in",
+                  "value": "No"
+                }],
+                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+              }, {
+                "op": "and",
+                "checks": [{
+                  "path": "multivariate_discriminants.mva_use",
+                  "if": "equals",
+                  "value": "Yes"
+                }],
+                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+              }, {
+                "op": "and",
+                "checks": [{
+                  "path": "ml_app_use",
+                  "if": "exists",
+                  "value": true
+                }],
+                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+              }, {
+                "op": "and",
+                "checks": [{
+                  "path": "ml_survey.options",
+                  "if": "equals",
+                  "value": "Yes"
+                }],
+                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+              }],
+              "default": [
+                "some-recipient-placeholder@cern.ch"
+              ],
+              "type": "bcc"
+            }
+          }, {
+            "template": {
+              "default": "mail/analysis_plain_text.html",
+              "type": "plain"
+            },
+            "subject": {
+              "template": "mail/subject/subject_published.html",
+              "ctx": {
+                "cadi_id": {
+                  "type": "path",
+                  "path": "analysis_context.cadi_id"
+                },
+                "revision": {
+                  "type": "path",
+                  "path": "_deposit.pid.revision_id"
+                }
+              }
+            },
+            "message": {
+              "template": "mail/message/message_published_plain.html",
+              "ctx": {
+                "cadi_id": {
+                  "type": "path",
+                  "path": "analysis_context.cadi_id"
+                },
+                "title": {
+                  "type": "path",
+                  "path": "general_title"
+                },
+                "questionnaire_url": {
+                  "type": "method",
+                  "method": "create_questionnaire_url"
+                },
+                "reviewer_params": {
+                  "type": "method",
+                  "method": "get_reviewer_params"
+                },
+                "submitter_mail": {
+                  "type": "method",
+                  "method": "get_submitter_mail"
+                }
+              }
+            },
+            "recipients": {
+              "mail_formatted": {
+                "template": "mail/addresses/hypernews.html",
+                "ctx": {
+                  "cadi_id": {
+                    "type": "path",
+                    "path": "analysis_context.cadi_id"
+                  }
+                }
+              },
+              "type": "bcc"
+            }
           }
-        },
-        "review": {
-          "subject": {
-            "func": "get_review_subject"
-          },
-          "message": {
-            "func": "get_review_message"
-          },
-          "recipients": {
-            "func": "get_review_recipients",
-            "owner": true,
-            "current_user": true
+        ],
+        "review": [
+          {
+            "subject": {
+              "template": "mail/subject/subject_review.html",
+              "ctx": {
+                "cadi_id": {
+                  "type": "path",
+                  "path": "analysis_context.cadi_id"
+                }
+              }
+            },
+            "message": {
+              "template": "mail/message/message_review.html",
+              "ctx": {
+                "cadi_id": {
+                  "type": "path",
+                  "path": "analysis_context.cadi_id"
+                },
+                "title": {
+                  "type": "path",
+                  "path": "general_title"
+                },
+                "questionnaire_url": {
+                  "type": "method",
+                  "method": "create_questionnaire_url"
+                },
+                "submitter_mail": {
+                  "type": "method",
+                  "method": "get_submitter_mail"
+                },
+                "reviewer_mail": {
+                  "type": "method",
+                  "method": "get_reviewer_mail"
+                }
+              }
+            },
+            "recipients": {
+              "owner": true,
+              "current_user": true,
+              "type": "bcc"
+            }
+          }, {
+            "template": {
+              "default": "mail/analysis_plain_text.html",
+              "type": "plain"
+            },
+             "subject": {
+               "template": "mail/subject/subject_review.html",
+               "ctx": {
+                 "cadi_id": {
+                   "type": "path",
+                   "path": "analysis_context.cadi_id"
+                }
+              }
+            },
+            "message": {
+              "template": "mail/message/message_review_plain.html",
+              "ctx": {
+                "cadi_id": {
+                  "type": "path",
+                  "path": "analysis_context.cadi_id"
+                },
+                "title": {
+                  "type": "path",
+                  "path": "general_title"
+                },
+                "questionnaire_url": {
+                  "type": "method",
+                  "method": "create_questionnaire_url"
+                },
+                "submitter_mail": {
+                  "type": "method",
+                  "method": "get_submitter_mail"
+                },
+                "reviewer_mail": {
+                  "type": "method",
+                  "method": "get_reviewer_mail"
+                }
+              }
+            },
+            "recipients": {
+              "conditions": [{
+                "op": "and",
+                "checks": [{
+                  "path": "parton_distribution_functions",
+                  "if": "has_permission",
+                  "value": "comittee-mail@cern0.ch"
+                }],
+                "mail_formatted": {
+                  "template": "mail/addresses/hypernews.html",
+                  "ctx": {
+                    "cadi_id": {
+                      "type": "path",
+                      "path": "analysis_context.cadi_id"
+                    }
+                  }
+                }
+              }],
+              "type": "bcc"
+            }
           }
-        }
+        ]
       }
     }
   },
+  "use_deposit_as_record":true,
   "deposit_schema":{
     "additionalProperties":false,
     "$schema":"http://json-schema.org/draft-04/schema#",

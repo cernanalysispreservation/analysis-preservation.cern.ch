@@ -28,35 +28,120 @@ from pytest import raises
 from mock import patch
 
 from invenio_deposit.signals import post_action
-from cap.modules.mail.tasks import create_and_send
-
-
-def test_create_and_send_no_recipients_fails(app):
-    with raises(AssertionError):
-        create_and_send(None, None, 'Test subject', [])
 
 
 @patch('cap.modules.mail.users.current_user')
-def test_send_mail_published(mock_user, app, users, create_deposit, create_schema, client, auth_headers_for_user):
+def test_send_mail_published(mock_user, app, users, create_deposit,
+                             create_schema, client, auth_headers_for_user):
     config = {
         "notifications": {
             "actions": {
-                "publish": {
-                    "subject": {"func": "get_cms_stat_subject"},
-                    "message": {"func": "get_cms_stat_message"},
+                "publish": [{
+                    "template": {
+                        "default": "mail/analysis_plain_text.html",
+                        "type": "plain"
+                    },
+                    "subject": {
+                        "template": "mail/subject/subject_published.html",
+                        "ctx": {
+                            "cadi_id": {
+                                "type": "path",
+                                "path": "analysis_context.cadi_id"
+                            },
+                            "revision": {
+                                "type": "path",
+                                "path": "_deposit.pid.revision_id"
+                            }
+                        }
+                    },
+                    "message": {
+                        "template": "mail/message/message_published_plain.html",
+                        "ctx": {
+                            "cadi_id": {
+                                "type": "path",
+                                "path": "analysis_context.cadi_id"
+                            },
+                            "title": {
+                                "type": "path",
+                                "path": "general_title"
+                            },
+                            "questionnaire_url": {
+                                "type": "method",
+                                "method": "create_questionnaire_url"
+                            },
+                            "submitter_mail": {
+                                "type": "method",
+                                "method": "get_submitter_mail"
+                            }
+                        }
+                    },
+                    "recipients": {
+                        "mail_formatted": {
+                            "template": "mail/addresses/hypernews.html",
+                            "ctx": {
+                                "cadi_id": {
+                                    "type": "path",
+                                    "path": "analysis_context.cadi_id"
+                                }
+                            }
+                        },
+                        "type": "bcc"
+                    }
+                }, {
+                    "template": {
+                        "default": "mail/analysis_published.html"
+                    },
+                    "subject": {
+                        "template": "mail/subject/subject_published.html",
+                        "ctx": {
+                            "cadi_id": {
+                                "type": "path",
+                                "path": "analysis_context.cadi_id"
+                            },
+                            "revision": {
+                                "type": "path",
+                                "path": "_deposit.pid.revision_id"
+                            }
+                        }
+                    },
+                    "message": {
+                        "template": "mail/message/message_published.html",
+                        "ctx": {
+                            "cadi_id": {
+                                "type": "path",
+                                "path": "analysis_context.cadi_id"
+                            },
+                            "title": {
+                                "type": "path",
+                                "path": "general_title"
+                            },
+                            "questionnaire_url": {
+                                "type": "method",
+                                "method": "create_questionnaire_url"
+                            },
+                            "submitter_mail": {
+                                "type": "method",
+                                "method": "get_submitter_mail"
+                            }
+                        }
+                    },
                     "recipients": {
                         "func": "get_cms_stat_recipients",
                         "owner": True,
                         "current_user": True,
                         "conditions": [{
-                            "path": "ml_app_use",
-                            "if": ["exists"],
-                            "values": [True],
                             "op": "and",
+                            "checks": [
+                                {
+                                    "path": "ml_app_use",
+                                    "if": "exists",
+                                    "value": True,
+                                }
+                            ],
                             "mails": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
                         }]
                     }
-                }
+                }]
             }
         }
     }
@@ -107,7 +192,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit, create_schem
             assert 'https://cms.cern.ch/iCMS/analysisadmin/cadi?ancode=ABC-11-111' in hypernews_mail.body
             # recipients
             assert 'ml-conveners-test@cern0.ch' not in hypernews_mail.bcc
-            assert 'hn-cms-ABC-11-111@cern0.ch' in hypernews_mail.bcc
+            assert 'hn-cms-ABC-11-111@cern.ch' in hypernews_mail.bcc
 
             # standard
             # message
@@ -120,7 +205,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit, create_schem
             assert 'test@cern.ch' in standard_mail.bcc
             assert 'ml-conveners-test@cern0.ch' in standard_mail.bcc
             assert 'ml-conveners-jira-test@cern0.ch' in standard_mail.bcc
-            assert 'hn-cms-ABC-11-111@cern0.ch' not in standard_mail.bcc
+            assert 'hn-cms-ABC-11-111@cern.ch' not in standard_mail.bcc
 
 
 @patch('cap.modules.mail.users.current_user')

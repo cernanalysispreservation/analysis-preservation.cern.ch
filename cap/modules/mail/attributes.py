@@ -25,8 +25,10 @@
 from .custom import recipients as custom_recipients
 from .custom import messages as custom_messages
 from .custom import subjects as custom_subjects
+from .custom import templates as custom_templates
 
 from .conditions import CONDITION_METHODS
+from .utils import CONFIG_DEFAULTS, populate_template_from_ctx
 
 
 def get_recipients_from_config(record, config):
@@ -58,24 +60,32 @@ def get_recipients_from_config(record, config):
 
     # apply rules for conditions
     conditions = config.get('conditions', [])
-    for cond in conditions:
-        # the conditions of each list must all be True, in order to be accepted
-        # we enumerate and check method/value in pairs
-        condition_results = []
-        path = cond['path']
+    for condition in conditions:
+        # for each condition we have a group of checks to perform
+        # all of the checks should give a True/False result
+        operator = condition['op']
+        mails = condition.get('mails', [])
 
-        for i, method in enumerate(cond['if']):
-            condition_results.append(
-                CONDITION_METHODS[method](record, path, cond['values'][i])
+        formatted = condition.get('mail_formatted')
+        if formatted:
+            mails += [populate_template_from_ctx(record, formatted)]
+
+        check_results = []
+        checks = condition['checks']
+
+        for check in checks:
+            # get the method to apply, and use it on the required path/value
+            method = CONDITION_METHODS[check['if']]
+            check_results.append(
+                method(record, check.get('path'), check['value'])
             )
 
         # we check the validity of the condition depending on the operator:
         # - if 'and', then we need everything to be true
         # - if 'or' we need at least 1 true
-        op = cond['op']
-        if (op == 'and' and False not in condition_results) or \
-                (op == 'or' and True in condition_results):
-            recipients += cond['mails']
+        if (operator == 'and' and False not in check_results) or \
+                (operator == 'or' and True in check_results):
+            recipients += mails
 
     # remove duplicates
     return list(set(recipients))
@@ -84,9 +94,12 @@ def get_recipients_from_config(record, config):
 def generate_recipients(record, config):
     """
     Recipients generator for notification action.
-    Retrieves from config and from custom function if it exists
+    Retrieves from config and from custom function if it exists:
     - custom function name in the 'func' field of the recipients config
     - implementation should ALWAYS go in the mail.custom.recipients.py file
+
+    Also returns the `type` of the recipients that the mail should have, in
+    this case: recipients/bcc/cc.
     """
     re_config = config.get('recipients')
     if not re_config:
@@ -95,6 +108,10 @@ def generate_recipients(record, config):
     default = re_config.get('default', [])
     func = re_config.get('func')
     recipients = get_recipients_from_config(record, re_config)
+    formatted = re_config.get('mail_formatted')
+
+    # recipients type accepts: recipients, bcc, cc
+    _type = re_config.get('type', 'bcc')
 
     if default:
         recipients += default
@@ -103,50 +120,117 @@ def generate_recipients(record, config):
         custom_recipients_func = getattr(custom_recipients, func)
         recipients += custom_recipients_func(record, re_config)
 
-    return recipients
+    if formatted:
+        recipients += [populate_template_from_ctx(record, formatted)]
+
+    return recipients, _type
 
 
-def generate_message(record, host_url, config):
+def generate_message(record, config, action):
     """
     Message generator for notification action.
-    Retrieves from config and from custom function if it exists
+    Retrieves from config and from custom function if it exists:
     - custom function name in the 'func' field of the message config
     - implementation should ALWAYS go in the mail.custom.messages.py file
+    - if a template and context are available, it will be rendered and added
+      to the mail
+    - the default is None, where the mail sent will just show standard info
+      (analysis published, etc)
+
+    Example of message config:
+    "message": {
+      "template": "mail/message/message_review.html",
+      "ctx": {
+        "title": {
+          "type": "path",
+          "path": "general_title"
+        }
+      }
+    }
     """
     msg_config = config.get('message')
     if not msg_config:
         return
 
     default = msg_config.get('default')
-    func = msg_config.get('func')
-
     if default:
         return default
 
+    func = msg_config.get('func')
     if func:
         custom_message_func = getattr(custom_messages, func)
-        message = custom_message_func(record, host_url, config)
+        message = custom_message_func(record, config)
         return message
 
+    return populate_template_from_ctx(
+        record, msg_config, action,
+        module=custom_messages,
+        type='message'
+    )
 
-def generate_subject(record, config):
+
+def generate_subject(record, config, action):
     """
     Message generator for notification action.
     Retrieves from config and from custom function if it exists
     - custom function name in the 'func' field of the subject config
     - implementation should ALWAYS go in the mail.custom.subjects.py file
+    - the default, according to the `action`, is retrieved from the
+      `SUBJECT_DEFAULTS` in the `cap.mail.utils.py` file
+    Example of subject config:
+    "subject": {
+      "template": "mail/subject/subject_published.html",
+      "ctx": {
+        "cadi_id": {
+          "type": "path",
+          "path": "analysis_context.cadi_id"
+        }
+      }
+    }
     """
     subj_config = config.get('subject')
     if not subj_config:
-        return
+        return CONFIG_DEFAULTS['subject'][action]
 
     default = subj_config.get('default')
-    func = subj_config.get('func')
-
     if default:
         return default
 
+    func = subj_config.get('func')
     if func:
         custom_subject_func = getattr(custom_subjects, func)
         subject = custom_subject_func(record, config)
         return subject
+
+    return populate_template_from_ctx(
+        record, subj_config, action,
+        module=custom_subjects,
+        type='subject'
+    )
+
+
+def generate_template(record, config, action):
+    """
+    Template generator for notification action.
+    Retrieves from config and from custom function if it exists:
+    - custom function name in the 'func' field of the template config
+    - implementation should ALWAYS go in the mail.custom.templates.py file
+    - the default, according to the `action`, is retrieved from the
+      `TEMPLATE_DEFAULTS` in the `cap.mail.utils.py` file
+    """
+    template_config = config.get('template')
+    if not template_config:
+        return CONFIG_DEFAULTS['template'][action]
+
+    _type = template_config.get('type')
+
+    default = template_config.get('default')
+    if default:
+        template = default
+
+    func = template_config.get('func')
+    if func:
+        custom_template_func = getattr(custom_templates, func)
+        template = custom_template_func(record, config)
+
+    return template, _type
