@@ -22,6 +22,7 @@ import Notification from "../partials/Notification";
 import { publishedToDraftStatus } from "../../actions/draftItem";
 import ReviewModal from "../partials/Review/ReviewModal";
 import ReviewList from "../partials/Review/ReviewList";
+import DraftPreviewLoader from "./DraftPreviewLoader";
 
 const transformSchema = schema => {
   const schemaFieldsToRemove = [
@@ -159,6 +160,10 @@ const DraftPreview = props => {
     props.schemas && props.schemas.schema
       ? transformSchema(props.schemas.schema)
       : null;
+
+  if (props.loading) {
+    return <DraftPreviewLoader />;
+  }
 
   return (
     <Box
@@ -396,7 +401,8 @@ DraftPreview.propTypes = {
   history: PropTypes.object,
   canReview: PropTypes.bool,
   status: PropTypes.string,
-  edit: PropTypes.func
+  edit: PropTypes.func,
+  loading: PropTypes.bool
 };
 
 function mapStateToProps(state) {
@@ -410,14 +416,13 @@ function mapStateToProps(state) {
     repositories: state.draftItem.get("repositories"),
     metadata: state.draftItem.get("metadata"),
     status: state.draftItem.get("status"),
-
     access: state.draftItem.get("access"),
     schema: state.draftItem.get("schema"),
     // schemasLoading: state.draftItem.get("schemasLoading"),
-
     webhooks: state.draftItem.get("webhooks"),
     files: state.draftItem.get("bucket"),
-    revision: state.draftItem.get("revision")
+    revision: state.draftItem.get("revision"),
+    loading: state.draftItem.get("loading")
   };
 }
 

@@ -100,7 +100,7 @@ class DraftsItemIndex extends React.Component {
                     render={props => (
                       <DraftEditor {...props} formRef={this.formRef} />
                     )}
-                  />} />
+                  />
                   <Route path={DRAFT_ITEM_SETTINGS} component={DraftSettings} />
                   <Route
                     path={DRAFT_ITEM_INTEGRATIONS}

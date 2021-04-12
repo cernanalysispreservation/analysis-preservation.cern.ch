@@ -97,9 +97,10 @@ export default function draftsReducer(state = initialState, action) {
     case draftItemActions.DRAFTS_ITEM_SUCCESS:
       return state
         .set("formData", action.draft.metadata)
+        .set("loading", false)
         .merge(Map(action.draft));
     case draftItemActions.DRAFTS_ITEM_ERROR:
-      return state.set("errors", action.error);
+      return state.set("errors", action.error).set("loading", false);
     case draftItemActions.CREATE_DRAFT_REQUEST:
       return state.set("loading", true);
     case draftItemActions.CREATE_DRAFT_SUCCESS:

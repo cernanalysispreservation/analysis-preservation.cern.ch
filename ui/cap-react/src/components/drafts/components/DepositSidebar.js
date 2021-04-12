@@ -22,6 +22,7 @@ import Tag from "../../partials/Tag";
 import Button from "../../partials/Button";
 import { AiOutlinePlus, AiOutlineReload } from "react-icons/ai";
 import { DRAFT_ITEM } from "../../routes";
+import DepositSidebarLoading from "./DepositSidebarLoading";
 
 class DepositSidebar extends React.Component {
   constructor(props) {
@@ -92,7 +93,11 @@ class DepositSidebar extends React.Component {
 
     return colors[status];
   };
+
   render() {
+    if (this.props.loading) {
+      return <DepositSidebarLoading />;
+    }
     return (
       <Sidebar
         full={false}
@@ -169,7 +174,7 @@ class DepositSidebar extends React.Component {
               responsive={false}
               align="center"
             >
-              Created:
+              Created
               {this.props.created && (
                 <strong>
                   <TimeAgo date={this.props.created} minPeriod="60" />
@@ -183,7 +188,7 @@ class DepositSidebar extends React.Component {
               responsive={false}
               align="center"
             >
-              Last Updated:
+              Last Updated
               {this.props.updated && (
                 <strong>
                   <TimeAgo date={this.props.updated} minPeriod="60" />
@@ -228,7 +233,8 @@ DepositSidebar.propTypes = {
   canUpdate: PropTypes.bool,
   links: PropTypes.object,
   getBucketById: PropTypes.func,
-  schema: PropTypes.object
+  schema: PropTypes.object,
+  loading: PropTypes.bool
 };
 
 function mapStateToProps(state) {
@@ -243,7 +249,8 @@ function mapStateToProps(state) {
     created: state.draftItem.get("created"),
     updated: state.draftItem.get("updated"),
     canUpdate: state.draftItem.get("can_update"),
-    links: state.draftItem.get("links")
+    links: state.draftItem.get("links"),
+    loading: state.draftItem.get("loading")
   };
 }
 

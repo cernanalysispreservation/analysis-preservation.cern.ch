@@ -1,0 +1,111 @@
+@keyframes loading {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+.info_header_box {
+  height: 40px;
+}
+
+.loader_box {
+  background: #e6e6e6;
+  position: relative;
+  overflow: hidden;
+}
+
+.section_header {
+  height: 20px;
+  width: 20%;
+  margin-bottom: 5px;
+}
+
+.section_header::before {
+  height: 20px;
+  width: 40%;
+}
+
+.section_header_xs {
+  height: 20px;
+  width: 10%;
+}
+
+.section_header_xs::before {
+  height: 20px;
+  width: 40%;
+}
+
+.section_header_small {
+  height: 20px;
+  width: 30%;
+  margin-bottom: 5px;
+}
+
+.section_header_small::before {
+  height: 20px;
+  width: 40%;
+}
+
+.section_header_medium {
+  height: 20px;
+  width: 50%;
+  margin-bottom: 5px;
+}
+
+.section_header_medium::before {
+  height: 20px;
+  width: 40%;
+}
+
+.section_box_large {
+  height: 35vh;
+  background: transparent;
+  width: 100%;
+}
+.section_box_small {
+  height: 115px;
+  background: transparent;
+  width: 100%;
+}
+
+.section_header_medium::before,
+.section_header_small::before,
+.section_header_xs::before,
+.section_header::before,
+.deposit_row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(to right, #e5e5e5, #e6e6e6, #f1f1f1);
+  animation: loading 1.5s infinite linear;
+}
+
+/* DepositSideBar */
+.deposit_header {
+  height: 17px;
+  width: 30%;
+}
+.deposit_header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 40%;
+  background: linear-gradient(to right, #e5e5e5, #e6e6e6, #f1f1f1);
+  animation: loading 1.5s infinite linear;
+}
+
+.deposit_row {
+  height: 20px;
+  width: 80%;
+  margin-bottom: 5px;
+}
+.deposit_row::before {
+  height: 20px;
+  width: 40%;
+}
