@@ -42,9 +42,6 @@ class CapFile extends React.Component {
   };
 
   render() {
-    let keys = Object.keys(this.props.files.toJS());
-    let missedFileError = !keys.includes(this.props.formData);
-
     return (
       <Box
         pad={{ horizontal: "medium" }}
@@ -60,7 +57,7 @@ class CapFile extends React.Component {
               <Box margin={{ right: "small" }}>{this.props.formData}</Box>
               <Anchor label="Edit" onClick={this._toggleActiveLayer} />
             </Box>
-            {missedFileError && (
+            {!this.props.files.has(this.props.formData) && (
               <Box
                 margin={{ right: "small" }}
                 align="center"

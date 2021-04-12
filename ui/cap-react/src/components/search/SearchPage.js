@@ -23,6 +23,7 @@ import SearchFilterLayer from "./SearchFilterLayer";
 
 import DocumentTitle from "../partials/Title";
 import Button from "../partials/Button";
+import { List } from "immutable";
 
 class SearchPage extends React.Component {
   constructor(props) {
@@ -126,8 +127,8 @@ class SearchPage extends React.Component {
       });
     }
 
-    if (_results && _results.hits) {
-      total = _results.hits.total;
+    if (this.props.results && this.props.results.has("hits")) {
+      total = this.props.results.getIn(["hits", "total"]);
       utils = (
         <SearchUtils
           loading={this.props.loading}
@@ -169,7 +170,9 @@ class SearchPage extends React.Component {
         </Box>
       ) : (
         <Box flex={false} justify="center" align="center">
-          <SearchResults results={_results.hits.hits || []} />
+          <SearchResults
+            results={this.props.results.getIn(["hits", "hits"]) || List([])}
+          />
           {utils}
         </Box>
       );
@@ -195,7 +198,7 @@ class SearchPage extends React.Component {
               />
             }
           />
-          <Box direction="row" >
+          <Box direction="row">
             <Box id="sidebar">
               <SearchFacets
                 removeType={this.props.match.params.anatype}
@@ -212,7 +215,13 @@ class SearchPage extends React.Component {
                 responsive={false}
                 margin={{ bottom: "small" }}
               >
-                <SearchResultHeading results={_results.hits.total} />
+                <SearchResultHeading
+                  results={
+                    this.props.results &&
+                    this.props.results.has("hits") &&
+                    this.props.results.getIn(["hits", "total"])
+                  }
+                />
                 <Button
                   id="sidebar_button"
                   primary
