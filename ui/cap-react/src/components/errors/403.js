@@ -10,7 +10,8 @@ const PermissionDenied = ({ history, status = 404, message }) => {
   const getTitle = () => {
     const choices = {
       403: "Permission Required",
-      404: "Page was not Found"
+      404: "Page was not Found",
+      500: "Network Error"
     };
 
     return choices[status];
@@ -28,6 +29,11 @@ const PermissionDenied = ({ history, status = 404, message }) => {
         <span>
           Your account has not the permissions to access the content of this
           page
+        </span>
+      ),
+      500: (
+        <span>
+          Currently our service can not provide any information due to a problem. Please try again later
         </span>
       )
     };

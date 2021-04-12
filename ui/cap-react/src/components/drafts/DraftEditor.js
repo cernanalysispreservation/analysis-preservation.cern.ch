@@ -165,7 +165,6 @@ DraftEditor.propTypes = {
   fetchAndAssignSchema: PropTypes.func,
   fetchSchemaByNameVersion: PropTypes.func,
   formRef: PropTypes.object,
-  errors: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   canUpdate: PropTypes.bool,
   location: PropTypes.object
 };
@@ -179,7 +178,6 @@ function mapStateToProps(state) {
     schemas: state.draftItem.get("schemas"),
     metadata: state.draftItem.get("metadata"),
     formData: state.draftItem.get("formData"),
-    errors: state.draftItem.get("errors"),
     extraErrors: state.draftItem.get("extraErrors"),
     schemaErrors: state.draftItem.get("schemaErrors"),
     canUpdate: state.draftItem.get("can_update")

@@ -234,7 +234,6 @@ export function createDraft(data = {}, ana_type) {
         dispatch(push(`/drafts/${draft_id}/edit`));
       })
       .catch(error => {
-        dispatch(createDraftError(error.response));
         throw error;
       });
   };
@@ -267,8 +266,6 @@ export function postCreateDraft(data = {}, ana_type) {
         }
       })
       .catch(error => {
-        dispatch(createDraftError(error.response));
-
         cogoToast.error(error.response.data.message, {
           position: "top-center",
           heading: "Something went wrong",
@@ -698,7 +695,6 @@ export function deleteDraft() {
           });
       })
       .catch(error => {
-        dispatch(deleteDraftError(error.response));
         cogoToast.error(
           "There is an error, please make sure you are connected and try again",
           {
@@ -708,43 +704,6 @@ export function deleteDraft() {
             hideAfter: 3
           }
         );
-      });
-  };
-}
-
-export function getDraftById(draft_id, fetchSchemaFlag = false) {
-  return dispatch => {
-    dispatch(draftsItemRequest());
-
-    let uri = `/api/deposits/${draft_id}`;
-
-    axios
-      .get(uri, {
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-      .then(response => {
-        let url;
-
-        if (fetchSchemaFlag && response.data.metadata.$schema) {
-          url = response.data.metadata.$schema;
-          dispatch(fetchAndAssignSchema(url));
-        }
-        dispatch(draftsItemSuccess(draft_id, response.data));
-        let bucket_id = response.data.links.bucket.split("/").pop();
-        dispatch(getBucketById(bucket_id));
-      })
-      .catch(error => {
-        const e = error.response
-          ? error.response.data
-          : {
-              status: 400,
-              message:
-                "Something went wrong with your request. Please try again"
-            };
-
-        dispatch(draftsItemError(e));
       });
   };
 }
@@ -807,6 +766,45 @@ export function getDraftByIdAndInitForm(draft_id) {
 
         dispatch(draftsItemSuccess(draft_id, { ...response.data }));
         if (bucket_link) dispatch(getBucketByUri(bucket_link));
+      })
+      .catch(error => {
+        let  e = error.response|| {
+              status: 400,
+              message:
+                "Something went wrong with your request. Please try again"
+            };
+        dispatch(draftsItemError(e));
+      });
+  };
+}
+
+// ********************************************************
+// ********************************************************
+// Functions that are deceprecated and about to be deleted
+// ********************************************************
+// ********************************************************
+export function getDraftById(draft_id, fetchSchemaFlag = false) {
+  return dispatch => {
+    dispatch(draftsItemRequest());
+
+    let uri = `/api/deposits/${draft_id}`;
+
+    axios
+      .get(uri, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(response => {
+        let url;
+
+        if (fetchSchemaFlag && response.data.metadata.$schema) {
+          url = response.data.metadata.$schema;
+          dispatch(fetchAndAssignSchema(url));
+        }
+        dispatch(draftsItemSuccess(draft_id, response.data));
+        let bucket_id = response.data.links.bucket.split("/").pop();
+        dispatch(getBucketById(bucket_id));
       })
       .catch(error => {
         const e = error.response

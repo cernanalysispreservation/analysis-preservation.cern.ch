@@ -410,11 +410,9 @@ function mapStateToProps(state) {
     repositories: state.draftItem.get("repositories"),
     metadata: state.draftItem.get("metadata"),
     status: state.draftItem.get("status"),
-
     access: state.draftItem.get("access"),
     schema: state.draftItem.get("schema"),
     // schemasLoading: state.draftItem.get("schemasLoading"),
-
     webhooks: state.draftItem.get("webhooks"),
     files: state.draftItem.get("bucket"),
     revision: state.draftItem.get("revision")

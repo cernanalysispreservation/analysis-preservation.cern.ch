@@ -63,7 +63,8 @@ export default function draftsReducer(state = initialState, action) {
       return state
         .set("errors", [])
         .set("formErrors", Set([]))
-        .set("extraErrors", {});
+        .set("extraErrors", {})
+        .set("bucketError", null);
     case commonActions.FORM_ERRORS:
       return state.set(
         "formErrors",
@@ -97,9 +98,10 @@ export default function draftsReducer(state = initialState, action) {
     case draftItemActions.DRAFTS_ITEM_SUCCESS:
       return state
         .set("formData", action.draft.metadata)
-        .merge(Map(action.draft));
+        .merge(Map(action.draft))
+        .set("loading", false);
     case draftItemActions.DRAFTS_ITEM_ERROR:
-      return state.set("errors", action.error);
+      return state.set("errors", action.error).set("loading", false);
     case draftItemActions.CREATE_DRAFT_REQUEST:
       return state.set("loading", true);
     case draftItemActions.CREATE_DRAFT_SUCCESS:
@@ -117,7 +119,8 @@ export default function draftsReducer(state = initialState, action) {
         .set("loading", true)
         .set("errors", [])
         .set("formErrors", Set([]))
-        .set("extraErrors", {});
+        .set("extraErrors", {})
+        .set("bucketError",null);
     // .setIn(["current_item", "message"], { msg: "Updating.." });
     case draftItemActions.UPDATE_DRAFT_SUCCESS:
       return state
@@ -156,17 +159,11 @@ export default function draftsReducer(state = initialState, action) {
       return state.set("loading", true);
     case draftItemActions.EDIT_PUBLISHED_REQUEST:
       return state.set("loading", true);
-    // .set("error", null);
     case draftItemActions.EDIT_PUBLISHED_SUCCESS:
       return state
         .set("loading", false)
         .set("formData", action.draft.metadata)
         .merge(Map({ ...action.draft }));
-
-    // case draftItemActions.EDIT_PUBLISHED_ERROR:
-    // 	return state
-    // 		.set("loading", false)
-    // 		.set("error", action.error);
     case draftItemActions.PUBLISH_DRAFT_REQUEST:
       return state
         .set("loading", true)
@@ -196,7 +193,7 @@ export default function draftsReducer(state = initialState, action) {
 
     // Files
     case filesActions.BUCKET_ITEM_REQUEST:
-      return state.set("loading", true);
+      return state.set("loading", true).set("bucketError", null);
     case filesActions.BUCKET_ITEM_SUCCESS:
       return state
         .set("loading", false)
@@ -211,7 +208,7 @@ export default function draftsReducer(state = initialState, action) {
     case filesActions.BUCKET_ITEM_ERROR:
       return state
         .set("loading", false)
-        .set("error", [...state.get("errors"), action.error]);
+        .set("bucketError", action.error);
     case filesActions.PATH_SELECTED:
       return state.set("pathSelected", {
         type: action.path_type,

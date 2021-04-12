@@ -30,7 +30,7 @@ class PublishedItemIndex extends React.Component {
   }
 
   render() {
-    if (this.props.error && [403, 404].indexOf(this.props.error.status) > -1)
+    if (this.props.error && [403, 404 , 500].indexOf(this.props.error.status) > -1)
       return (
         <PermissionDenied
           status={this.props.error.status}

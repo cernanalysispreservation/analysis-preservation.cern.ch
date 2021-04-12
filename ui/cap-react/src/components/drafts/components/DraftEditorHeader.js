@@ -9,8 +9,6 @@ import Box from "grommet/components/Box";
 import Label from "grommet/components/Label";
 
 import {
-  createDraft,
-  createDraftError,
   updateDraft,
   editPublished,
   toggleActionsLayer
@@ -138,14 +136,6 @@ class DraftEditorHeader extends React.Component {
     }
   };
 
-  _createDraft = schema_id => {
-    if (this._validateFormData()) {
-      this.props.createDraft(this.props.formData, schema_id).finally(() => {
-        this._validateFormData();
-      });
-    }
-  };
-
   _saveData() {
     let { errorFlag, errorSchema = [] } = this._validateFormData();
 
@@ -263,7 +253,6 @@ DraftEditorHeader.propTypes = {
   discardDraft: PropTypes.func,
   updateDraft: PropTypes.func,
   editPublished: PropTypes.func,
-  createDraft: PropTypes.func,
   publishDraft: PropTypes.func,
   formData: PropTypes.object,
   toggleActionsLayer: PropTypes.func,
@@ -297,8 +286,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    createDraft: (data, ana_type) => dispatch(createDraft(data, ana_type)),
-    createDraftError: err => dispatch(createDraftError(err)),
     updateDraft: (data, draft_id) => dispatch(updateDraft(data, draft_id)),
     editPublished: (data, schema, draft_id) =>
       dispatch(editPublished(data, schema, draft_id)),

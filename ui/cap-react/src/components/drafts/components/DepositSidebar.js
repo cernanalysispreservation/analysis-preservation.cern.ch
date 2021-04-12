@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import { withRouter } from "react-router";
 
 import Box from "grommet/components/Box";
+import Label from "grommet/components/Label";
 import Sidebar from "grommet/components/Sidebar";
 
 import { toggleFilemanagerLayer } from "../../../actions/draftItem";
@@ -22,6 +23,8 @@ import Tag from "../../partials/Tag";
 import Button from "../../partials/Button";
 import { AiOutlinePlus, AiOutlineReload } from "react-icons/ai";
 import { DRAFT_ITEM } from "../../routes";
+
+import Notification from "../../partials/Notification"
 
 class DepositSidebar extends React.Component {
   constructor(props) {
@@ -93,6 +96,7 @@ class DepositSidebar extends React.Component {
     return colors[status];
   };
   render() {
+
     return (
       <Sidebar
         full={false}
@@ -192,25 +196,35 @@ class DepositSidebar extends React.Component {
             </Box>
           </Box>
         </Box>
-        <Box flex={true} pad="none" colorIndex="light-2">
-          <SectionHeader
-            label="Files | Data | Repos"
-            uppercase={true}
-            icon={
-              <Box
-                direction="row"
-                responsive={false}
-                wrap={false}
-                pad={{ between: "small" }}
-                margin={{ right: "small" }}
-              >
-                {this._renderRefreshFilesButton()}
-                {this._renderAddFileIcon()}
+          {
+            this.props.bucketError ?
+            <Box  size={{ width: { max: "medium" } }} pad="small" align="center">
+              <Notification
+                action={this._renderRefreshFilesButton()}
+                type={this.props.bucketError.status === 500 ?"error":"warning"}
+                text="There is an error while loading files, please try again by clicking the refresh button"
+              />
+            </Box> :
+              <Box flex={true} pad="none" colorIndex="light-2">
+                <SectionHeader
+                  label="Files | Data | Repos"
+                  uppercase={true}
+                  icon={
+                    <Box
+                      direction="row"
+                      responsive={false}
+                      wrap={false}
+                      pad={{ between: "small" }}
+                      margin={{ right: "small" }}
+                    >
+                      {this._renderRefreshFilesButton()}
+                      {this._renderAddFileIcon()}
+                    </Box>
+                  }
+                />
+                <DepositFilesList files={this.props.files} />
               </Box>
-            }
-          />
-          <DepositFilesList files={this.props.files} />
-        </Box>
+          }
       </Sidebar>
     );
   }
@@ -243,7 +257,8 @@ function mapStateToProps(state) {
     created: state.draftItem.get("created"),
     updated: state.draftItem.get("updated"),
     canUpdate: state.draftItem.get("can_update"),
-    links: state.draftItem.get("links")
+    links: state.draftItem.get("links"),
+    bucketError: state.draftItem.get("bucketError")
   };
 }
 

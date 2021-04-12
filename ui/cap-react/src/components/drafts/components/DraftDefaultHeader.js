@@ -119,7 +119,6 @@ function mapStateToProps(state) {
     status: state.draftItem.get("status"),
     canUpdate: state.draftItem.get("can_update"),
     draft: state.draftItem.get("metadata"),
-    errors: state.draftItem.get("errors"),
     schema: state.draftItem.get("schema"),
     formData: state.draftItem.get("formData"),
     metadata: state.draftItem.get("metadata")
