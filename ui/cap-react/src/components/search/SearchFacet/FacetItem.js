@@ -5,6 +5,7 @@ import ShowMore from "../ShowMore";
 import CheckBox from "grommet/components/CheckBox";
 import Button from "../../partials/Button";
 import SubFacet from "./SubFacet/SubFacet";
+import { Map } from "immutable";
 
 const FacetItem = ({
   limit,
@@ -12,14 +13,15 @@ const FacetItem = ({
   isAggSelected,
   selectedAggs,
   onChange,
-  category
+  category,
+  item
 }) => {
   return (
-    <ShowMore limit={limit} items={items} category={category}>
+    <ShowMore limit={limit} items={items} item={item} category={category}>
       {({ current, updateShowMore, filter, expanded, countMore }) => (
         <Box>
           {current.map(field => (
-            <Box key={String(field.key)}>
+            <Box key={String(field.get("key"))}>
               <Box
                 size="medium"
                 direction="row"
@@ -29,15 +31,15 @@ const FacetItem = ({
                 }}
               >
                 <CheckBox
-                  label={`${field.key} ${
-                    typeof field.doc_count === "object"
-                      ? `(${field.doc_count.doc_count})`
-                      : `(${field.doc_count})`
+                  label={`${field.get("key")} ${
+                    Map.isMap(field.get("doc_count"))
+                      ? `(${field.get("doc_count").get("doc_count")})`
+                      : `(${field.get("doc_count")})`
                   }`}
-                  key={field.key}
-                  name={String(field.key)}
+                  key={field.get("key")}
+                  name={String(field.get("key"))}
                   checked={
-                    isAggSelected(selectedAggs[category], field.key)
+                    isAggSelected(selectedAggs[category], field.get("key"))
                       ? true
                       : false
                   }
@@ -52,21 +54,22 @@ const FacetItem = ({
                   left: "small"
                 }}
               >
-                {isAggSelected(selectedAggs[category], field.key) &&
-                  Object.keys(field)
-                    .filter(key => key.startsWith("facet_"))
-                    .map((key, index) => {
+                {isAggSelected(selectedAggs[category], field.get("key")) &&
+                  field.keySeq().map((key, index) => {
+                    if (key.startsWith("facet_")) {
                       return (
                         <SubFacet
                           key={key + index}
                           type={key}
-                          field={field}
+                          field={field.toJS()}
+                          ff={field}
                           isAggSelected={isAggSelected}
                           selectedAggs={selectedAggs}
                           onChange={onChange}
                         />
                       );
-                    })}
+                    }
+                  })}
               </Box>
             </Box>
           ))}
