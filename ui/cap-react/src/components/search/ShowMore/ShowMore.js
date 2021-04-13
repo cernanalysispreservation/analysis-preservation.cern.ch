@@ -8,15 +8,16 @@ const ShowMore = ({
   children,
   limit,
   items,
+  item,
   more,
   updateExpandState,
   category
 }) => {
   const categoryIsIncluded = more.includes(category);
   const [current, setCurrent] = useState(
-    categoryIsIncluded ? items : items.slice(0, limit)
+    categoryIsIncluded ? item : item.slice(0, limit)
   );
-  const [filter] = useState(items.length > limit);
+  const [filter] = useState(item.size > limit);
 
   const updateShowMore = category => {
     updateExpandState(category);
@@ -24,7 +25,7 @@ const ShowMore = ({
 
   useEffect(
     () => {
-      setCurrent(categoryIsIncluded ? items : items.slice(0, limit));
+      setCurrent(categoryIsIncluded ? item : item.slice(0, limit));
     },
     [more]
   );

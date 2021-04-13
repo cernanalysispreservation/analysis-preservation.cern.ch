@@ -195,11 +195,12 @@ class SearchPage extends React.Component {
               />
             }
           />
-          <Box direction="row" >
+          <Box direction="row">
             <Box id="sidebar">
               <SearchFacets
                 removeType={this.props.match.params.anatype}
                 aggs={_aggs}
+                regs={this.props.results.get("aggregations")}
                 selectedAggs={this.props.selectedAggs}
                 onChange={this._toggleAggs}
               />

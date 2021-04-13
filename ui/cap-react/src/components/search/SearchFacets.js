@@ -12,6 +12,7 @@ import SearchFacetLoading from "./SearchFacetLoading";
 import CheckBox from "grommet/components/CheckBox";
 
 import SearchFacet from "./SearchFacet";
+import { Map } from "immutable";
 
 // import FiltersPreview from './components/FiltersPreview';
 
@@ -26,24 +27,33 @@ class SearchFacets extends React.Component {
     };
   }
 
-  constructFacets = aggs => {
+  constructFacets = (aggs, regs) => {
     let facets = {};
+    let ff = Map({});
 
     let keys = Object.keys(aggs).filter(key => {
       return typeof aggs[key] === "object";
     });
-    for (let key of keys) {
-      let obj = {};
-      if (key.startsWith("facet_")) {
-        obj[key.replace("facet_", "")] =
-          "filtered" in aggs[key] ? aggs[key]["filtered"] : aggs[key];
-      } else {
-        obj = this.constructFacets(aggs[key]);
-      }
-      Object.assign(facets, obj);
-    }
 
-    return facets;
+    regs &&
+      regs.mapEntries(item => {
+        if (!Map.isMap(item[1])) return;
+        let oo = Map({});
+
+        if (item[0].startsWith("facet_")) {
+          let newItem = item[1].has("filtered")
+            ? item[1].get("filtered")
+            : item[1];
+
+          oo = oo.set(item[0].replace("facet_", ""), newItem);
+        } else {
+          oo = this.constructFacets(item[1].toJS(), item[1]);
+        }
+
+        ff = ff.merge(oo);
+      });
+
+    return ff;
   };
 
   _onChange(category, event) {
@@ -72,7 +82,8 @@ class SearchFacets extends React.Component {
   }
 
   updateHistory(selectedAggs, category) {
-    let facet = this.constructFacets(this.props.aggs);
+    let facet = this.constructFacets(this.props.aggs, this.props.regs);
+
     let catType;
     if (facet[category]) {
       let temp = Object.keys(facet[category].buckets[0]).filter(name =>
@@ -178,12 +189,12 @@ class SearchFacets extends React.Component {
     let facets_result = null;
 
     if (this.props.aggs) {
-      let facets = this.constructFacets(this.props.aggs);
+      let facet = this.constructFacets(this.props.aggs, this.props.regs);
+      let facets = facet.toJS();
 
       if (this.props.removeType) {
         delete facets.type;
       }
-      let categories = Object.keys(facets);
 
       facets_result = (
         <Box
@@ -192,22 +203,21 @@ class SearchFacets extends React.Component {
           margin={{ vertical: "medium" }}
           className="search_facets"
         >
-          {categories.map(category => {
-            return (
-              <Box key={category}>
-                {facets[category].buckets.length > 0 && (
-                  <Box key={category} separator="bottom">
-                    <SearchFacet
-                      category={category}
-                      facets={facets}
-                      isAggSelected={this.isAggSelected}
-                      selectedAggs={this.props.selectedAggs}
-                      onChange={category => this._onChange.bind(this, category)}
-                    />
-                  </Box>
-                )}
-              </Box>
-            );
+          {facet.entrySeq().map(item => {
+            if (item[1].get("buckets").size > 0) {
+              return (
+                <Box key={item[0]} separator="bottom">
+                  <SearchFacet
+                    category={item[0]}
+                    facets={facets}
+                    ffacet={facet}
+                    isAggSelected={this.isAggSelected}
+                    selectedAggs={this.props.selectedAggs}
+                    onChange={category => this._onChange.bind(this, category)}
+                  />
+                </Box>
+              );
+            }
           })}
         </Box>
       );

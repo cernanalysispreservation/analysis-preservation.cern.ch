@@ -20,7 +20,8 @@ const SearchFacet = ({
   selectedAggs,
   onChange,
   collapsed,
-  updateFacet
+  updateFacet,
+  ffacet
 }) => {
   let expanded = !collapsed.includes(category);
   let facet = facets[category];
@@ -32,6 +33,7 @@ const SearchFacet = ({
         <FacetItem
           limit={11}
           items={facets[category].buckets}
+          item={ffacet.getIn([category, "buckets"])}
           isAggSelected={isAggSelected}
           selectedAggs={selectedAggs}
           onChange={onChange}
@@ -42,6 +44,7 @@ const SearchFacet = ({
 
     return choices[type === "range"];
   };
+
   return (
     <Box>
       <Box
