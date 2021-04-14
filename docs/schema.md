@@ -90,3 +90,170 @@ Each schema is directly provided or created with the support of collaboration ph
 Every schema change is versioned so that it can adapt to changes in the data or other components provided by the collaborations. This practice also ensures the that the integrity of the older analysis records is maintained.
 
 Depending on the preference and work environment of the researcher, analysis information can be created and edited through a [project-submission-form](./tutorials.md#the-cap-form) on the web interface or via the [project-rest-api](./api.md).
+
+
+# Schema Configuration
+
+The new versions of CAP schemas support hardcoded configuration options, which can be used either to perform certain tasks,
+or certain checks. Right now the supported options are:
+
+- `reviewable`: shows if the analysis type is reviewable (used to add review options in the UI)
+- `notifications`: an extended JSON that provides a lot of options regarding notifications/mails
+
+As the `notifications` is the most complicated of the two, we will explain its components in depth, and how they should be used.
+
+
+### Notification Config Structure
+
+The basic structure that is followed is this:
+
+    "config": {
+        "notifications": {
+          "actions": {
+            "publish": {...},
+            "review": {...}
+          }
+        }
+      }
+
+What this means essentially is that when certain actions are triggered on a deposit, in this case when it is `published` or
+`reviewed`, the backend will handle the mail/notifications according to what is configured. The fields in each one of those
+actions represent a part of the required context of the mail:
+
+- `subject`
+- `message`
+- `recipients`
+- `template`
+
+Let's provide some examples for each one, and explain their usage.
+
+
+##### 1. Subject
+
+This field provides configuration regarding the `subject` of the mail. It looks like this:
+
+    "subject": {
+      "template": "mail/subject/subject_published.html",
+      "ctx": {
+        "cadi_id": {
+          "type": "path",
+          "path": "analysis_context.cadi_id"
+        },
+        "some_field": {
+          "type": "method",
+          "method": "some_method"
+        }
+      }
+    }
+
+The user needs to provide a path to a `template`, that will be populated by the context (`ctx`). The context variables can
+be accessed in 2 different ways by their `type`:
+
+- `path` uses the deposit path that holds a variable
+- `method` uses a custom method that can be created and accessed in the `cap.modules.mail.custom.subject.py` file
+
+The subject `template` should be added in the `cap.modules.mail.templates.mail.subject` folder. The template can be omitted
+since there are defaults that can be used for each action.
+
+
+##### 2. Message
+
+Similar to the subject, we provide a template and a context for the message of tha notification, as follows:
+
+    "message": {
+      "template": "mail/message/message_published.html",
+      "ctx": {
+        "title": {
+          "type": "path",
+          "path": "general_title"
+        },
+        "questionnaire_url": {
+          "type": "method",
+          "method": "create_questionnaire_url"
+        }
+      }
+    }
+
+The same rules are being followed, with the exception that if no message is provided, then the notification will only
+contain a header with general information, and no specific info. The template should be added in the 
+`cap.modules.mail.templates.mail.message` folder, and the custom functions in the `cap.modules.mail.custom.message.py` file
+
+
+##### 3. Recipients
+
+Due to the complicated nature and requirements in adding recipients, the configuration follows more steps. Let's take a
+look at an example:
+
+    "recipients": {
+      "func": "get_cms_stat_recipients",
+      "owner": true,
+      "current_user": true,
+      "conditions": [{
+        "op": "and",
+        "checks": [{
+          "path": "parton_distribution_functions",
+          "if": "exists",
+          "value": true
+        }],
+        "mails": ["pdf-forum-placeholder@cern.ch"]
+      }, {
+        "op": "and",
+        "checks": [{
+          "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
+          "if": "exists",
+          "value": true
+        }, {
+          "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
+          "if": "is_not_in",
+          "value": "No"
+        }],
+        "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+      }],
+      "default": ["some-recipient-placeholder@cern.ch"],
+      "type": "bcc"
+    }
+
+There are several first level fields that need to be addressed:
+
+- `func`: a function that returns a list of recipients, needs to be added in `cap.modules.mail.custom.recipients.py`
+- `owner`: if `true`, the owner of the analysis will also be notified
+- `current_user`: if `true`, the current user (the one that publishes or reviews) of the analysis will also be notified
+- `default`: a list of recipients that will be notified in any case
+- `type`: the type of the recipients in the mail (recipients/bcc/cc)
+- `conditions`: a collection of checks that determine if a list of mails are added in the recipients
+
+Regarding the conditions, each one of them has a collection of checks that need to pass, in order for the mails to be added
+in the recipients list. Each condition object contains:
+
+- `op`: the operation to be done in the check results. If `and`, all the checks need to be true, and if `or`, just one of them is enough
+- `mails`: the mails that will be added
+- `checks`: a list of checks
+
+Each `check` object needs to have:
+
+- `path`: the path of variable, found in the deposit
+- `value`: the value that needs to be the result of the method used
+- `if`: the method that will be used
+
+If for example you need to make sure that the deposit has a `general_title`, then the check would be
+
+    {
+      "path": "general_title",
+      "if": "exists",
+      "value": true
+    }
+
+if you need to make sure that a certain value does not appear in a list, then
+
+    {
+      "path": "path.to.some_list",
+      "if": "is_not_in",
+      "value": "some value'
+    }
+
+The supported conditions and checks can be found in the `cap.modules.mail.conditions.py` file
+
+
+##### 4. Template
+
+This field provides the general template that will be followed for the specific notification, similar with the above fields.
