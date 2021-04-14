@@ -63,8 +63,8 @@ class FileTree extends React.Component {
   constructTree = data => {
     let paths = [];
 
-    Object.keys(data).map(k => {
-      paths.push([k.split("/"), data[k]]);
+    data.mapEntries(item => {
+      paths.push([item[0].split("/"), item[1]]);
     });
 
     let children = arrangeIntoTree(paths);
