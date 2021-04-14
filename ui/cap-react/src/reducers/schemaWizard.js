@@ -69,11 +69,11 @@ export default function schemaReducer(state = initialState, action) {
       return state
         .setIn(
           ["current", "uiSchema", ...action.path.uiSchema],
-          fromJS(action.value.uiSchema)
+          action.value.uiSchema
         )
         .setIn(
           ["current", "schema", ...action.path.schema],
-          fromJS(action.value.schema)
+          action.value.schema
         );
     case CURRENT_UPDATE_SCHEMA_PATH:
       return state.setIn(

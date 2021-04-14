@@ -18,8 +18,8 @@ function mapDispatchToProps(dispatch) {
   return {
     addProperty: (path, key) => dispatch(addProperty(path, key)),
     enableCreateMode: () => dispatch(enableCreateMode()),
-    deleteByPath: item => dispatch(deleteByPath(item)),
-    renameId: (item, newName) => dispatch(renameIdByPath(item, newName))
+    deleteByPath: path => dispatch(deleteByPath(path)),
+    renameId: (newName, path) => dispatch(renameIdByPath(newName, path))
   };
 }
 
