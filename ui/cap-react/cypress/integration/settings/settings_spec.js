@@ -5,11 +5,9 @@ describe("Settings Page", function() {
   it("add new token", function() {
     cy.loginUrl("info@inveniosoftware.org", "infoinfo");
 
-    cy.wait(1000);
     // open menu
     cy.get("[data-cy=header-menu]").click();
 
-    cy.wait(1000);
     // select settings
     cy.get("[data-cy=settings-menuitem]").click();
 
@@ -27,11 +25,9 @@ describe("Settings Page", function() {
   it("Delete the Token from the list", function() {
     cy.loginUrl("info@inveniosoftware.org", "infoinfo");
 
-    cy.wait(1000);
     // open menu
     cy.get("[data-cy=header-menu]").click();
 
-    cy.wait(1000);
     // select settings
     cy.get("[data-cy=settings-menuitem]").click();
 

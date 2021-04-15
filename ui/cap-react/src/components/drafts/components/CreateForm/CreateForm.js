@@ -66,7 +66,12 @@ const CreateForm = props => {
             <Box>
               <Box>
                 <Box size={{ height: { max: "medium" } }}>
-                  <Box direction="row" wrap justify="between">
+                  <Box
+                    direction="row"
+                    wrap
+                    justify="between"
+                    data-cy="deposit-group-list"
+                  >
                     {props.contentTypes &&
                       props.contentTypes.map(type => (
                         <Box
@@ -91,7 +96,13 @@ const CreateForm = props => {
                             wrap={false}
                             style={{ overflow: "visible" }}
                           >
-                            <Label size="small">{type.get("name")}</Label>
+                            <Label
+                              size="small"
+                              data-cy="deposit-group-name"
+                              name={type.get("name")}
+                            >
+                              {type.get("name")}
+                            </Label>
                             <Box justify="center">
                               {type.get("deposit_group") === contentType ? (
                                 <CheckmarkIcon colorIndex="ok" size="xsmall" />
