@@ -95,6 +95,9 @@ const CreateForm = props => {
                             responsive={false}
                             wrap={false}
                             style={{ overflow: "visible" }}
+                            data-cy={`deposit-group-${type.get(
+                              "deposit_group"
+                            )}-wrapper`}
                           >
                             <Label
                               size="small"
@@ -105,7 +108,11 @@ const CreateForm = props => {
                             </Label>
                             <Box justify="center">
                               {type.get("deposit_group") === contentType ? (
-                                <CheckmarkIcon colorIndex="ok" size="xsmall" />
+                                <CheckmarkIcon
+                                  colorIndex="ok"
+                                  size="xsmall"
+                                  data-cy="deposit-group-checkmark"
+                                />
                               ) : null}
                             </Box>
                           </Box>

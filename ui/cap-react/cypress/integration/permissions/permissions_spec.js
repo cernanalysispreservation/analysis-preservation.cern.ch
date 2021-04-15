@@ -64,3 +64,30 @@ describe("Validate Deposit Groups", () => {
       });
   });
 });
+
+describe("Visit create path, with a specific analysis name", () => {
+  it("Cms analysis should be  pre selected", () => {
+    cy.login("cms@inveniosoftware.org", "cmscms");
+
+    cy.visit("/create/cms-analysis");
+
+    // find out if the deposit groups are the correct ones
+    // CMS Analysis and CMS Statistics Questionnaire
+    cy.get("[data-cy=deposit-group-list] > div")
+      .children()
+      .each(value => {
+        cy.wrap(value)
+          .get("[data-cy=deposit-group-cms-analysis-wrapper]")
+          .get("[data-cy=deposit-group-checkmark]")
+          .should("be.visible");
+      });
+  });
+
+  it("Fetch an analysis with no permissions", () => {
+    cy.login("cms@inveniosoftware.org", "cmscms");
+
+    cy.visit("/create/atlas-analysis");
+
+    cy.get("[data-cy=create-form-error-page]").should("be.visible");
+  });
+});
