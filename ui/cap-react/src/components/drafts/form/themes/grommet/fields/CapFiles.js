@@ -91,7 +91,7 @@ class CapFile extends React.Component {
         <DepositFileManager
           activeLayer={this.state.activeLayer}
           toggleLayer={this._toggleActiveLayer}
-          files={this.props.files.toJS()}
+          files={this.props.files}
           onDirectoryClick={null}
           onFileClick={this._onFileClick}
           onSelect={this._onChange}

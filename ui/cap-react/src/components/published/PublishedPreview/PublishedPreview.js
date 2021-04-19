@@ -211,7 +211,7 @@ class PublishedPreview extends React.Component {
                     <SectionHeader label="Files | Data | Source Code" />
                     <Box flex={true}>
                       <FileTree
-                        files={this.props.files.toJS()}
+                        files={this.props.files}
                         status={this.props.status}
                         background="#f5f5f5"
                         color="#000"
