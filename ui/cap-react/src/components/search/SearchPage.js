@@ -11,6 +11,7 @@ import Empty from "../../img/empty_search.svg";
 
 import SearchFacets from "./SearchFacets";
 import SearchUtils from "./SearchUtils";
+import Pagination from "./Pagination";
 import SearchResults from "./SearchResults";
 import SearchTag from "./SearchTag";
 
@@ -170,7 +171,22 @@ class SearchPage extends React.Component {
       ) : (
         <Box flex={false} justify="center" align="center">
           <SearchResults results={_results.hits.hits || []} />
-          {utils}
+          {/* {utils} */}
+          <Pagination
+            total_results={total || 0}
+            size={
+              this.props.selectedAggs.size
+                ? parseInt(this.props.selectedAggs.size)
+                : 10
+            }
+            current_page={
+              this.props.selectedAggs.page
+                ? parseInt(this.props.selectedAggs.page)
+                : 1
+            }
+            onPageChange={this._changePage.bind(this)}
+            onPageSizeChange={this._changePageSize.bind(this)}
+          />
         </Box>
       );
     }
@@ -195,7 +211,7 @@ class SearchPage extends React.Component {
               />
             }
           />
-          <Box direction="row" >
+          <Box direction="row">
             <Box id="sidebar">
               <SearchFacets
                 removeType={this.props.match.params.anatype}
