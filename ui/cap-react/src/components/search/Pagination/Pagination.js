@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Pagination from "rc-pagination";
-import Button from "../../partials/Button";
-import { Box } from "grommet";
+import Select from "rc-select";
 import "./Pagination.css";
+
 import {
   AiOutlineLeft,
   AiOutlineRight,
@@ -20,9 +20,9 @@ const SearchPagination = ({
 }) => {
   const updatePageFromArrows = move => {
     if (move > 0) {
-      if (current_page < size) onPageChange(current_page + 1);
+      if (current_page < size) onPageChange(current_page + 1, size);
     } else {
-      if (current_page > 1) onPageChange(current_page - 1);
+      if (current_page > 1) onPageChange(current_page - 1, size);
     }
   };
 
@@ -30,8 +30,15 @@ const SearchPagination = ({
     <Pagination
       total={total_results}
       pageSize={size}
+      selectComponentClass={Select}
       current={current_page}
-      onChange={onPageChange}
+      showSizeChanger
+      onShowSizeChange={(_, size) => {
+        onPageSizeChange(size);
+      }}
+      onChange={(currentPage, pageSize) => {
+        onPageChange(currentPage, pageSize);
+      }}
       jumpPrevIcon={
         <span
           style={{
@@ -74,14 +81,14 @@ const SearchPagination = ({
             display: "inline-block",
             lineHeight: 0,
             textAlign: "center",
-            verticalAlign: "-.100em"
+            verticalAlign: "-.200em"
           }}
         >
           <AiOutlineRight onClick={() => updatePageFromArrows(+1)} />
         </span>
       }
       locale={{
-        items_per_page: "Items per page",
+        items_per_page: "/page",
         jump_to: "Go to",
         jump_to_confirm: "Confirm jump to",
         page: null,
@@ -96,6 +103,12 @@ const SearchPagination = ({
   );
 };
 
-SearchPagination.propTypes = {};
+SearchPagination.propTypes = {
+  total_results: PropTypes.number,
+  size: PropTypes.number,
+  current_page: PropTypes.number,
+  onPageChange: PropTypes.func,
+  onPageSizeChange: PropTypes.func
+};
 
 export default SearchPagination;

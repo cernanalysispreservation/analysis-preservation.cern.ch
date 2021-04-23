@@ -45,6 +45,7 @@ class SearchPage extends React.Component {
 
   _changePageSize(size) {
     let currentParams = queryString.parse(this.props.location.search);
+
     const location = {
       search: `${queryString.stringify(
         Object.assign(currentParams, { size: size })
@@ -90,12 +91,12 @@ class SearchPage extends React.Component {
     this.props.history.push(location);
   };
 
-  _changePage(page) {
+  _changePage(page, size) {
     let currentParams = queryString.parse(this.props.location.search);
 
     const location = {
       search: `${queryString.stringify(
-        Object.assign(currentParams, { page: page })
+        Object.assign(currentParams, { page: page, size: size })
       )}`
     };
     this.props.history.push(location);
@@ -171,7 +172,7 @@ class SearchPage extends React.Component {
       ) : (
         <Box flex={false} justify="center" align="center">
           <SearchResults results={_results.hits.hits || []} />
-          {/* {utils} */}
+          {utils}
           <Pagination
             total_results={total || 0}
             size={

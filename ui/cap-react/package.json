@@ -64,6 +64,7 @@
     "prism-react-renderer": "0.1.7",
     "query-string": "^5.1.0",
     "rc-pagination": "3.1.6",
+    "rc-select": "12.1.10",
     "react": "^16.6.0",
     "react-ace": "8.0.0",
     "react-compound-slider": "2.5.0",
