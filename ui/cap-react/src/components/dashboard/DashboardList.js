@@ -11,6 +11,7 @@ import Label from "grommet/components/Label";
 import List from "grommet/components/List";
 
 import ListPlaceholder from "grommet-addons/components/ListPlaceholder";
+import DashboardListLoader from "./DashboardListLoader";
 
 function DashboardList(props) {
   let { header = "", emptyMessage = null, listType, list, ListItem } = props;
@@ -75,7 +76,9 @@ function DashboardList(props) {
         }}
         colorIndex="light-1"
       >
-        {list[activeList].list.length > 0 ? (
+        {props.loading ? (
+          <DashboardListLoader />
+        ) : list[activeList].list.length > 0 ? (
           <Box>
             <List
               id="anchor-no-style"
