@@ -1,0 +1,386 @@
+{
+  "name": "schema-config",
+  "version": "0.0.1",
+  "fullname": "Configuration Schema for Analyses",
+  "is_indexed": false,
+  "use_deposit_as_record": true,
+  "allow_all": true,
+  "deposit_schema": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ATLAS Analysis",
+    "type": "object",
+    "description": "Schema describing properties of an ATLAS analysis",
+    "properties": {
+      "reviewable": {
+        "type": "boolean",
+        "title": "Reviewable"
+      },
+      "notifications": {
+        "type": "object",
+        "title": "Notifications",
+        "properties": {
+          "actions": {
+            "type": "object",
+            "title": "Actions",
+            "properties": {
+              "publish": {
+                "type": "array",
+                "title": "Publish Notification Options",
+                "items": {
+                  "type": "object",
+                  "title": "New Mail Options",
+                  "properties": {
+                    "subject": {
+                      "type": "object",
+                      "title": "Subject",
+                      "properties": {
+                        "template": {
+                          "type": "string",
+                          "title": "Subject template path"
+                        },
+                        "ctx": {
+                          "type": "array",
+                          "title": "Subject context options",
+                          "uniqueItems": true,
+                          "items": {
+                            "type":"object",
+                            "title": "Context Option",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "title": "The name of the ctx variable"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": ["path", "method"]
+                              },
+                              "method": {
+                                "type": "string",
+                                "title": "The method that retrieves the value"
+                              },
+                              "path": {
+                                "type": "string",
+                                "title": "The path that retrieves the value"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "object",
+                      "title": "Message",
+                      "properties": {
+                        "template": {
+                          "type": "string",
+                          "title": "Message template path"
+                        },
+                        "ctx": {
+                          "type": "array",
+                          "title": "Message context options",
+                          "uniqueItems": true,
+                          "items": {
+                            "type":"object",
+                            "title": "Context Option",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "title": "The name of the ctx variable"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": ["path", "method"]
+                              },
+                              "method": {
+                                "type": "string",
+                                "title": "The method that retrieves the value"
+                              },
+                              "path": {
+                                "type": "string",
+                                "title": "The path that retrieves the value"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "template": {
+                      "type": "object",
+                      "title": "Template",
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "title": "Template path"
+                        },
+                        "plain": {
+                          "type": "boolean",
+                          "title": "Plain text or HTML"
+                        }
+                      }
+                    },
+                    "recipients": {
+                      "type": "object",
+                      "title": "Recipients",
+                      "properties": {
+                        "owner": {
+                          "type": "boolean",
+                          "title": "Add the owner of the analysis"
+                        },
+                        "current_user": {
+                          "type": "boolean",
+                          "title": "Add the current user"
+                        },
+                        "func": {
+                          "type": "string",
+                          "title": "A function that adds recipients (added by CAP developers)"
+                        },
+                        "default": {
+                          "type": "array",
+                          "title": "Default recipients",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "type": {
+                          "type": "string",
+                          "title": "Recipients type (visible recipients, cc, bcc)",
+                          "enum": ["recipients", "cc", "bcc"]
+                        },
+                        "conditions": {
+                          "type": "array",
+                          "title": "Conditions according to which, recipients are added",
+                          "items": {
+                            "type": "object",
+                            "title": "Condition item",
+                            "properties": {
+                              "op": {
+                                "type": "string",
+                                "title": "The operator for the checks comparison",
+                                "enum": ["and", "or"]
+                              },
+                              "checks": {
+                                "type": "array",
+                                "title": "Check item",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "path": {
+                                      "type": "string",
+                                      "title": "The path of the variable to be checked"
+                                    },
+                                    "if": {
+                                      "type": "string",
+                                      "title": "The condition that should be true for the check to succeed"
+                                    },
+                                    "value": {
+                                      "type": "string",
+                                      "title": "The value of the check"
+                                    }
+                                  }
+                                }
+                              },
+                              "mails": {
+                                "type": "array",
+                                "title": "Mails that will be added if the check is successful",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "repositories": {
+        "type": "object",
+        "title": "Repositories",
+        "properties": {
+          "github": {
+            "type": "object",
+            "title": "Github configuration",
+            "properties": {
+              "admin": {
+                "type": "string",
+                "title": "Admin key of the experiment"
+              },
+              "org_name": {
+                "type": "string",
+                "title": "Organization Name"
+              },
+              "private": {
+                "type": "boolean",
+                "private": "Private Repo"
+              },
+              "license": {
+                "type": "string",
+                "title": "License"
+              },
+              "repo_name": {
+                "type": "object",
+                "title": "Repository Name",
+                "properties": {
+                  "template": {
+                    "type": "string",
+                    "title": "Repo name template path"
+                  },
+                  "ctx": {
+                    "type": "array",
+                    "title": "Repo name context options",
+                    "uniqueItems": true,
+                    "items": {
+                      "type":"object",
+                      "title": "Context Option",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["path", "method"]
+                        },
+                        "method": {
+                          "type": "string",
+                          "title": "The method that retrieves the value"
+                        },
+                        "path": {
+                          "type": "string",
+                          "title": "The path that retrieves the value"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "description": {
+                "type": "object",
+                "title": "Repository Description",
+                "properties": {
+                  "template": {
+                    "type": "string",
+                    "title": "Repo description template path"
+                  },
+                  "ctx": {
+                    "type": "array",
+                    "title": "Repo description context options",
+                    "uniqueItems": true,
+                    "items": {
+                      "type":"object",
+                      "title": "Context Option",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["path", "method"]
+                        },
+                        "method": {
+                          "type": "string",
+                          "title": "The method that retrieves the value"
+                        },
+                        "path": {
+                          "type": "string",
+                          "title": "The path that retrieves the value"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "gitlab": {
+            "type": "object",
+            "title": "Gitlab configuration",
+            "properties": {
+              "admin": {
+                "type": "string",
+                "title": "Admin key of the experiment"
+              },
+              "org_name": {
+                "type": "string",
+                "title": "Organization Name"
+              },
+              "private": {
+                "type": "boolean",
+                "private": "Private Repo"
+              },
+              "license": {
+                "type": "string",
+                "title": "License"
+              },
+              "repo_name": {
+                "type": "object",
+                "title": "Repository Name",
+                "properties": {
+                  "template": {
+                    "type": "string",
+                    "title": "Repo name template path"
+                  },
+                  "ctx": {
+                    "type": "array",
+                    "title": "Repo name context options",
+                    "uniqueItems": true,
+                    "items": {
+                      "type":"object",
+                      "title": "Context Option",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["path", "method"]
+                        },
+                        "method": {
+                          "type": "string",
+                          "title": "The method that retrieves the value"
+                        },
+                        "path": {
+                          "type": "string",
+                          "title": "The path that retrieves the value"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "description": {
+                "type": "object",
+                "title": "Repository Description",
+                "properties": {
+                  "template": {
+                    "type": "string",
+                    "title": "Repo description template path"
+                  },
+                  "ctx": {
+                    "type": "array",
+                    "title": "Repo description context options",
+                    "uniqueItems": true,
+                    "items": {
+                      "type":"object",
+                      "title": "Context Option",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["path", "method"]
+                        },
+                        "method": {
+                          "type": "string",
+                          "title": "The method that retrieves the value"
+                        },
+                        "path": {
+                          "type": "string",
+                          "title": "The path that retrieves the value"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "deposit_options": {}
+}
