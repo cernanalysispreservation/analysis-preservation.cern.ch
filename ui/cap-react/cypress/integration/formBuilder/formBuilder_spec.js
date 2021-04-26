@@ -9,8 +9,6 @@ describe("Form Builder", function() {
       .contains("CMS Analysis")
       .click();
 
-    cy.wait(2000);
-
     cy.get("header span").contains("CMS Analysis");
   });
 
@@ -22,8 +20,6 @@ describe("Form Builder", function() {
       .contains("CMS Statistics Questionnaire")
       .click();
 
-    cy.wait(2000);
-
     cy.get("header span").contains("CMS Statistics Questionnaire");
   });
 
@@ -34,7 +30,6 @@ describe("Form Builder", function() {
     const description = "Description of the form";
 
     // Find the form and add a new name
-    cy.wait(2000);
     cy.get("input#root_name").type(name);
     cy.get("textarea#root_description").type(description);
 
@@ -42,8 +37,6 @@ describe("Form Builder", function() {
     cy.get("form div")
       .contains("Create")
       .click();
-
-    cy.wait(2000);
 
     cy.get("header span").contains(name);
   });

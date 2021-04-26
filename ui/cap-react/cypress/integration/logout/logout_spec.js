@@ -4,13 +4,11 @@ describe("Logout Process", function() {
     cy.loginUrl("info@inveniosoftware.org", "infoinfo");
 
     // logout
-    cy.wait(1000);
     cy.get(".headerMenuAppp").click();
-    cy.wait(1000);
     cy.get("a.not-underline span")
       .contains("Logout")
       .click({ force: true });
-    cy.wait(1000);
+
     cy.url().should("include", "/login?next=/");
   });
 });

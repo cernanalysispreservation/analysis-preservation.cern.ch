@@ -22,8 +22,6 @@ describe("Create Draft", function() {
     // cancel the changes
     cy.get("[data-cy=closeicon]").click();
 
-    cy.wait(2000);
-
     // search the new title
     cy.get("[data-cy=editable-title-wrapper]").contains(firstTitle);
   });
@@ -68,7 +66,6 @@ describe("Create Draft", function() {
     cy.get("[data-cy=draft-delete-btn]").click();
 
     cy.get("[data-cy=layer-primary-action]").click();
-    cy.wait(1000);
 
     cy.url().should("not.include", "/drafts");
   });
@@ -89,8 +86,6 @@ describe("Create Draft", function() {
     cy.get("div")
       .contains("Start Preserving")
       .click();
-
-    cy.wait(1000);
 
     cy.url().should("not.include", "/drafts");
   });

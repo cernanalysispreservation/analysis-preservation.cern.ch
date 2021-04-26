@@ -7,11 +7,8 @@ describe("Search Integration Suite", function() {
       .should("have.attr", "id", "searchbar")
       .type("cern{enter}");
 
-    cy.wait(1000);
-
     cy.url().should("include", "search?q=cern");
 
-    cy.wait(1000);
     cy.get("input#search_facet_published_checkbox").should(
       "have.attr",
       "checked"

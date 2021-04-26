@@ -28,7 +28,13 @@ const CreateIndex = props => {
         </Box>
       ),
       false: (
-        <Box flex align="center" justify="center" colorIndex="light-2">
+        <Box
+          flex
+          align="center"
+          justify="center"
+          colorIndex="light-2"
+          data-cy="create-form-error-page"
+        >
           <Box align="center" pad="small">
             <Box>
               <Lock />
