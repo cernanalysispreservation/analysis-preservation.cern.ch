@@ -35,6 +35,7 @@ export default class SearchUtils extends React.Component {
 
   render() {
     let num_pages = Math.ceil(this.props.total / this.props.size);
+
     return (
       <Box
         colorIndex="light-2"
