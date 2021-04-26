@@ -45,10 +45,18 @@ def test_generate_recipients(mock_user, app, users, location, create_schema, cre
                         "value": True,
                     }
                 ],
-                "mails": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
+                "mails": {
+                    "default": {
+                        "cc": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"],
+                        "bcc": ["something-else@cern0.ch"]
+                    }
+                }
             }],
-            "default": ['default@cern0.ch'],
-            "type": "cc"
+            "mails": {
+                "default": {
+                    "recipients": ['default@cern0.ch']
+                }
+            }
         }
     }
     create_schema('test', experiment='CMS', config=config)
@@ -61,10 +69,10 @@ def test_generate_recipients(mock_user, app, users, location, create_schema, cre
                              experiment='CMS',
                              publish=True)
 
-    recipients, recipient_type = generate_recipients(deposit, config)
-    assert recipient_type == 'cc'
-    assert set(recipients) == {'ml-conveners-jira-test@cern0.ch', 'cms_user@cern.ch',
-                               'ml-conveners-test@cern0.ch', 'default@cern0.ch'}
+    recipients, cc, bcc = generate_recipients(deposit, config)
+    assert set(recipients) == {'cms_user@cern.ch', 'default@cern0.ch'}
+    assert set(cc) == {"ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"}
+    assert set(bcc) == {"something-else@cern0.ch"}
 
 
 @patch('cap.modules.mail.users.current_user')
@@ -75,24 +83,25 @@ def test_generate_message(mock_user, app, users, location, create_schema, create
     config = {
         "message": {
             "template": "mail/message/message_published.html",
-            "ctx": {
-                "cadi_id": {
+            "ctx": [
+                {
+                    "name": "cadi_id",
                     "type": "path",
                     "path": "analysis_context.cadi_id"
-                },
-                "title": {
+                }, {
+                    "name": "title",
                     "type": "path",
                     "path": "general_title"
-                },
-                "questionnaire_url": {
+                }, {
+                    "name": "questionnaire_url",
                     "type": "method",
                     "method": "create_questionnaire_url"
-                },
-                "submitter_mail": {
+                }, {
+                    "name": "submitter_mail",
                     "type": "method",
                     "method": "get_submitter_mail"
                 }
-            }
+            ]
         }
     }
     create_schema('test', experiment='CMS', config=config)
@@ -121,16 +130,21 @@ def test_generate_subject(mock_user, app, users, location, create_schema, create
     config = {
         "subject": {
             "template": "mail/subject/subject_published.html",
-            "ctx": {
-                "cadi_id": {
+            "ctx": [
+                {
+                    "name": "cadi_id",
                     "type": "path",
                     "path": "analysis_context.cadi_id"
-                },
-                "revision": {
+                }, {
+                    "name": "revision",
                     "type": "path",
                     "path": "_deposit.pid.revision_id"
+                }, {
+                    "name": "recid",
+                    "type": "path",
+                    "path": "_deposit.pid.value"
                 }
-            }
+            ]
         }
     }
     create_schema('test', experiment='CMS', config=config)
@@ -144,5 +158,6 @@ def test_generate_subject(mock_user, app, users, location, create_schema, create
                              experiment='CMS',
                              publish=True)
 
+    pid = deposit['_deposit']['pid']['value']
     subject = generate_subject(deposit, config, 'publish')
-    assert subject == 'Questionnaire for ABC-11-111 - New Published Analysis | CERN Analysis Preservation'
+    assert subject == f'Questionnaire for ABC-11-111 {pid} - New Published Analysis | CERN Analysis Preservation'

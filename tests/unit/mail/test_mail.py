@@ -39,53 +39,63 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                 "publish": [{
                     "template": {
                         "default": "mail/analysis_plain_text.html",
-                        "type": "plain"
+                        "plain": True
                     },
                     "subject": {
                         "template": "mail/subject/subject_published.html",
-                        "ctx": {
-                            "cadi_id": {
+                        "ctx": [
+                            {
+                                "name": "cadi_id",
                                 "type": "path",
                                 "path": "analysis_context.cadi_id"
-                            },
-                            "revision": {
+                            }, {
+                                "name": "revision",
                                 "type": "path",
                                 "path": "_deposit.pid.revision_id"
+                            }, {
+                                "name": "recid",
+                                "type": "path",
+                                "path": "_deposit.pid.value"
                             }
-                        }
+                        ]
                     },
                     "message": {
                         "template": "mail/message/message_published_plain.html",
-                        "ctx": {
-                            "cadi_id": {
+                        "ctx": [
+                            {
+                                "name": "cadi_id",
                                 "type": "path",
                                 "path": "analysis_context.cadi_id"
-                            },
-                            "title": {
+                            }, {
+                                "name": "title",
                                 "type": "path",
                                 "path": "general_title"
-                            },
-                            "questionnaire_url": {
+                            }, {
+                                "name": "questionnaire_url",
                                 "type": "method",
                                 "method": "create_questionnaire_url"
-                            },
-                            "submitter_mail": {
+                            }, {
+                                "name": "submitter_mail",
                                 "type": "method",
                                 "method": "get_submitter_mail"
                             }
-                        }
+                        ]
                     },
                     "recipients": {
-                        "mail_formatted": {
-                            "template": "mail/addresses/hypernews.html",
-                            "ctx": {
-                                "cadi_id": {
-                                    "type": "path",
-                                    "path": "analysis_context.cadi_id"
-                                }
+                        "mails": {
+                            "formatted": {
+                                "bcc": [
+                                    {
+                                        "template": "mail/addresses/hypernews.html",
+                                        "ctx": [{
+                                            "name": "cadi_id",
+                                            "type": "path",
+                                            "path": "analysis_context.cadi_id"
+                                        }]
+                                    }
+                                ]
                             }
-                        },
-                        "type": "bcc"
+                        }
                     }
                 }, {
                     "template": {
@@ -93,40 +103,48 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                     },
                     "subject": {
                         "template": "mail/subject/subject_published.html",
-                        "ctx": {
-                            "cadi_id": {
+                        "ctx": [
+                            {
+                                "name": "cadi_id",
                                 "type": "path",
                                 "path": "analysis_context.cadi_id"
-                            },
-                            "revision": {
+                            }, {
+                                "name": "revision",
                                 "type": "path",
                                 "path": "_deposit.pid.revision_id"
+                            }, {
+                                "name": "recid",
+                                "type": "path",
+                                "path": "_deposit.pid.value"
                             }
-                        }
+                        ]
                     },
                     "message": {
                         "template": "mail/message/message_published.html",
-                        "ctx": {
-                            "cadi_id": {
+                        "ctx": [
+                            {
+                                "name": "cadi_id",
                                 "type": "path",
                                 "path": "analysis_context.cadi_id"
-                            },
-                            "title": {
+                            }, {
+                                "name": "title",
                                 "type": "path",
                                 "path": "general_title"
-                            },
-                            "questionnaire_url": {
+                            }, {
+                                "name": "questionnaire_url",
                                 "type": "method",
                                 "method": "create_questionnaire_url"
-                            },
-                            "submitter_mail": {
+                            }, {
+                                "name": "submitter_mail",
                                 "type": "method",
                                 "method": "get_submitter_mail"
                             }
-                        }
+                        ]
                     },
                     "recipients": {
-                        "func": "get_cms_stat_recipients",
+                        "func": {
+                            "bcc": "get_cms_stat_recipients"
+                        },
                         "owner": True,
                         "current_user": True,
                         "conditions": [{
@@ -138,7 +156,11 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                                     "value": True,
                                 }
                             ],
-                            "mails": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
+                            "mails": {
+                                "default": {
+                                    "bcc": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
+                                }
+                            }
                         }]
                     }
                 }]
@@ -191,8 +213,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                    in hypernews_mail.body
             assert 'https://cms.cern.ch/iCMS/analysisadmin/cadi?ancode=ABC-11-111' in hypernews_mail.body
             # recipients
-            assert 'ml-conveners-test@cern0.ch' not in hypernews_mail.bcc
-            assert 'hn-cms-ABC-11-111@cern.ch' in hypernews_mail.bcc
+            assert hypernews_mail.bcc == ['hn-cms-ABC-11-111@cern.ch']
 
             # standard
             # message
@@ -202,10 +223,8 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                    in standard_mail.html
             assert 'https://cms.cern.ch/iCMS/analysisadmin/cadi?ancode=ABC-11-111' in standard_mail.html
             # recipients
-            assert 'test@cern.ch' in standard_mail.bcc
-            assert 'ml-conveners-test@cern0.ch' in standard_mail.bcc
-            assert 'ml-conveners-jira-test@cern0.ch' in standard_mail.bcc
-            assert 'hn-cms-ABC-11-111@cern.ch' not in standard_mail.bcc
+            assert set(standard_mail.bcc) == {'ml-conveners-jira-test@cern0.ch', 'ml-conveners-test@cern0.ch'}
+            assert set(standard_mail.recipients) == {'cms_user@cern.ch', 'test@cern.ch'}
 
 
 @patch('cap.modules.mail.users.current_user')

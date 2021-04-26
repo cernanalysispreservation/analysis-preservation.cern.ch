@@ -28,7 +28,8 @@ from .custom import subjects as custom_subjects
 from .custom import templates as custom_templates
 
 from .conditions import CONDITION_METHODS
-from .utils import CONFIG_DEFAULTS, populate_template_from_ctx
+from .utils import CONFIG_DEFAULTS, populate_template_from_ctx,\
+    update_mail_lists_from_defaults
 
 
 def get_recipients_from_config(record, config):
@@ -49,6 +50,8 @@ def get_recipients_from_config(record, config):
     are in the conditions.py file.
     """
     recipients = []
+    cc = []
+    bcc = []
 
     if config.get('owner'):
         recipients.append(CONDITION_METHODS['owner'](record))
@@ -64,14 +67,8 @@ def get_recipients_from_config(record, config):
         # for each condition we have a group of checks to perform
         # all of the checks should give a True/False result
         operator = condition['op']
-        mails = condition.get('mails', [])
-
-        formatted = condition.get('mail_formatted')
-        if formatted:
-            mails += [populate_template_from_ctx(record, formatted)]
-
-        check_results = []
         checks = condition['checks']
+        check_results = []
 
         for check in checks:
             # get the method to apply, and use it on the required path/value
@@ -85,10 +82,10 @@ def get_recipients_from_config(record, config):
         # - if 'or' we need at least 1 true
         if (operator == 'and' and False not in check_results) or \
                 (operator == 'or' and True in check_results):
-            recipients += mails
+            update_mail_lists_from_defaults(record, condition, recipients, cc, bcc)  # noqa
 
     # remove duplicates
-    return list(set(recipients))
+    return list(set(recipients)), list(set(cc)), list(set(bcc))
 
 
 def generate_recipients(record, config):
@@ -105,25 +102,23 @@ def generate_recipients(record, config):
     if not re_config:
         return
 
-    default = re_config.get('default', [])
+    recipients, cc, bcc = get_recipients_from_config(record, re_config)
+    update_mail_lists_from_defaults(record, re_config, recipients, cc, bcc)
+
+    # get the mails from functions (adds to right list depending on config)
     func = re_config.get('func')
-    recipients = get_recipients_from_config(record, re_config)
-    formatted = re_config.get('mail_formatted')
-
-    # recipients type accepts: recipients, bcc, cc
-    _type = re_config.get('type', 'bcc')
-
-    if default:
-        recipients += default
-
     if func:
-        custom_recipients_func = getattr(custom_recipients, func)
-        recipients += custom_recipients_func(record, re_config)
+        if func.get('recipients'):
+            custom_recipients_func = getattr(custom_recipients, func['recipients'])  # noqa
+            recipients += custom_recipients_func(record, re_config)
+        if func.get('cc'):
+            custom_recipients_func = getattr(custom_recipients, func['cc'])
+            cc += custom_recipients_func(record, re_config)
+        if func.get('bcc'):
+            custom_recipients_func = getattr(custom_recipients, func['bcc'])
+            bcc += custom_recipients_func(record, re_config)
 
-    if formatted:
-        recipients += [populate_template_from_ctx(record, formatted)]
-
-    return recipients, _type
+    return recipients, cc, bcc
 
 
 def generate_message(record, config, action):
@@ -222,7 +217,8 @@ def generate_template(record, config, action):
     if not template_config:
         return CONFIG_DEFAULTS['template'][action]
 
-    _type = template_config.get('type')
+    # plain or html
+    plain = template_config.get('plain')
 
     default = template_config.get('default')
     if default:
@@ -233,4 +229,4 @@ def generate_template(record, config, action):
         custom_template_func = getattr(custom_templates, func)
         template = custom_template_func(record, config)
 
-    return template, _type
+    return template, plain

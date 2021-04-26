@@ -32,13 +32,12 @@ from invenio_mail.api import TemplatedMessage
                  'max_retries': 3,
                  'countdown': 10
              })
-def create_and_send(template, ctx, mail_ctx, type=None):
+def create_and_send(template, ctx, mail_ctx, plain=False):
     if not current_app.config['CAP_SEND_MAIL']:
         return
 
-    if type == "plain":
-        msg = TemplatedMessage(template_body=template, ctx=ctx, **mail_ctx)
-    else:
-        msg = TemplatedMessage(template_html=template, ctx=ctx, **mail_ctx)
+    msg = TemplatedMessage(template_body=template, ctx=ctx, **mail_ctx) \
+        if plain \
+        else TemplatedMessage(template_html=template, ctx=ctx, **mail_ctx)
 
     current_app.extensions['mail'].send(msg)

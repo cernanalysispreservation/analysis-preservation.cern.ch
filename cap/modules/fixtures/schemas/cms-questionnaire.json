@@ -12,54 +12,63 @@
           {
             "subject": {
               "template": "mail/subject/subject_published.html",
-              "ctx": {
-                "cadi_id": {
-                  "type": "path",
-                  "path": "analysis_context.cadi_id"
-                },
-                "revision": {
-                  "type": "path",
-                  "path": "_deposit.pid.revision_id"
-                }
-              }
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "revision",
+                "type": "path",
+                "path": "_deposit.pid.revision_id"
+              }, {
+                "name": "recid",
+                "type": "path",
+                "path": "_deposit.pid.value"
+              }]
             },
             "message": {
               "template": "mail/message/message_published.html",
-              "ctx": {
-                "cadi_id": {
-                  "type": "path",
-                  "path": "analysis_context.cadi_id"
-                },
-                "title": {
-                  "type": "path",
-                  "path": "general_title"
-                },
-                "questionnaire_url": {
-                  "type": "method",
-                  "method": "create_questionnaire_url"
-                },
-                "reviewer_params": {
-                  "type": "method",
-                  "method": "get_reviewer_params"
-                },
-                "submitter_mail": {
-                  "type": "method",
-                  "method": "get_submitter_mail"
-                }
-              }
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "name": "questionnaire_url",
+                "type": "method",
+                "method": "create_questionnaire_url"
+              }, {
+                "name": "reviewer_params",
+                "type": "method",
+                "method": "get_reviewer_params"
+              }, {
+                "name": "submitter_mail",
+                "type": "method",
+                "method": "get_submitter_mail"
+              }]
             },
             "recipients": {
-              "func": "get_cms_stat_recipients",
+              "func": {
+                "bcc": "get_cms_stat_recipients"
+              },
               "owner": true,
               "current_user": true,
-              "conditions": [{
+              "conditions": [
+                {
                 "op": "and",
                 "checks": [{
                   "path": "parton_distribution_functions",
                   "if": "exists",
                   "value": true
                 }],
-                "mails": ["pdf-forum-placeholder@cern.ch"]
+                "mails": {
+                  "default": {
+                    "bcc": ["pdf-forum-placeholder@cern.ch"]
+                  }
+                }
               }, {
                 "op": "and",
                 "checks": [{
@@ -71,7 +80,11 @@
                   "if": "is_not_in",
                   "value": "No"
                 }],
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                "mails": {
+                  "default": {
+                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                  }
+                }
               }, {
                 "op": "and",
                 "checks": [{
@@ -79,7 +92,11 @@
                   "if": "equals",
                   "value": "Yes"
                 }],
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                "mails": {
+                  "default": {
+                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                  }
+                }
               }, {
                 "op": "and",
                 "checks": [{
@@ -87,7 +104,11 @@
                   "if": "exists",
                   "value": true
                 }],
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                "mails": {
+                  "default": {
+                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                  }
+                }
               }, {
                 "op": "and",
                 "checks": [{
@@ -95,67 +116,76 @@
                   "if": "equals",
                   "value": "Yes"
                 }],
-                "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                "mails": {
+                  "default": {
+                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                  }
+                }
               }],
-              "default": [
-                "some-recipient-placeholder@cern.ch"
-              ],
-              "type": "bcc"
+              "mails": {
+                "default": {
+                  "bcc": ["some-recipient-placeholder@cern.ch"]
+                }
+              }
             }
           }, {
             "template": {
               "default": "mail/analysis_plain_text.html",
-              "type": "plain"
+              "plain": true
             },
             "subject": {
               "template": "mail/subject/subject_published.html",
-              "ctx": {
-                "cadi_id": {
-                  "type": "path",
-                  "path": "analysis_context.cadi_id"
-                },
-                "revision": {
-                  "type": "path",
-                  "path": "_deposit.pid.revision_id"
-                }
-              }
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "revision",
+                "type": "path",
+                "path": "_deposit.pid.revision_id"
+              }, {
+                "name": "recid",
+                "type": "path",
+                "path": "_deposit.pid.value"
+              }]
             },
             "message": {
               "template": "mail/message/message_published_plain.html",
-              "ctx": {
-                "cadi_id": {
-                  "type": "path",
-                  "path": "analysis_context.cadi_id"
-                },
-                "title": {
-                  "type": "path",
-                  "path": "general_title"
-                },
-                "questionnaire_url": {
-                  "type": "method",
-                  "method": "create_questionnaire_url"
-                },
-                "reviewer_params": {
-                  "type": "method",
-                  "method": "get_reviewer_params"
-                },
-                "submitter_mail": {
-                  "type": "method",
-                  "method": "get_submitter_mail"
-                }
-              }
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "name": "questionnaire_url",
+                "type": "method",
+                "method": "create_questionnaire_url"
+              }, {
+                "name": "reviewer_params",
+                "type": "method",
+                "method": "get_reviewer_params"
+              }, {
+                "name": "submitter_mail",
+                "type": "method",
+                "method": "get_submitter_mail"
+              }]
             },
             "recipients": {
-              "mail_formatted": {
-                "template": "mail/addresses/hypernews.html",
-                "ctx": {
-                  "cadi_id": {
-                    "type": "path",
-                    "path": "analysis_context.cadi_id"
-                  }
+              "mails": {
+                "formatted": {
+                  "bcc": [{
+                    "template": "mail/addresses/hypernews.html",
+                    "ctx": [{
+                      "name": "cadi_id",
+                      "type": "path",
+                      "path": "analysis_context.cadi_id"
+                    }]
+                  }]
                 }
-              },
-              "type": "bcc"
+              }
             }
           }
         ],
@@ -163,81 +193,76 @@
           {
             "subject": {
               "template": "mail/subject/subject_review.html",
-              "ctx": {
-                "cadi_id": {
-                  "type": "path",
-                  "path": "analysis_context.cadi_id"
-                }
-              }
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }]
             },
             "message": {
               "template": "mail/message/message_review.html",
-              "ctx": {
-                "cadi_id": {
-                  "type": "path",
-                  "path": "analysis_context.cadi_id"
-                },
-                "title": {
-                  "type": "path",
-                  "path": "general_title"
-                },
-                "questionnaire_url": {
-                  "type": "method",
-                  "method": "create_questionnaire_url"
-                },
-                "submitter_mail": {
-                  "type": "method",
-                  "method": "get_submitter_mail"
-                },
-                "reviewer_mail": {
-                  "type": "method",
-                  "method": "get_reviewer_mail"
-                }
-              }
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "name": "questionnaire_url",
+                "type": "method",
+                "method": "create_questionnaire_url"
+              }, {
+                "name": "reviewer_params",
+                "type": "method",
+                "method": "get_reviewer_params"
+              }, {
+                "name": "submitter_mail",
+                "type": "method",
+                "method": "get_submitter_mail"
+              }]
             },
             "recipients": {
               "owner": true,
-              "current_user": true,
-              "type": "bcc"
+              "current_user": true
             }
           }, {
             "template": {
               "default": "mail/analysis_plain_text.html",
-              "type": "plain"
+              "plain": true
             },
-             "subject": {
+            "subject": {
                "template": "mail/subject/subject_review.html",
-               "ctx": {
-                 "cadi_id": {
-                   "type": "path",
-                   "path": "analysis_context.cadi_id"
-                }
-              }
+               "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }]
             },
             "message": {
               "template": "mail/message/message_review_plain.html",
-              "ctx": {
-                "cadi_id": {
-                  "type": "path",
-                  "path": "analysis_context.cadi_id"
-                },
-                "title": {
-                  "type": "path",
-                  "path": "general_title"
-                },
-                "questionnaire_url": {
-                  "type": "method",
-                  "method": "create_questionnaire_url"
-                },
-                "submitter_mail": {
-                  "type": "method",
-                  "method": "get_submitter_mail"
-                },
-                "reviewer_mail": {
-                  "type": "method",
-                  "method": "get_reviewer_mail"
-                }
-              }
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "name": "questionnaire_url",
+                "type": "method",
+                "method": "create_questionnaire_url"
+              }, {
+                "name": "reviewer_params",
+                "type": "method",
+                "method": "get_reviewer_params"
+              }, {
+                "name": "submitter_mail",
+                "type": "method",
+                "method": "get_submitter_mail"
+              }]
             },
             "recipients": {
               "conditions": [{
@@ -247,17 +272,19 @@
                   "if": "has_permission",
                   "value": "comittee-mail@cern0.ch"
                 }],
-                "mail_formatted": {
-                  "template": "mail/addresses/hypernews.html",
-                  "ctx": {
-                    "cadi_id": {
-                      "type": "path",
-                      "path": "analysis_context.cadi_id"
-                    }
+                "mails": {
+                  "formatted": {
+                    "bcc": [{
+                      "template": "mail/addresses/hypernews.html",
+                      "ctx": [{
+                        "name": "cadi_id",
+                        "type": "path",
+                        "path": "analysis_context.cadi_id"
+                      }]
+                    }]
                   }
                 }
-              }],
-              "type": "bcc"
+              }]
             }
           }
         ]

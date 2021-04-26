@@ -23,8 +23,6 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 from flask import render_template
-from flask_principal import RoleNeed
-from invenio_access.permissions import Permission
 
 CONFIG_DEFAULTS = {
     'subject': {
@@ -62,10 +60,6 @@ def create_analysis_url(deposit):
     return f'published/{deposit["control_number"]}'
 
 
-def check_for_permission(email):
-    return Permission(RoleNeed(email)).can()
-
-
 def populate_template_from_ctx(record, config, action=None,
                                module=None, type=None):
     """
@@ -85,9 +79,8 @@ def populate_template_from_ctx(record, config, action=None,
         return CONFIG_DEFAULTS[type][action]
 
     ctx = {}
-    for key_attrs in config_ctx.items():
-        key = key_attrs[0]
-        attrs = key_attrs[1]
+    for attrs in config_ctx:
+        name = attrs['name']
 
         if attrs['type'] == 'path':
             val = path_value_equals(attrs['path'], record)
@@ -95,6 +88,32 @@ def populate_template_from_ctx(record, config, action=None,
             custom_func = getattr(module, attrs['method'])
             val = custom_func(record, config)
 
-        ctx.update({key: val})
+        ctx.update({name: val})
 
     return render_template(template, **ctx)
+
+
+def update_mail_lists_from_defaults(record, config, recipients, cc, bcc):
+    # get the default mails (formatted or simple strings)
+    mails_default = config.get('mails', {}).get('default')
+    mails_formatted = config.get('mails', {}).get('formatted')
+
+    if mails_default:
+        if mails_default.get('recipients'):
+            recipients += mails_default['recipients']
+        if mails_default.get('cc'):
+            cc += mails_default['cc']
+        if mails_default.get('bcc'):
+            bcc += mails_default['bcc']
+
+    # if we have formatted mails, format them using jinja and add them
+    if mails_formatted:
+        if mails_formatted.get('recipients'):
+            recipients += [populate_template_from_ctx(record, formatted)
+                           for formatted in mails_formatted['recipients']]
+        if mails_formatted.get('cc'):
+            cc += [populate_template_from_ctx(record, formatted)
+                   for formatted in mails_formatted['cc']]
+        if mails_formatted.get('bcc'):
+            bcc += [populate_template_from_ctx(record, formatted)
+                    for formatted in mails_formatted['bcc']]

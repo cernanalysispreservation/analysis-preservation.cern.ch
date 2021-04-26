@@ -46,21 +46,23 @@ def post_action_notifications(sender, action=None, pid=None, deposit=None):
         .get(action, [])
 
     for config in action_configs:
-        recipients, recipients_type = generate_recipients(deposit, config)
+        recipients, cc, bcc = generate_recipients(deposit, config)
         subject = generate_subject(deposit, config, action)
 
-        if not recipients:
+        if not any([recipients, cc, bcc]):
             current_app.logger.error(
                 f'Mail Error from {sender} with subject: {subject}.\n'
                 f'Empty recipient list.')
 
         message = generate_message(deposit, config, action)
-        template, template_type = generate_template(deposit, config, action)
+        template, plain = generate_template(deposit, config, action)
 
         mail_ctx = {
             'sender': sender,
             'subject': subject,
-            recipients_type: recipients
+            'recipients': recipients,
+            'cc': cc,
+            'bcc': bcc
         }
 
         if action == "publish":
@@ -78,5 +80,5 @@ def post_action_notifications(sender, action=None, pid=None, deposit=None):
 
         create_and_send.delay(
             template, msg_ctx, mail_ctx,
-            type=template_type
+            plain=plain
         )
