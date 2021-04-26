@@ -144,6 +144,7 @@ def test_get(client, db, users, auth_headers_for_user):
             'fullname': 'CMS Schema 1.2.3',
             'is_indexed': True,
             'use_deposit_as_record': False,
+            'config': {},
             'deposit_schema': {
                 'title': 'deposit_schema'
             },
@@ -208,6 +209,7 @@ def test_get(client, db, users, auth_headers_for_user):
         'fullname': 'CMS Schema 1.2.3',
         'is_indexed': True,
         'use_deposit_as_record': False,
+        'config': {},
         'deposit_schema': {
             'title': 'deposit_schema'
         },
@@ -267,6 +269,7 @@ def test_get(client, db, users, auth_headers_for_user):
         'fullname': 'CMS Schema 1.2.3',
         'is_indexed': True,
         'use_deposit_as_record': False,
+        'config': {},
         'deposit_schema': {
             'title': 'deposit_schema'
         },
@@ -409,6 +412,7 @@ def test_get_resolved_schemas(
         'deposit_options': {},
         'record_mapping': {},
         'record_options': {},
+        'config': {},
         'links':
             {
                 'self':
@@ -450,6 +454,7 @@ def test_get_only_latest_version_of_schemas(
             'deposit_mapping': {},
             'deposit_schema': {},
             'record_mapping': {},
+            'config': {},
             'links':
                 {
                     'record':
@@ -481,6 +486,7 @@ def test_get_only_latest_version_of_schemas(
             'deposit_schema': {},
             'record_mapping': {},
             'name': 'schema2',
+            'config': {},
         },
     ]
 
@@ -586,6 +592,7 @@ def test_post(client, db, users, auth_headers_for_user, json_headers):
         'fullname': 'CMS Schema 1.2.3',
         'is_indexed': True,
         'use_deposit_as_record': False,
+        'config': {},
         'deposit_schema': {
             'title': 'deposit_schema'
         },
@@ -742,6 +749,7 @@ def test_put(client, db, auth_headers_for_user, users, json_headers):
         'is_indexed': False,
         'use_deposit_as_record': True,
         'deposit_schema': {},
+        'config': {},
         'deposit_options': {
             'title': 'deposit_options'
         },
