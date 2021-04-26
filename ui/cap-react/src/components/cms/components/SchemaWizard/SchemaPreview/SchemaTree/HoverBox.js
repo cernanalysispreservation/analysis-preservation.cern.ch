@@ -26,19 +26,44 @@ function HoverBox({
   shouldHideChildren,
   schema
 }) {
-  const [{ isOverCurrent }, drop] = useDrop({
+  const [{ isOverCurrent, canDrop }, drop] = useDrop({
     accept: "FIELD_TYPE",
     drop: (item, monitor) => {
       const didDrop = monitor.didDrop();
+      if (!didDrop) {
+        if (!item.data) {
+          let names = [...item.parent.uiSchema, item.card.name];
+          let shouldWeAdd = names.filter(i => !path.uiSchema.includes(i));
 
-      if (!didDrop && !shouldHideChildren) {
-        addProperty(path, item.data.default);
+          let diff = item.parent.schema.filter(i => i !== "items");
+          let isSamePath = diff.filter(item => !path.schema.includes(item));
+
+          if (diff.length === path.schema.length && isSamePath.length === 0)
+            return;
+
+          shouldWeAdd.length > 0 &&
+            addProperty(
+              path,
+              {
+                schema: item.card.prop.content.props.schema,
+                uiSchema: item.card.prop.content.props.uiSchema
+              },
+              item.card.name,
+              {
+                schema: item.parent.schema,
+                uiSchema: item.parent.uiSchema
+              }
+            );
+        } else {
+          addProperty(path, item.data.default);
+        }
         return { item, path, propKey };
       }
     },
     collect: monitor => ({
       isOver: monitor.isOver(),
-      isOverCurrent: monitor.isOver({ shallow: true })
+      isOverCurrent: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop()
     })
   });
 
@@ -61,6 +86,18 @@ function HoverBox({
         </Box>
       )}
       {children}
+      {canDrop &&
+        isOverCurrent && (
+          <div
+            style={{
+              padding: "5px",
+              color: "#000",
+              background: "rgba(0,0,0,0.1)"
+            }}
+          >
+            Drop here
+          </div>
+        )}
     </div>
   );
 }

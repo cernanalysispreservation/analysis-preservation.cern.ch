@@ -13,10 +13,10 @@ function getStyle(opacity) {
   };
 }
 
-function SortableBox({ parent, children, id, index, moveCard }) {
+function SortableBox({ parent, children, id, index, moveCard, card }) {
   const ref = useRef(null);
-  const [, drop] = useDrop({
-    accept: `RE-${parent}`,
+  const [{ isOverCurrent }, drop] = useDrop({
+    accept: `FIELD_TYPE`,
     hover: (item, monitor) => {
       if (!ref.current) {
         return;
@@ -55,22 +55,29 @@ function SortableBox({ parent, children, id, index, moveCard }) {
       // but it's good here for the sake of performance
       // to avoid expensive index searches.
       item.index = hoverIndex;
-    }
+    },
+    collect: monitor => ({
+      isOverCurrent: monitor.isOver(),
+      canDrop: monitor.canDrop()
+    })
   });
 
   const [{ isDragging }, drag] = useDrag({
     item: {
-      type: `RE-${parent}`,
+      type: `FIELD_TYPE`,
       index,
-      id
+      id,
+      card,
+      parent
     },
     collect: monitor => ({
       isDragging: monitor.isDragging()
     })
   });
 
-  const opacity = isDragging ? 0 : 1;
+  const opacity = isDragging ? (isOverCurrent ? 0.3 : 0) : 1;
   drag(drop(ref));
+
   return (
     <div ref={ref} style={getStyle(opacity)}>
       {children}

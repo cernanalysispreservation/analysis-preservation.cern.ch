@@ -124,11 +124,12 @@ const ObjectFieldTemplate = function(props) {
     },
     [cards]
   );
+
   if (props.idSchema.$id == "root") {
     return (
       <Box>
         {cards.map((card, i) =>
-          RenderSortable(props.formContext.uiSchema, card, i, moveCard)
+          RenderSortable(props.formContext, card, i, moveCard)
         )}
       </Box>
     );

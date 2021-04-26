@@ -236,9 +236,7 @@ CustomizeField.propTypes = {
   onSchemaChange: PropTypes.func,
   onUiSchemaChange: PropTypes.func,
   path: PropTypes.array,
-  deleteByPath: PropTypes.func,
-  optionsSchema: PropTypes.object,
-  renameId: PropTypes.func
+  optionsSchema: PropTypes.object
 };
 
 export default CustomizeField;

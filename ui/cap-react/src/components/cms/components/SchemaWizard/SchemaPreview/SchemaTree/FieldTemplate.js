@@ -113,7 +113,8 @@ FieldTemplate.propTypes = {
 
 function mapDispatchToProps(dispatch) {
   return {
-    addProperty: (path, data) => dispatch(addByPath(path, data))
+    addProperty: (path, data, name, deletePrevious) =>
+      dispatch(addByPath(path, data, name, deletePrevious))
   };
 }
 
