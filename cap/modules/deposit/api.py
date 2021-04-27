@@ -56,10 +56,10 @@ from cap.modules.experiments.permissions import exp_need_factory
 from cap.modules.records.api import CAPRecord
 from cap.modules.records.errors import get_error_path
 from cap.modules.repos.errors import GitError
-from cap.modules.repos.factory import create_git_api
+from cap.modules.repos.factory import create_git_api, host_to_git_api
 from cap.modules.repos.tasks import download_repo, download_repo_file
 from cap.modules.repos.utils import (create_webhook, disconnect_subscriber,
-                                     parse_git_url)
+                                     parse_git_url, populate_template_from_ctx)
 from cap.modules.schemas.resolvers import (resolve_schema_by_url,
                                            schema_name_to_url)
 from cap.modules.user.errors import DoesNotExistInLDAP
@@ -238,68 +238,185 @@ class CAPDeposit(Deposit, Reviewable):
     @has_status
     @mark_as_action
     def upload(self, pid, *args, **kwargs):
-        """Upload action for repostiories.
+        """Upload action for repositories.
 
         Can upload a repository or its single file and/or create a webhook.
         Expects json with params:
-        * `url`
-        * `webhook` (true|false)
-        * `event_type` (release|push)'.
+        * `url`: the git url, can point to repo or specific file
+        * `webhook`: the webhook type to be applied, can be null to just `attach` the repo  # noqa
         """
         with UpdateDepositPermission(self).require(403):
             if request:
                 _, rec = request.view_args.get('pid_value').data
                 record_uuid = str(rec.id)
                 data = request.get_json()
-                webhook = data.get('webhook', False)
-                event_type = data.get('event_type', 'release')
+                action_type = data.get('type')
+
+                actions = {
+                    'create': self.create_repo_as_user_and_attach,
+                    'attach': self.attach_repo_to_deposit,
+                    'collab': self.create_repo_as_collaborator_and_attach
+                }
 
                 try:
-                    url = data['url']
+                    actions[action_type](record_uuid, data)
                 except KeyError:
-                    raise FileUploadError('Missing url parameter.')
-
-                try:
-                    host, owner, repo, branch, filepath = parse_git_url(url)
-                    api = create_git_api(host, owner, repo, branch,
-                                         current_user.id)
-
-                    if filepath:
-                        if webhook:
-                            raise FileUploadError(
-                                'You cannot create a webhook on a file')
-
-                        download_repo_file(
-                            record_uuid,
-                            f'repositories/{host}/{owner}/{repo}/{api.branch or api.sha}/{filepath}',  # noqa
-                            *api.get_file_download(filepath),
-                            api.auth_headers,
-                        )
-                    elif webhook:
-                        if event_type == 'release':
-                            if branch:
-                                raise FileUploadError(
-                                    'You cannot create a release webhook'
-                                    ' for a specific branch or sha.')
-
-                        if event_type == 'push' and \
-                                api.branch is None and api.sha:
-                            raise FileUploadError(
-                                'You cannot create a push webhook'
-                                ' for a specific sha.')
-
-                        create_webhook(record_uuid, api, event_type)
-                    else:
-                        download_repo.delay(
-                            record_uuid,
-                            f'repositories/{host}/{owner}/{repo}/{api.branch or api.sha}.tar.gz',  # noqa
-                            api.get_repo_download(),
-                            api.auth_headers)
-
-                except GitError as e:
-                    raise FileUploadError(str(e))
+                    raise FileUploadError(
+                        'Unsupported repository action. '
+                        'Try create, attach or collab.')
 
             return self
+
+    def create_repo_as_collaborator_and_attach(self, record_uuid, data):
+        config = self.schema.config.get('repositories', {})
+        if not config:
+            raise FileUploadError(
+                'No config found. Cannot create a repo for this analysis.')
+
+        host = data.get('host')
+        git_service = host.split('.')[0]
+        repos = config.get(git_service)
+
+        token = current_app.config.get(repos['admin'])
+        if not token:
+            raise FileUploadError(f'Admin API key for {host} is not provided.')
+
+        name = populate_template_from_ctx(self, repos.get('repo_name'))
+        desc = populate_template_from_ctx(self, repos.get('description'))
+        organization = repos.get('org_name')
+
+        api = host_to_git_api(host)
+
+        repo, invite = api.create_repo_as_collaborator(
+            token, organization, name,
+            description=desc,
+            private=repos.get('private'),
+            license=repos.get('license'),
+            host=host
+        )
+
+        # get the url from the repo according to host
+        url = repo.html_url if host == 'github.com' \
+            else repo.attributes['web_url']
+
+        # after the repo creation, attach it to the deposit
+        host, owner, repo, branch, filepath = parse_git_url(url)
+        api = create_git_api(
+            host, owner, repo, branch,
+            user_id=current_user.id
+        )
+
+        create_webhook(record_uuid, api)
+
+    def create_repo_as_user_and_attach(self, record_uuid, data):
+        """Create a repository according to the parameters, and attach it to
+        the current analysis.
+
+        Expects json with params:
+        * `host`: the git host, should be `github.com` or `gitlab.cern.ch`
+        * `name`: the name of the new repo
+        * `description`: a short repo description
+        * `private`: true or false
+        * `license`: the license type, should be string, or None
+        * `org_name`: the organization name that should own the repo (the user
+        should have access to it)
+        """
+        host = data.get('host')
+        api = host_to_git_api(host)
+
+        repo = api.create_repo_as_user(
+            current_user.id,
+            data.get('name'),
+            description=data.get('description', ''),
+            private=data.get('private', False),
+            license=data.get('license'),
+            org_name=data.get('org_name'),
+            host=host
+        )
+
+        # get the url from the repo according to host
+        url = repo.html_url if host == 'github.com' \
+            else repo.attributes['web_url']
+
+        # after the repo creation, attach it to the deposit
+        host, owner, repo, branch, filepath = parse_git_url(url)
+        api = create_git_api(
+            host, owner, repo, branch,
+            user_id=current_user.id
+        )
+
+        create_webhook(record_uuid, api)
+
+    def attach_repo_to_deposit(self, record_uuid, data):
+        """Attach a repo to a deposit, download it, and create webhooks
+        according to the parameters.
+
+        Can upload a repository or its single file and/or create a webhook.
+        Expects json with params:
+        * `url`: the git url, can point to repo or specific file
+        * `download`: download the repo as a .tar and save it in the analysis
+        * `webhook`: the webhook type to be applied, can be null to just `attach` the repo  # noqa
+        """
+        url = data.get('url')
+        if not url:
+            raise FileUploadError('Missing url parameter.')
+
+        try:
+            webhook = data.get('webhook')
+            download = data.get('download')
+            host, owner, repo, branch, filepath = parse_git_url(url)
+            api = create_git_api(
+                host, owner, repo, branch,
+                user_id=current_user.id
+            )
+
+            # if filepath, download the file
+            if filepath:
+                if webhook:
+                    raise FileUploadError('You cannot create a webhook on a file')  # noqa
+
+                download_repo_file(
+                    record_uuid,
+                    f'repositories/{host}/{owner}/{repo}/{api.branch or api.sha}/{filepath}',  # noqa
+                    *api.get_file_download(filepath),
+                    api.auth_headers
+                )
+
+            # if repo, we need to check the options, which work separately
+            # we can just download, connect webhooks, both, or nothing at
+            # all (so just attach the repo it to the record)
+            else:
+                # in any case, attach the repo to the record
+                create_webhook(record_uuid, api)
+
+                # if download, add the repo .tar in the files
+                if download:
+                    download_repo.delay(
+                        record_uuid,
+                        f'repositories/{host}/{owner}/{repo}/{api.branch or api.sha}.tar.gz',  # noqa
+                        api.get_repo_download(),
+                        api.auth_headers)
+
+                # if webhook, create webhook connection
+                if webhook:
+                    if webhook == 'release' and branch:
+                        raise FileUploadError(
+                            'You cannot create a release webhook'
+                            ' for a specific branch or sha.')
+
+                    if webhook == 'push' and not api.branch and api.sha:
+                        raise FileUploadError(
+                            'You cannot create a push webhook'
+                            ' for a specific sha.')
+
+                    if webhook not in ['push', 'release']:
+                        raise FileUploadError(
+                            'Supported webhooks are push, release.')
+
+                    create_webhook(record_uuid, api, webhook)
+
+        except GitError as e:
+            raise FileUploadError(str(e))
 
     @has_status
     @mark_as_action

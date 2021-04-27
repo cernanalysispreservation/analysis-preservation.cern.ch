@@ -852,3 +852,8 @@ APP_DEFAULT_SECURE_HEADERS = {
     'strict_transport_security_max_age': 31556926,  # One year in seconds
     'strict_transport_security_preload': False,
 }
+
+# GitHub/GitLab API credentials
+# =============================
+ATLAS_ADMIN_GITHUB = os.environ.get("CAP_ATLAS_ADMIN_GITHUB")
+ATLAS_ADMIN_GITLAB = os.environ.get("CAP_ATLAS_ADMIN_GITHUB")

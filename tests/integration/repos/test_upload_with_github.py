@@ -27,14 +27,14 @@ from __future__ import absolute_import, print_function
 
 import json
 import tarfile
-
 import responses
-from github import GithubException
-from invenio_files_rest.models import ObjectVersion
 from mock import Mock, patch
 
+from github import GithubException
+from invenio_files_rest.models import ObjectVersion
+
 from cap.modules.repos.github_api import Github, GithubAPI
-from cap.modules.repos.models import GitWebhookSubscriber
+from cap.modules.repos.models import GitWebhookSubscriber, GitWebhook
 
 
 def test_upload_when_missing_params_returns_400(client, deposit,
@@ -44,7 +44,9 @@ def test_upload_when_missing_params_returns_400(client, deposit,
 
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
-                       data=json.dumps({}))
+                       data=json.dumps({
+                           'type': 'attach'
+                       }))
 
     assert resp.status_code == 400
     assert resp.json == {'status': 400, 'message': "Missing url parameter."}
@@ -57,8 +59,12 @@ def test_upload_when_host_not_gitlab_nor_github_returns_400(
     resp = client.post(
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
-        data=json.dumps(
-            {'url': 'http://notsupported.com/owner/repository/mybranch'}))
+        data=json.dumps({
+            'type': 'attach',
+            'url': 'http://notsupported.com/owner/repository/mybranch',
+            'webhook': 'push'
+        })
+    )
 
     assert resp.status_code == 400
     assert resp.json == {'status': 400, 'message': "Invalid git URL."}
@@ -92,16 +98,20 @@ def test_upload_when_wrong_url(client, deposit, auth_headers_for_example_user,
 
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
-                       data=json.dumps(
-                           {'url': 'http://github.com/verywrongurl'}))
+                       data=json.dumps({
+                           'type': 'attach',
+                           'url': 'http://github.com/verywrongurl'
+                       }))
 
     assert resp.status_code == 400
     assert resp.json == {'status': 400, 'message': 'Invalid git URL.'}
 
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
-                       data=json.dumps(
-                           {'url': 'http://unknownhost.com/verywrongurl'}))
+                       data=json.dumps({
+                           'type': 'attach',
+                           'url': 'http://unknownhost.com/verywrongurl'
+                       }))
 
     assert resp.status_code == 400
     assert resp.json == {'status': 400, 'message': 'Invalid git URL.'}
@@ -113,8 +123,10 @@ def test_upload_when_wrong_url_2(client, deposit,
 
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
-                       data=json.dumps(
-                           {'url': 'http://github.com/verywrongurl'}))
+                       data=json.dumps({
+                           'type': 'attach',
+                           'url': 'http://github.com/verywrongurl'
+                       }))
 
     assert resp.status_code == 400
     assert resp.json == {'status': 400, 'message': 'Invalid git URL.'}
@@ -126,6 +138,7 @@ def test_upload_when_user_gave_url_with_sha_and_tries_to_create_a_release_webhoo
     m_get_repo, client, deposit, auth_headers_for_example_user, json_headers,
     git_repo_tar):
     class MockProject(object):
+        id = 'id'
         def get_branch(self, name):
             raise GithubException(404, data={'message': 'Branch not found'})
 
@@ -141,8 +154,9 @@ def test_upload_when_user_gave_url_with_sha_and_tries_to_create_a_release_webhoo
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
         data=json.dumps({
+            'type': 'attach',
             'url': 'http://github.com/owner/repository/mycommitsha',
-            'webhook': True
+            'webhook': 'release'
         }))
 
     assert resp.status_code == 400
@@ -158,6 +172,7 @@ def test_upload_when_user_gave_url_with_sha_and_tries_to_create_a_push_webhook_r
     m_get_repo, client, deposit, auth_headers_for_example_user, json_headers,
     git_repo_tar):
     class MockProject(object):
+        id = 'id'
         def get_branch(self, name):
             raise GithubException(404, data={'message': 'Branch not found'})
 
@@ -173,9 +188,9 @@ def test_upload_when_user_gave_url_with_sha_and_tries_to_create_a_push_webhook_r
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
         data=json.dumps({
+            'type': 'attach',
             'url': 'http://github.com/owner/repository/mycommitsha',
-            'event_type': 'push',
-            'webhook': True
+            'webhook': 'push'
         }))
 
     assert resp.status_code == 400
@@ -191,6 +206,7 @@ def test_upload_when_repo(m_get_repo, client, deposit,
                           auth_headers_for_example_user, json_headers,
                           git_repo_tar):
     class MockProject(object):
+        id = 'id'
         def get_branch(self, name):
             mock = Mock()
             mock.name = name
@@ -220,7 +236,9 @@ def test_upload_when_repo(m_get_repo, client, deposit,
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
                        data=json.dumps({
-                           'url': 'http://github.com/owner/repository/mybranch'
+                           'type': 'attach',
+                           'url': 'http://github.com/owner/repository/mybranch',
+                           'download': True
                        }))
 
     assert resp.status_code == 201
@@ -245,6 +263,7 @@ def test_upload_for_record_so_bucket_is_locked_returns_403(
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
                        data=json.dumps({
+                           'type': 'attach',
                            'url': 'http://github.com/owner/repository/mybranch'
                        }))
 
@@ -306,8 +325,9 @@ def test_upload_when_repo_and_creating_release_webhook(
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
                        data=json.dumps({
+                           'type': 'attach',
                            'url': 'http://github.com/owner/repository',
-                           'webhook': True,
+                           'webhook': 'release'
                        }))
 
     assert resp.status_code == 201
@@ -372,8 +392,8 @@ def test_upload_when_repo_and_creating_push_webhook(
                        headers=auth_headers_for_example_user + json_headers,
                        data=json.dumps({
                            'url': 'http://github.com/owner/repository',
-                           'event_type': 'push',
-                           'webhook': True,
+                           'type': 'attach',
+                           'webhook': 'push',
                        }))
 
     assert resp.status_code == 201
@@ -382,7 +402,8 @@ def test_upload_when_repo_and_creating_push_webhook(
     assert not deposit.files
 
     # webhook was created
-    sub = GitWebhookSubscriber.query.filter_by(record_id=deposit.id).one()
+    webhook = GitWebhook.query.filter_by(event_type='push').one()
+    sub = GitWebhookSubscriber.query.filter_by(record_id=deposit.id, webhook_id=webhook.id).one()
     repo = sub.webhook.repo
 
     assert sub.webhook.branch == 'def-branch'
@@ -429,6 +450,7 @@ def test_upload_when_repo_file(m_get_repo, client, deposit,
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
         data=json.dumps({
+            'type': 'attach',
             'url': 'http://github.com/owner/repository/blob/mybranch/README.md'
         }))
 
@@ -441,3 +463,46 @@ def test_upload_when_repo_file(m_get_repo, client, deposit,
     repo_content = open_file.read()
 
     assert repo_content == 'test repo for cap\n'
+
+
+@patch('cap.modules.deposit.api.host_to_git_api')
+@patch('cap.modules.deposit.api.create_git_api')
+def test_create_repo_and_attach(
+        m_create_api, m_api, client, deposit, auth_headers_for_example_user, json_headers, git_repo_tar):
+    class MockRepo(object):
+        html_url = 'https://github.com/owner/repository/'
+
+    class MockAPI(object):
+        branch = None
+        repo_id = 'id'
+        host = 'github.com'
+        owner = 'owner'
+        repo = 'repository'
+
+        def create_webhook(type_):
+            return 'id', 'secret'
+
+    class MockProject(object):
+        def create_repo_as_user(cls, user_id, repo_name, description='',
+                                private=False, license=None, org_name=None, host=None):
+            return MockRepo()
+
+    m_api.return_value = MockProject()
+    m_create_api.return_value = MockAPI()
+    pid = deposit['_deposit']['id']
+    resp = client.post(f'/deposits/{pid}/actions/upload',
+                       headers=auth_headers_for_example_user + json_headers,
+                       data=json.dumps({
+                           'type': 'create',
+                           'name': 'repository',
+                           'host': 'github.com'
+                       }))
+
+    assert resp.status_code == 201
+
+    webhook = GitWebhook.query.filter_by(event_type=None).one()
+    sub = GitWebhookSubscriber.query.filter_by(record_id=deposit.id, webhook_id=webhook.id).one()
+    repo = sub.webhook.repo
+
+    assert repo.name == 'repository'
+    assert repo.owner == 'owner'

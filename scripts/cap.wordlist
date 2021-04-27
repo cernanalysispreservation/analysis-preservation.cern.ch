@@ -30,3 +30,6 @@ OIDC
 json
 reviewable
 recid
+github
+gitlab
+repos

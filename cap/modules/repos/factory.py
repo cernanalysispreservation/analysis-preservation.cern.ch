@@ -27,12 +27,18 @@ from .github_api import GithubAPI
 from .gitlab_api import GitlabAPI
 
 
+def host_to_git_api(host):
+    return {
+        'github.com': GithubAPI,
+        'gitlab.cern.ch': GitlabAPI,
+        'gitlab.com': GitlabAPI,
+    }[host]
+
+
 def create_git_api(host, owner, repo, branch='master', user_id=None):
     try:
-        return {
-            'github.com': GithubAPI,
-            'gitlab.cern.ch': GitlabAPI,
-            'gitlab-test.cern.ch': GitlabAPI,
-        }[host](host, owner, repo, branch, user_id)
+        return host_to_git_api(host)(
+            host, owner, repo, branch, user_id
+        )
     except KeyError:
         raise GitHostNotSupported

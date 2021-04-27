@@ -30,7 +30,7 @@ import shutil
 import string
 from tempfile import SpooledTemporaryFile
 
-from flask import current_app, url_for
+from flask import current_app, url_for, render_template
 from flask_login import current_user
 from invenio_db import db
 from sqlalchemy.orm.exc import NoResultFound
@@ -46,7 +46,7 @@ def parse_git_url(url):
     git_regex = re.compile(
         '''
         (?:https|http)://
-        (?P<host>(?:github\.com|gitlab\.cern\.ch|gitlab-test\.cern\.ch))
+        (?P<host>(?:github\.com|gitlab\.cern\.ch|gitlab\.com))
         [:|\/]
         (?P<owner>[\w-]+)\/
         (?P<repo>[\w\.-]+)
@@ -88,7 +88,7 @@ def ensure_content_length(resp):
     return resp
 
 
-def create_webhook(record_id, api, type_='release'):
+def create_webhook(record_id, api, type_=None):
     """
     Create webhook.
 
@@ -99,33 +99,39 @@ def create_webhook(record_id, api, type_='release'):
     with db.session.begin_nested():
         # release event cannot be on branch
         branch = None if type_ == 'release' else api.branch
+        repo = GitRepository.create_or_get(
+            api.repo_id, api.host, api.owner, api.repo)
 
-        repo = GitRepository.create_or_get(api.repo_id, api.host, api.owner,
-                                           api.repo)
         try:
-            webhook = GitWebhook.query.filter_by(event_type=type_,
-                                                 repo_id=repo.id,
-                                                 branch=branch).one()
+            webhook = GitWebhook.query.filter_by(
+                event_type=type_, repo_id=repo.id, branch=branch).one()
+
         except NoResultFound:
-            hook_id, hook_secret = api.create_webhook(type_)
-            webhook = GitWebhook(event_type=type_,
-                                 repo_id=repo.id,
-                                 branch=branch,
-                                 external_id=hook_id,
-                                 secret=hook_secret)
+            if type_:
+                hook_id, hook_secret = api.create_webhook(type_)
+                webhook = GitWebhook(
+                    event_type=type_, repo_id=repo.id, branch=branch,
+                    external_id=hook_id, secret=hook_secret)
+            else:
+                webhook = GitWebhook(repo_id=repo.id, branch=branch)
+
             db.session.add(webhook)
 
         try:
             GitWebhookSubscriber.query.filter_by(
                 record_id=record_id,
                 user_id=current_user.id,
-                webhook_id=webhook.id,
+                webhook_id=webhook.id
             ).one()
-            raise GitIntegrationError(
-                f'Analysis already connected with {type_} webhook.')
+
+            if type_:
+                raise GitIntegrationError(
+                    f'Analysis already connected with {type_} webhook.')
+
         except NoResultFound:
-            subscriber = GitWebhookSubscriber(record_id=record_id,
-                                              user_id=current_user.id)
+            subscriber = GitWebhookSubscriber(
+                record_id=record_id,
+                user_id=current_user.id)
             webhook.subscribers.append(subscriber)
 
     db.session.commit()
@@ -151,3 +157,50 @@ def disconnect_subscriber(sub_id):
     sub = GitWebhookSubscriber.query.filter_by(id=sub_id).one()
     sub.status = 'deleted'
     db.session.commit()
+
+
+def path_value_equals(element, JSON):
+    """Given a string path, retrieve the JSON item."""
+    paths = element.split(".")
+    data = JSON
+    try:
+        for i in range(0, len(paths)):
+            data = data[paths[i]]
+    except KeyError:
+        return None
+    return data
+
+
+def populate_template_from_ctx(record, config, module=None):
+    """
+    Render a template according to the context provided in the schema.
+    Args:
+        record: The analysis record that has the necessary fields.
+        config: The analysis config, provided in the `schema`.
+        module: The file that will hold the custom created functions.
+
+    Returns: The rendered string, using the required context values.
+    """
+    if not config:
+        raise GitIntegrationError('No config provided for repo creation.')
+
+    config_ctx = config.get('ctx', {})
+    template = config.get('template')
+
+    if not template:
+        raise GitIntegrationError('No template provided for repo creation.')
+
+    ctx = {}
+    for key_attrs in config_ctx.items():
+        key = key_attrs[0]
+        attrs = key_attrs[1]
+
+        if attrs['type'] == 'path':
+            val = path_value_equals(attrs['path'], record)
+        else:
+            custom_func = getattr(module, attrs['method'])
+            val = custom_func(record, config)
+
+        ctx.update({key: val})
+
+    return render_template(template, **ctx)

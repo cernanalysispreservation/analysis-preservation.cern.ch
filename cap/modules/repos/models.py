@@ -74,9 +74,9 @@ class GitWebhook(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     branch = db.Column(db.String(255), nullable=True)
-    event_type = db.Column(db.String(255), nullable=False)
+    event_type = db.Column(db.String(255), nullable=True)
 
-    external_id = db.Column(db.Integer, nullable=False)
+    external_id = db.Column(db.Integer, nullable=True)
     secret = db.Column(db.String(32), nullable=True)
 
     repo_id = db.Column(db.Integer, db.ForeignKey(GitRepository.id))

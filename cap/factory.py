@@ -34,10 +34,12 @@ def config_loader(app, **kwargs_config):
             app.jinja_loader,
         ])
 
-    # mail templates
     app.jinja_loader = ChoiceLoader([
+        # mail templates
         FileSystemLoader('cap/modules/mail/templates'),
         FileSystemLoader('cap/modules/auth/templates'),
+        # repo templates
+        FileSystemLoader('cap/modules/repos/templates'),
         app.jinja_loader,
     ])
 

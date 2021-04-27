@@ -25,10 +25,13 @@
 
 import requests
 from flask import request
-from gitlab import Gitlab
-from gitlab.exceptions import GitlabAuthenticationError, GitlabGetError
+from flask_login import current_user
+from gitlab import Gitlab, DEVELOPER_ACCESS
+from gitlab.exceptions import GitlabAuthenticationError, GitlabGetError,\
+    GitlabCreateError
 
 from cap.modules.auth.ext import _fetch_token
+from cap.modules.deposit.errors import FileUploadError
 
 from .errors import (GitIntegrationError, GitObjectNotFound,
                      GitRequestWithInvalidSignature, GitUnauthorizedRequest)
@@ -127,13 +130,6 @@ class GitlabAPI(GitAPI):
         except GitlabAuthenticationError:
             raise GitObjectNotFound('No permission to delete this webhook')
 
-    def _get_token(self, user_id):
-        token_obj = _fetch_token('gitlab', user_id) if user_id else None
-        if not token_obj:
-            return None
-
-        return token_obj.get('access_token')
-
     def _get_branch_and_sha(self, branch_or_sha):
         if not branch_or_sha:
             # try default branch
@@ -159,3 +155,74 @@ class GitlabAPI(GitAPI):
                         f'{branch_or_sha} does not match any branch or sha.')
 
         return branch, sha
+
+    @classmethod
+    def create_repo(cls, token, repo_name, description,
+                    private, license, org_name, host):
+        """
+        Create a gitlab repo as user/organization.
+        """
+        try:
+            gitlab = Gitlab(f'https://{host}', oauth_token=token)
+            return gitlab.projects.create({
+                'name': repo_name,
+                'description': description,
+                'namespace_id': org_name,
+                'visibility': 'private' if private else 'public',
+                'initialize_with_readme': True
+            })
+
+        except (GitlabCreateError,
+                GitlabAuthenticationError,
+                GitlabGetError) as ex:
+            raise FileUploadError(description=ex.error_message)
+
+    @classmethod
+    def create_repo_as_user(cls, user_id, repo_name, description='',
+                            private=False, license=None, org_name=None,
+                            host=None):
+        """Create repo a user, using the current user's token."""
+        token = cls._get_token(user_id)
+        if not token:
+            raise GitUnauthorizedRequest(
+                'Gitlab requires authorization - '
+                'connect your CERN account: Settings -> Integrations.')
+
+        repo = cls.create_repo(
+            token, repo_name, description, private,
+            license, org_name, host)
+        return repo
+
+    @classmethod
+    def create_repo_as_collaborator(cls, create_token, org_name, repo_name,
+                                    description='', private=False,
+                                    license=None, host=None):
+        """
+        Create repo through an organization admin,
+        adding the current user as a member/collaborator.
+        """
+        repo = cls.create_repo(
+            create_token, repo_name, description,
+            private, license, org_name, host)
+
+        try:
+            collab_token = cls._get_token(current_user.id)
+            gitlab = Gitlab(f'https://{host}', oauth_token=collab_token)
+            gitlab.auth()
+
+            collaborator = gitlab.user.id
+            member = repo.members.create({
+                'user_id': collaborator,
+                'access_level': DEVELOPER_ACCESS
+            })
+
+            return repo, member
+        except GitlabCreateError as ex:
+            raise FileUploadError(description=ex.error_message)
+
+    @classmethod
+    def _get_token(cls, user_id):
+        token_obj = _fetch_token('gitlab', user_id) if user_id else None
+        if not token_obj:
+            return None
+        return token_obj.get('access_token')

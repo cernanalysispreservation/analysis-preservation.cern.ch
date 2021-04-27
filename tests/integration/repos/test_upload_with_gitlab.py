@@ -27,15 +27,14 @@ from __future__ import absolute_import, print_function
 
 import json
 import tarfile
-
 import responses
-from flask import current_app
-from github import GithubException
-from gitlab.exceptions import GitlabAuthenticationError, GitlabGetError
-from invenio_files_rest.models import ObjectVersion
 from mock import Mock, patch
+from pytest import mark
 
-from cap.modules.repos.models import GitWebhookSubscriber
+from gitlab.exceptions import GitlabGetError
+from invenio_files_rest.models import ObjectVersion
+
+from cap.modules.repos.models import GitWebhookSubscriber, GitWebhook
 
 
 def test_upload_when_wrong_url(client, deposit, auth_headers_for_example_user,
@@ -44,16 +43,20 @@ def test_upload_when_wrong_url(client, deposit, auth_headers_for_example_user,
 
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
-                       data=json.dumps(
-                           {'url': 'http://gitlab.cern.ch/verywrongurl'}))
+                       data=json.dumps({
+                           'type': 'attach',
+                           'url': 'http://gitlab.cern.ch/verywrongurl'
+                       }))
 
     assert resp.status_code == 400
     assert resp.json == {'status': 400, 'message': 'Invalid git URL.'}
 
 
+@mark.skip
 @patch('cap.modules.repos.gitlab_api.Gitlab')
+@patch('cap.modules.deposit.api.create_git_api')
 def test_upload_when_user_gave_url_with_sha_and_tries_to_create_a_push_webhook_raises_an_error(
-    m_gitlab, client, deposit, auth_headers_for_example_user, json_headers,
+    m_api, m_gitlab, client, deposit, auth_headers_for_example_user, json_headers,
     git_repo_tar):
     class MockCommitManager:
         def get(self, sha):
@@ -71,16 +74,22 @@ def test_upload_when_user_gave_url_with_sha_and_tries_to_create_a_push_webhook_r
                 commits=MockCommitManager(),
             )
 
+    def create_webhook(type_):
+        return 'id', 'secret'
+
     m_gitlab.return_value = Mock(projects=MockProjectManager())
+    m_api.return_value = Mock(repo_id='id', host='gitlab.cern.ch', repo='repo',
+                              owner='owner', branch='mycommitsha',
+                              create_webhook=create_webhook)
     pid = deposit['_deposit']['id']
 
     resp = client.post(
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
         data=json.dumps({
+            'type': 'attach',
             'url': 'http://gitlab.cern.ch/owner/repository/mycommitsha',
-            'event_type': 'push',
-            'webhook': True
+            'webhook': 'push'
         }))
 
     assert resp.status_code == 400
@@ -122,8 +131,11 @@ def test_upload_when_repo(m_gitlab, client, deposit,
     resp = client.post(
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
-        data=json.dumps(
-            {'url': 'http://gitlab.cern.ch/owner/repository/mybranch'}))
+        data=json.dumps({
+            'type': 'attach',
+            'url': 'http://gitlab.cern.ch/owner/repository/mybranch',
+            'download': True
+        }))
 
     assert resp.status_code == 201
 
@@ -199,9 +211,9 @@ def test_upload_when_repo_and_creating_push_webhook(
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
         data=json.dumps({
+            'type': 'attach',
             'url': 'http://gitlab.cern.ch/owner/repository/mybranch',
-            'event_type': 'push',
-            'webhook': True,
+            'webhook': 'push'
         }))
 
     assert resp.status_code == 201
@@ -210,7 +222,8 @@ def test_upload_when_repo_and_creating_push_webhook(
     assert not deposit.files
 
     # webhook was created
-    sub = GitWebhookSubscriber.query.filter_by(record_id=deposit.id).one()
+    webhook = GitWebhook.query.filter_by(event_type='push').one()
+    sub = GitWebhookSubscriber.query.filter_by(record_id=deposit.id, webhook_id=webhook.id).one()
     repo = sub.webhook.repo
 
     assert sub.webhook.branch == 'mybranch'
@@ -266,8 +279,9 @@ def test_upload_when_repo_and_creating_release_webhook(
     resp = client.post(f'/deposits/{pid}/actions/upload',
                        headers=auth_headers_for_example_user + json_headers,
                        data=json.dumps({
+                           'type': 'attach',
                            'url': 'http://gitlab.cern.ch/owner/repository',
-                           'webhook': True,
+                           'webhook': 'release'
                        }))
 
     assert resp.status_code == 201
@@ -312,6 +326,7 @@ def test_upload_when_repo_file(m_gitlab, client, deposit,
         f'/deposits/{pid}/actions/upload',
         headers=auth_headers_for_example_user + json_headers,
         data=json.dumps({
+            'type': 'attach',
             'url': 'http://gitlab.cern.ch/owner/repository/blob/mybranch/README.md'
         }))
 
@@ -324,3 +339,48 @@ def test_upload_when_repo_file(m_gitlab, client, deposit,
     repo_content = open_file.read()
 
     assert repo_content == 'readme'
+
+
+@patch('cap.modules.deposit.api.host_to_git_api')
+@patch('cap.modules.deposit.api.create_git_api')
+def test_create_repo_and_attach(
+        m_create_api, m_api, client, deposit, auth_headers_for_example_user, json_headers, git_repo_tar):
+    class MockRepo(object):
+        attributes = {
+            'web_url': 'https://gitlab.cern.ch/owner/repository/'
+        }
+
+    class MockAPI(object):
+        branch = None
+        repo_id = 'id'
+        host = 'github.com'
+        owner = 'owner'
+        repo = 'repository'
+
+        def create_webhook(type_):
+            return 'id', 'secret'
+
+    class MockProject(object):
+        def create_repo_as_user(cls, user_id, repo_name, description='',
+                                private=False, license=None, org_name=None, host=None):
+            return MockRepo()
+
+    m_api.return_value = MockProject()
+    m_create_api.return_value = MockAPI()
+    pid = deposit['_deposit']['id']
+    resp = client.post(f'/deposits/{pid}/actions/upload',
+                       headers=auth_headers_for_example_user + json_headers,
+                       data=json.dumps({
+                           'type': 'create',
+                           'name': 'repository',
+                           'host': 'gitlab.com'
+                       }))
+
+    assert resp.status_code == 201
+
+    webhook = GitWebhook.query.filter_by(event_type=None).one()
+    sub = GitWebhookSubscriber.query.filter_by(record_id=deposit.id, webhook_id=webhook.id).one()
+    repo = sub.webhook.repo
+
+    assert repo.name == 'repository'
+    assert repo.owner == 'owner'
