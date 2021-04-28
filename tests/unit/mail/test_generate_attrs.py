@@ -34,8 +34,12 @@ def test_generate_recipients(mock_user, app, users, location, create_schema, cre
 
     config = {
         "recipients": {
-            "owner": True,
-            "current_user": True,
+            "owner": {
+                "recipients": True
+            },
+            "current_user": {
+                "recipients": True
+            },
             "conditions": [{
                 "op": "and",
                 "checks": [
@@ -161,3 +165,78 @@ def test_generate_subject(mock_user, app, users, location, create_schema, create
     pid = deposit['_deposit']['pid']['value']
     subject = generate_subject(deposit, config, 'publish')
     assert subject == f'Questionnaire for ABC-11-111 {pid} - New Published Analysis | CERN Analysis Preservation'
+
+
+@patch('cap.modules.mail.users.current_user')
+def test_generate_recipients_with_nested_conditions(mock_user, app, users, location, create_schema, create_deposit):
+    user = users['cms_user']
+    mock_user.email = user.email
+
+    config = {
+        "recipients": {
+            "owner": {
+                "recipients": True
+            },
+            "current_user": {
+                "recipients": True
+            },
+            "conditions": [{
+                "op": "and",
+                "checks": [
+                    {
+                        "path": "ml_app_use",
+                        "if": "exists",
+                        "value": True,
+                    },
+                    {
+                        # 1st nested: should return true, 1 of them is false and we have or
+                        "op": "or",
+                        "checks": [{
+                            "path": "some_other_field",
+                            "if": "equals",
+                            "value": 'yes',
+                        }, {
+                            "path": "some_field",
+                            "if": "exists",
+                            "value": True,
+                        }, {
+                            # 2nd nested
+                            "op": "and",
+                            "checks": [{
+                                "path": "some_third_field",
+                                "if": "equals",
+                                "value": 'yes',
+                            }]
+                        }]
+                    }
+                ],
+                "mails": {
+                    "default": {
+                        "cc": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"],
+                        "bcc": ["something-else@cern0.ch"]
+                    }
+                }
+            }],
+            "mails": {
+                "default": {
+                    "recipients": ['default@cern0.ch']
+                }
+            }
+        }
+    }
+    create_schema('test', experiment='CMS', config=config)
+    deposit = create_deposit(user, 'test',
+                             {
+                                 '$ana_type': 'test',
+                                 'general_title': 'Test',
+                                 'ml_app_use': True,
+                                 'some_other_field': 'yes',
+                                 'some_third_field': 'yes'
+                             },
+                             experiment='CMS',
+                             publish=True)
+
+    recipients, cc, bcc = generate_recipients(deposit, config)
+    assert set(recipients) == {'cms_user@cern.ch', 'default@cern0.ch'}
+    assert set(cc) == {"ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"}
+    assert set(bcc) == {"something-else@cern0.ch"}

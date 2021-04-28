@@ -54,74 +54,61 @@
               "func": {
                 "bcc": "get_cms_stat_recipients"
               },
-              "owner": true,
-              "current_user": true,
+              "owner": {
+                "bcc": true
+              },
+              "current_user": {
+                "bcc": true
+              },
               "conditions": [
                 {
-                "op": "and",
-                "checks": [{
-                  "path": "parton_distribution_functions",
-                  "if": "exists",
-                  "value": true
-                }],
-                "mails": {
-                  "default": {
-                    "bcc": ["pdf-forum-placeholder@cern.ch"]
+                  "op": "and",
+                  "checks": [{
+                    "path": "parton_distribution_functions",
+                    "if": "exists",
+                    "value": true
+                  }],
+                  "mails": {
+                    "default": {
+                      "bcc": ["pdf-forum-placeholder@cern.ch"]
+                    }
                   }
-                }
-              }, {
-                "op": "and",
-                "checks": [{
-                  "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
-                  "if": "exists",
-                  "value": true
                 }, {
-                  "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
-                  "if": "is_not_in",
-                  "value": "No"
-                }],
-                "mails": {
-                  "default": {
-                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                  "op": "or",
+                  "checks": [
+                    {
+                      "path": "multivariate_discriminants.mva_use",
+                      "if": "equals",
+                      "value": "Yes"
+                    }, {
+                      "path": "ml_app_use",
+                      "if": "exists",
+                      "value": true
+                    }, {
+                      "path": "ml_survey.options",
+                      "if": "equals",
+                      "value": "Yes"
+                    }, {
+                      "op": "and",
+                      "checks": [
+                        {
+                          "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
+                          "if": "exists",
+                          "value": true
+                        }, {
+                          "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
+                          "if": "is_not_in",
+                          "value": "No"
+                        }
+                      ]
+                    }
+                  ],
+                  "mails": {
+                    "default": {
+                      "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                    }
                   }
-                }
-              }, {
-                "op": "and",
-                "checks": [{
-                  "path": "multivariate_discriminants.mva_use",
-                  "if": "equals",
-                  "value": "Yes"
                 }],
-                "mails": {
-                  "default": {
-                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
-                  }
-                }
-              }, {
-                "op": "and",
-                "checks": [{
-                  "path": "ml_app_use",
-                  "if": "exists",
-                  "value": true
-                }],
-                "mails": {
-                  "default": {
-                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
-                  }
-                }
-              }, {
-                "op": "and",
-                "checks": [{
-                  "path": "ml_survey.options",
-                  "if": "equals",
-                  "value": "Yes"
-                }],
-                "mails": {
-                  "default": {
-                    "bcc": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
-                  }
-                }
-              }],
               "mails": {
                 "default": {
                   "bcc": ["some-recipient-placeholder@cern.ch"]
@@ -224,8 +211,12 @@
               }]
             },
             "recipients": {
-              "owner": true,
-              "current_user": true
+              "owner": {
+                "bcc": true
+              },
+              "current_user": {
+                "bcc": true
+              }
             }
           }, {
             "template": {

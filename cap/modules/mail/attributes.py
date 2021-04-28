@@ -32,6 +32,34 @@ from .utils import CONFIG_DEFAULTS, populate_template_from_ctx,\
     update_mail_lists_from_defaults
 
 
+def check_condition(record, condition):
+    # for each condition we have a group of checks to perform
+    # all of the checks should give a True/False result
+    operator = condition['op']
+    checks = condition['checks']
+    check_results = []
+
+    for check in checks:
+        # get the method to apply, and use it on the required path/value
+        if check.get('if'):
+            method = CONDITION_METHODS[check['if']]
+            check_results.append(
+                method(record, check.get('path'), check['value'])
+            )
+        else:
+            check_results.append(
+                check_condition(record, check)
+            )
+
+    # we check the validity of the condition depending on the operator:
+    # - if 'and', then we need everything to be true
+    # - if 'or' we need at least 1 true
+    if (operator == 'and' and False not in check_results) or \
+            (operator == 'or' and True in check_results):
+        return True
+    return False
+
+
 def get_recipients_from_config(record, config):
     """
     Retrieve the recipients that are provided in the schema config file.
@@ -53,35 +81,33 @@ def get_recipients_from_config(record, config):
     cc = []
     bcc = []
 
-    if config.get('owner'):
-        recipients.append(CONDITION_METHODS['owner'](record))
+    owner = config.get('owner', {})
+    current_user = config.get('current_user', {})
 
-    if config.get('current_user'):
-        recipients.append(CONDITION_METHODS['current_user'](record))
+    if owner:
+        _owner = CONDITION_METHODS['owner'](record)
+        if owner.get('recipients'):
+            recipients.append(_owner)
+        if owner.get('cc'):
+            cc.append(_owner)
+        if owner.get('bcc'):
+            bcc.append(_owner)
+
+    if current_user:
+        _current = CONDITION_METHODS['current_user'](record)
+        if current_user.get('recipients'):
+            recipients.append(_current)
+        if current_user.get('cc'):
+            cc.append(_current)
+        if current_user.get('bcc'):
+            bcc.append(_current)
 
     # TODO: update for experiment, roles (read/admin)
 
     # apply rules for conditions
     conditions = config.get('conditions', [])
     for condition in conditions:
-        # for each condition we have a group of checks to perform
-        # all of the checks should give a True/False result
-        operator = condition['op']
-        checks = condition['checks']
-        check_results = []
-
-        for check in checks:
-            # get the method to apply, and use it on the required path/value
-            method = CONDITION_METHODS[check['if']]
-            check_results.append(
-                method(record, check.get('path'), check['value'])
-            )
-
-        # we check the validity of the condition depending on the operator:
-        # - if 'and', then we need everything to be true
-        # - if 'or' we need at least 1 true
-        if (operator == 'and' and False not in check_results) or \
-                (operator == 'or' and True in check_results):
+        if check_condition(record, condition):
             update_mail_lists_from_defaults(record, condition, recipients, cc, bcc)  # noqa
 
     # remove duplicates

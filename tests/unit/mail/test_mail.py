@@ -145,8 +145,12 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                         "func": {
                             "bcc": "get_cms_stat_recipients"
                         },
-                        "owner": True,
-                        "current_user": True,
+                        "owner": {
+                            "recipients": True
+                        },
+                        "current_user": {
+                            "recipients": True
+                        },
                         "conditions": [{
                             "op": "and",
                             "checks": [
