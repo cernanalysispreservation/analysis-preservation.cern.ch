@@ -16,13 +16,15 @@ import SettingsModal from "./SettingsModal";
 import {
   AiOutlineSetting,
   AiOutlineArrowLeft,
-  AiOutlineInfoCircle
+  AiOutlineInfoCircle,
+  AiOutlineControl
 } from "react-icons/ai";
 import { FaCode } from "react-icons/fa";
 import JsonDiff from "./JSONDiff";
 
 import Truncate from "react-truncate";
 import GuidelinesPopUp from "./GuidelinesPopUp";
+import ConfigModal from "./ConfigModal";
 import { shoudDisplayGuideLinePopUp } from "../utils/common";
 
 ["json"].forEach(lang => {
@@ -147,6 +149,11 @@ class SchemaWizardHeader extends React.Component {
               onClick={this._getSchema}
             />
             <Button
+              icon={<AiOutlineControl size={20} />}
+              size="small"
+              onClick={() => this.setState({ configModal: true })}
+            />
+            <Button
               icon={<FaCode size={20} />}
               size="small"
               onClick={this._toggleSchemaPreviewEnabled}
@@ -174,6 +181,12 @@ class SchemaWizardHeader extends React.Component {
               showModal: false
             })
           }
+        />
+      ),
+      this.state.configModal && (
+        <ConfigModal
+          show={this.state.configModal}
+          onClose={() => this.setState({ configModal: false })}
         />
       ),
       this.state.schemaPreviewEnabled && (
