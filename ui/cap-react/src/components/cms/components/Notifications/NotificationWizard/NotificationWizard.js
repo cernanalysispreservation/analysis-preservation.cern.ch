@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import ConditionList from "./ConditionList";
 
-const conditions = [
+let conditions = [
   {
     op: "and",
     checks: [
@@ -16,12 +16,12 @@ const conditions = [
         op: "and",
         checks: [
           {
-            path: "some_other_field",
+            path: "first",
             if: "equals",
             value: "yes"
           },
           {
-            path: "some_field",
+            path: "second",
             if: "exists",
             value: "true"
           }
@@ -95,17 +95,42 @@ const conditions = [
 ];
 
 const NotificationWizard = props => {
+  const [myConditions, setMyConditions] = useState(conditions);
+  const [count, setCount] = useState(0);
+  const updateConditions = (path, index) => {
+    const newObject = {
+      path: "general_title",
+      if: "exists",
+      value: "antonios"
+    };
+
+    let c = myConditions[index];
+
+    path.map(item => {
+      if (!item.index) {
+        c = c.checks;
+      } else c = c[item.index].checks;
+    });
+
+    c.push(newObject);
+    setMyConditions(myConditions);
+    setCount(state => state + 2);
+  };
+
   return (
     <Box pad="small">
       <Heading tag="h2" strong align="center">
         When Published
       </Heading>
-      {conditions.map((item, index) => (
+      {myConditions.map((item, index) => (
         <Box margin={{ vertical: "small" }} key={index}>
           <Heading tag="h4" strong margin="none">
             #{index + 1} Condition
           </Heading>
-          <ConditionList item={item} />
+          <ConditionList
+            item={item}
+            updateConditions={path => updateConditions(path, index)}
+          />
         </Box>
       ))}
     </Box>

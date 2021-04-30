@@ -7,7 +7,14 @@ import Select, { components } from "react-select";
 import { groupedOptions } from "./utils/buttonAddOptions";
 import "./ConditionsCheckBoxes.css";
 
-const ConditionsCheckBoxes = ({ item, initial }) => {
+const ConditionsCheckBoxes = ({
+  item,
+  initial,
+  path = [],
+  updateConditions,
+  index = undefined
+}) => {
+  path = [...path, index ? { checks: "checks", index } : "checks"];
   if (item.op && item.checks) {
     return item.checks.map((items, index) => (
       <Box key={index} direction="row" align="center">
@@ -16,9 +23,15 @@ const ConditionsCheckBoxes = ({ item, initial }) => {
           align="center"
           separator={items.op && items.checks && "all"}
           pad="small"
+          colorIndex={path.length % 2 === 0 ? "light-1" : "light-2"}
           margin={{ horizontal: "small" }}
         >
-          <ConditionsCheckBoxes item={items} />
+          <ConditionsCheckBoxes
+            item={items}
+            path={path}
+            index={index}
+            updateConditions={updateConditions}
+          />
         </Box>
         {index !== item.checks.length - 1 && (
           <Tag
@@ -33,7 +46,14 @@ const ConditionsCheckBoxes = ({ item, initial }) => {
           />
         )}
         {index === item.checks.length - 1 &&
-          !initial && <Button text="add check" primaryOutline size="small" />}
+          !initial && (
+            <Button
+              text="add check"
+              primaryOutline
+              size="small"
+              onClick={() => updateConditions(path)}
+            />
+          )}
       </Box>
     ));
   }
@@ -43,12 +63,6 @@ const ConditionsCheckBoxes = ({ item, initial }) => {
       <Tag text={item.path} size="large" />
       <Tag text={item.if} size="large" />
       <Tag text={item.value} size="large" />
-      <Select
-        className="notification-checkbox-select"
-        options={groupedOptions}
-        components={<components.Group />}
-        width="120px"
-      />
     </Box>
   );
 };

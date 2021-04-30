@@ -4,7 +4,7 @@ import { Box } from "grommet";
 import Button from "../../../../partials/Button";
 import ConditionsCheckBoxes from "./ConditionsCheckBoxes";
 
-const ConditionList = ({ item }) => {
+const ConditionList = ({ item, updateConditions }) => {
   return (
     <Box
       separator="all"
@@ -13,12 +13,17 @@ const ConditionList = ({ item }) => {
       justify="start"
       direction="row"
     >
-      <ConditionsCheckBoxes item={item} initial />
+      <ConditionsCheckBoxes
+        item={item}
+        initial
+        updateConditions={updateConditions}
+      />
       <Button
         primaryOutline
         text="add check"
         size="small"
         margin="0 0 0 10px"
+        onClick={() => updateConditions(["checks"])}
       />
     </Box>
   );
