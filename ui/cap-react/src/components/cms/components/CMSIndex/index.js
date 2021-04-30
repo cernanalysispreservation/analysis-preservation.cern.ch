@@ -11,10 +11,10 @@ import CreateContentType from "../../containers/CreateContentType";
 import DropZoneForm from "./DropZoneForm";
 
 import Notifications from "../Notifications";
-
+import NotificationWizard from "../Notifications/NotificationWizard";
 class CMSIndex extends React.Component {
   render() {
-    return <Notifications />;
+    return <NotificationWizard />;
     // return (
     //   <Box
     //     flex={true}
