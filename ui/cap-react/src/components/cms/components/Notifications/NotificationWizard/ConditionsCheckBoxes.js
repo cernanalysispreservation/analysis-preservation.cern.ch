@@ -3,8 +3,6 @@ import PropTypes from "prop-types";
 import Tag from "../../../../partials/Tag";
 import Button from "../../../../partials/Button";
 import { Box } from "grommet";
-import Select, { components } from "react-select";
-import { groupedOptions } from "./utils/buttonAddOptions";
 import "./ConditionsCheckBoxes.css";
 
 const ConditionsCheckBoxes = ({
@@ -12,7 +10,8 @@ const ConditionsCheckBoxes = ({
   initial,
   path = [],
   updateConditions,
-  index = undefined
+  index = undefined,
+  updateOperatorByPath
 }) => {
   path = [...path, index ? { checks: "checks", index } : "checks"];
   if (item.op && item.checks) {
@@ -31,19 +30,22 @@ const ConditionsCheckBoxes = ({
             path={path}
             index={index}
             updateConditions={updateConditions}
+            updateOperatorByPath={updateOperatorByPath}
           />
         </Box>
         {index !== item.checks.length - 1 && (
-          <Tag
-            margin="0 10px"
-            text={<b>{item.op}</b>}
-            color={{
-              bgcolor: "#c41d7f",
-              border: "#fff0f6",
-              color: "#ffadd2"
-            }}
-            size="large"
-          />
+          <Box onClick={() => updateOperatorByPath(path)}>
+            <Tag
+              margin="0 10px"
+              text={<b>{item.op}</b>}
+              color={{
+                bgcolor: "#c41d7f",
+                border: "#fff0f6",
+                color: "#ffadd2"
+              }}
+              size="large"
+            />
+          </Box>
         )}
         {index === item.checks.length - 1 &&
           !initial && (

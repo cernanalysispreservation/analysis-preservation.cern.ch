@@ -104,6 +104,22 @@ const NotificationWizard = props => {
       value: "antonios"
     };
 
+    const multiple = {
+      op: "and",
+      checks: [
+        {
+          path: "first",
+          if: "equals",
+          value: "yes"
+        },
+        {
+          path: "second",
+          if: "exists",
+          value: "true"
+        }
+      ]
+    };
+
     let c = myConditions[index];
 
     path.map(item => {
@@ -112,7 +128,23 @@ const NotificationWizard = props => {
       } else c = c[item.index].checks;
     });
 
-    c.push(newObject);
+    c.push(multiple);
+    setMyConditions(myConditions);
+    setCount(state => state + 2);
+  };
+
+  const updateOperatorByPath = (path, index) => {
+    let c = myConditions[index];
+
+    path.map((item, index) => {
+      if (!item.index) {
+        c = c.checks;
+      } else {
+        if (index === path.length - 1) c = c[item.index];
+        else c = c[item.index].checks;
+      }
+    });
+    c.op = c.op === "and" ? "or" : "and";
     setMyConditions(myConditions);
     setCount(state => state + 2);
   };
@@ -120,7 +152,7 @@ const NotificationWizard = props => {
   return (
     <Box pad="small">
       <Heading tag="h2" strong align="center">
-        When Published
+        When Published {count}
       </Heading>
       {myConditions.map((item, index) => (
         <Box margin={{ vertical: "small" }} key={index}>
@@ -130,6 +162,7 @@ const NotificationWizard = props => {
           <ConditionList
             item={item}
             updateConditions={path => updateConditions(path, index)}
+            updateOperatorByPath={path => updateOperatorByPath(path, index)}
           />
         </Box>
       ))}
