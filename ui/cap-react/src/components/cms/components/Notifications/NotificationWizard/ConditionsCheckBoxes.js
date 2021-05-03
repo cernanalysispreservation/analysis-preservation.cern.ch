@@ -2,8 +2,20 @@ import React from "react";
 import PropTypes from "prop-types";
 import Tag from "../../../../partials/Tag";
 import Button from "../../../../partials/Button";
+import Menu from "../../../../partials/Menu";
+import MenuItem from "../../../../partials/MenuItem";
 import { Box } from "grommet";
 import "./ConditionsCheckBoxes.css";
+import {
+  AiOutlineSetting,
+  AiOutlineLogout,
+  AiOutlinePlus
+} from "react-icons/ai";
+
+const selectValues = [
+  { value: "multiple", label: "multiple" },
+  { value: "single", label: "single" }
+];
 
 const ConditionsCheckBoxes = ({
   item,
@@ -16,7 +28,13 @@ const ConditionsCheckBoxes = ({
   path = [...path, index ? { checks: "checks", index } : "checks"];
   if (item.op && item.checks) {
     return item.checks.map((items, index) => (
-      <Box key={index} direction="row" align="center">
+      <Box
+        key={index}
+        direction="row"
+        align="center"
+        style={{ minWidth: "fit-content" }}
+        className="conditionlist-checkbox"
+      >
         <Box
           direction="row"
           align="center"
@@ -47,14 +65,24 @@ const ConditionsCheckBoxes = ({
             />
           </Box>
         )}
+
         {index === item.checks.length - 1 &&
           !initial && (
-            <Button
-              text="add check"
-              primaryOutline
-              size="small"
-              onClick={() => updateConditions(path)}
-            />
+            <Box>
+              <Button
+                text="add simple"
+                size="small"
+                margin="0 0 5px 0"
+                primaryOutline
+                onClick={() => updateConditions({ nested: false, path: path })}
+              />
+              <Button
+                text="add multiple"
+                size="small"
+                primaryOutline
+                onClick={() => updateConditions({ nested: true, path: path })}
+              />
+            </Box>
           )}
       </Box>
     ));

@@ -19,6 +19,21 @@ const Wrapper = styled(Anchor)`
     text-decoration: none;
   }
 `;
+const BoxWrapper = styled(Box)`
+  background: ${props => props.background};
+  text-decoration: none;
+  font-size: 1rem;
+  line-height: 1.5;
+  display: flex;
+
+  padding: 0 10px;
+
+  &:hover {
+    background: ${props => props.hovered && "rgb(235, 235, 235)"};
+    cursor: pointer;
+    text-decoration: none;
+  }
+`;
 
 const Item = styled.span`
   padding: 12px 24px;
@@ -41,26 +56,46 @@ const MenuItem = ({
   separator = false,
   hovered = false,
   background = "rgb(255, 255, 255)",
-  dataCy = ""
+  dataCy = "",
+  shouldBeAnchor = true
 }) => {
   return (
     <div className={className} data-cy={dataCy}>
-      <Wrapper
-        onClick={onClick}
-        href={onClick ? null : href}
-        path={path}
-        responsive={false}
-        hovered={hovered}
-        className="not-underline"
-        background={background}
-        style={{
-          paddingLeft: "5px",
-          borderBottom: separator ? "0.1px solid rgba(0, 0, 0, 0.1)" : ""
-        }}
-      >
-        <Box justify="center">{icon}</Box>
-        <Item>{title}</Item>
-      </Wrapper>
+      {shouldBeAnchor ? (
+        <Wrapper
+          onClick={onClick}
+          href={onClick ? null : href}
+          path={path}
+          responsive={false}
+          hovered={hovered}
+          className="not-underline"
+          background={background}
+          style={{
+            paddingLeft: "5px",
+            borderBottom: separator ? "0.1px solid rgba(0, 0, 0, 0.1)" : ""
+          }}
+        >
+          <Box justify="center">{icon}</Box>
+          <Item>{title}</Item>
+        </Wrapper>
+      ) : (
+        <BoxWrapper
+          onClick={onClick}
+          href={onClick ? null : href}
+          path={path}
+          responsive={false}
+          hovered={hovered}
+          className="not-underline"
+          background={background}
+          style={{
+            paddingLeft: "5px",
+            borderBottom: separator ? "0.1px solid rgba(0, 0, 0, 0.1)" : ""
+          }}
+        >
+          <Box justify="center">{icon}</Box>
+          <Item>{title}</Item>
+        </BoxWrapper>
+      )}
     </div>
   );
 };

@@ -122,13 +122,13 @@ const NotificationWizard = props => {
 
     let c = myConditions[index];
 
-    path.map(item => {
+    path.path.map(item => {
       if (!item.index) {
         c = c.checks;
       } else c = c[item.index].checks;
     });
-
-    c.push(multiple);
+    let itemToAdd = path.nested ? multiple : newObject;
+    c.push(itemToAdd);
     setMyConditions(myConditions);
     setCount(state => state + 2);
   };
