@@ -24,23 +24,36 @@
 
 from flask import current_app, request
 
-from ..users import get_record_owner, get_current_user
-from ..utils import create_analysis_url
+from .recipients import get_owner, get_current_user
 
 
-def create_questionnaire_url(record, config):
-    return f"{request.host_url}{create_analysis_url(record)}\n"
+def draft_url(record, config=None):
+    """Get the draft html url of the analysis."""
+    return f'{request.host_url}drafts/{record["_deposit"]["id"]}'
 
 
-def get_submitter_mail(record, config):
+def published_url(record, config=None):
+    """Get the published html url of the analysis."""
+    return f'{request.host_url}published/{record["control_number"]}'
+
+
+def working_url(record, config=None):
+    """Get the working html url of the analysis."""
+    status = record['_deposit']['status']
+    if status == 'draft':
+        return draft_url(record, config)
+    return published_url(record, config)
+
+
+def submitter_mail(record, config=None):
     return get_current_user(record)
 
 
-def get_reviewer_mail(record, config):
-    return get_record_owner(record)
+def reviewer_mail(record, config=None):
+    return get_owner(record)
 
 
-def get_reviewer_params(record, config):
+def reviewer_params(record, config=None):
     """Retrieve reviewer parameters according to the working group."""
     committee_pags = current_app.config.get("CMS_STATS_COMMITEE_AND_PAGS")
     working_group = record.get('analysis_context', {}).get('wg')

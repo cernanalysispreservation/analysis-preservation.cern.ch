@@ -24,7 +24,8 @@
 """Tests for mail."""
 from mock import patch
 from cap.modules.mail.users import get_all_users, get_users_by_record, \
-    get_users_by_experiment, get_current_user, get_record_owner
+    get_users_by_experiment
+from cap.modules.mail.custom.recipients import get_owner, get_current_user
 
 
 def test_get_all_user_mails(users):
@@ -69,7 +70,7 @@ def test_get_user_by_experiment(remote_accounts):
     assert len(alice_users) == 1
 
 
-@patch('cap.modules.mail.users.current_user')
+@patch('cap.modules.mail.custom.recipients.current_user')
 def test_get_current_user(mock_user):
     mock_user.email = 'test@cern.ch'
     assert get_current_user(None) == 'test@cern.ch'
@@ -82,4 +83,4 @@ def test_get_record_owner(users, location, create_schema, create_deposit):
         user, 'test',
         experiment='CMS',
     )
-    assert get_record_owner(deposit) == 'cms_user@cern.ch'
+    assert get_owner(deposit) == 'cms_user@cern.ch'

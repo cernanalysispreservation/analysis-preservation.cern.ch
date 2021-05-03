@@ -22,16 +22,17 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from flask import render_template
+from flask import render_template, render_template_string, current_app, abort
+from jinja2.exceptions import TemplateNotFound
 
 CONFIG_DEFAULTS = {
-    'subject': {
-        'review': "New Review on Analysis | CERN Analysis Preservation",
-        'publish': "New Published Analysis | CERN Analysis Preservation"
+    'review': {
+        'subject': 'New Review on Analysis | CERN Analysis Preservation',
+        'template': ('mail/analysis_review.html', None)
     },
-    'template': {
-        'review': ("mail/analysis_review.html", None),
-        'publish': ("mail/analysis_published.html", None),
+    'publish': {
+        'subject': 'New Published Analysis | CERN Analysis Preservation',
+        'template': ('mail/analysis_published.html', None)
     }
 }
 
@@ -48,18 +49,6 @@ def path_value_equals(element, JSON):
     return data
 
 
-def create_analysis_url(deposit):
-    """
-    Create the url of the analysis, depending on whether
-    it is published or not. Used to access it through a URL.
-    """
-    status = deposit['_deposit']['status']
-
-    if status == 'draft':
-        return f'drafts/{deposit["_deposit"]["id"]}'
-    return f'published/{deposit["control_number"]}'
-
-
 def populate_template_from_ctx(record, config, action=None,
                                module=None, type=None):
     """
@@ -74,46 +63,45 @@ def populate_template_from_ctx(record, config, action=None,
     """
     config_ctx = config.get('ctx', {})
     template = config.get('template')
+    template_file = config.get('template_file')
 
-    if not template:
-        return CONFIG_DEFAULTS[type][action]
+    if template:
+        render = render_template_string
+
+    if template_file:
+        render = render_template
+        template = template_file
+
+    if not (template or template_file):
+        return CONFIG_DEFAULTS[action][type]
 
     ctx = {}
     for attrs in config_ctx:
-        name = attrs['name']
-
         if attrs['type'] == 'path':
+            name = attrs['name']
             val = path_value_equals(attrs['path'], record)
         else:
-            custom_func = getattr(module, attrs['method'])
+            name = attrs['method']
+            custom_func = getattr(module, name)
             val = custom_func(record, config)
 
         ctx.update({name: val})
+    try:
+        return render(template, **ctx)
+    except TemplateNotFound as ex:
+        msg = f'Template {ex.name} not found. Notification procedure aborted.'
+        current_app.logger.error(msg)
+        abort(404, msg)
 
-    return render_template(template, **ctx)
 
+def update_mail_list(record, config, mails):
+    mails_list = config.get('default')
+    formatted_list = config.get('formatted')
 
-def update_mail_lists_from_defaults(record, config, recipients, cc, bcc):
-    # get the default mails (formatted or simple strings)
-    mails_default = config.get('mails', {}).get('default')
-    mails_formatted = config.get('mails', {}).get('formatted')
-
-    if mails_default:
-        if mails_default.get('recipients'):
-            recipients += mails_default['recipients']
-        if mails_default.get('cc'):
-            cc += mails_default['cc']
-        if mails_default.get('bcc'):
-            bcc += mails_default['bcc']
-
-    # if we have formatted mails, format them using jinja and add them
-    if mails_formatted:
-        if mails_formatted.get('recipients'):
-            recipients += [populate_template_from_ctx(record, formatted)
-                           for formatted in mails_formatted['recipients']]
-        if mails_formatted.get('cc'):
-            cc += [populate_template_from_ctx(record, formatted)
-                   for formatted in mails_formatted['cc']]
-        if mails_formatted.get('bcc'):
-            bcc += [populate_template_from_ctx(record, formatted)
-                    for formatted in mails_formatted['bcc']]
+    if mails_list:
+        mails += mails_list
+    if formatted_list:
+        mails += [
+            populate_template_from_ctx(record, formatted)
+            for formatted in formatted_list
+        ]

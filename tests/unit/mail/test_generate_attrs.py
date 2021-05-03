@@ -27,40 +27,38 @@ from cap.modules.mail.attributes import generate_recipients, generate_message, \
     generate_subject
 
 
-@patch('cap.modules.mail.users.current_user')
+@patch('cap.modules.mail.custom.recipients.current_user')
 def test_generate_recipients(mock_user, app, users, location, create_schema, create_deposit):
     user = users['cms_user']
     mock_user.email = user.email
-
     config = {
         "recipients": {
-            "owner": {
-                "recipients": True
-            },
-            "current_user": {
-                "recipients": True
-            },
-            "conditions": [{
-                "op": "and",
-                "checks": [
-                    {
-                        "path": "ml_app_use",
-                        "if": "exists",
-                        "value": True,
-                    }
-                ],
-                "mails": {
-                    "default": {
-                        "cc": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"],
-                        "bcc": ["something-else@cern0.ch"]
+            "bcc": [
+                {
+                    "type": "condition",
+                    "op": "and",
+                    "checks": [
+                        {
+                            "path": "ml_app_use",
+                            "if": "exists",
+                            "value": True,
+                        }
+                    ],
+                    "mails": {
+                        "default": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
                     }
                 }
-            }],
-            "mails": {
-                "default": {
-                    "recipients": ['default@cern0.ch']
+            ],
+            "recipients": [
+                {"type": "method", "method": "get_owner"},
+                {"type": "method", "method": "get_current_user"},
+                {
+                    "type": "default",
+                    "mails": {
+                        "default": ['default@cern0.ch']
+                    }
                 }
-            }
+            ]
         }
     }
     create_schema('test', experiment='CMS', config=config)
@@ -75,18 +73,18 @@ def test_generate_recipients(mock_user, app, users, location, create_schema, cre
 
     recipients, cc, bcc = generate_recipients(deposit, config)
     assert set(recipients) == {'cms_user@cern.ch', 'default@cern0.ch'}
-    assert set(cc) == {"ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"}
-    assert set(bcc) == {"something-else@cern0.ch"}
+    assert set(bcc) == {"ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"}
+    assert cc == []
 
 
-@patch('cap.modules.mail.users.current_user')
+@patch('cap.modules.mail.custom.recipients.current_user')
 def test_generate_message(mock_user, app, users, location, create_schema, create_deposit):
     user = users['cms_user']
     mock_user.email = user.email
 
     config = {
         "message": {
-            "template": "mail/message/message_published.html",
+            "template_file": "mail/message/questionnaire_message_published.html",
             "ctx": [
                 {
                     "name": "cadi_id",
@@ -97,13 +95,11 @@ def test_generate_message(mock_user, app, users, location, create_schema, create
                     "type": "path",
                     "path": "general_title"
                 }, {
-                    "name": "questionnaire_url",
                     "type": "method",
-                    "method": "create_questionnaire_url"
+                    "method": "published_url"
                 }, {
-                    "name": "submitter_mail",
                     "type": "method",
-                    "method": "get_submitter_mail"
+                    "method": "submitter_mail"
                 }
             ]
         }
@@ -126,27 +122,25 @@ def test_generate_message(mock_user, app, users, location, create_schema, create
     assert 'Submitted by cms_user@cern.ch.' in message
 
 
-@patch('cap.modules.mail.users.current_user')
+@patch('cap.modules.mail.custom.recipients.current_user')
 def test_generate_subject(mock_user, app, users, location, create_schema, create_deposit):
     user = users['cms_user']
     mock_user.email = user.email
 
     config = {
         "subject": {
-            "template": "mail/subject/subject_published.html",
+            "template_file": "mail/subject/questionnaire_subject_published.html",
             "ctx": [
                 {
                     "name": "cadi_id",
                     "type": "path",
                     "path": "analysis_context.cadi_id"
                 }, {
-                    "name": "revision",
-                    "type": "path",
-                    "path": "_deposit.pid.revision_id"
+                    "type": "method",
+                    "method": "revision"
                 }, {
-                    "name": "recid",
-                    "type": "path",
-                    "path": "_deposit.pid.value"
+                    "type": "method",
+                    "method": "published_id"
                 }
             ]
         }
@@ -167,61 +161,60 @@ def test_generate_subject(mock_user, app, users, location, create_schema, create
     assert subject == f'Questionnaire for ABC-11-111 {pid} - New Published Analysis | CERN Analysis Preservation'
 
 
-@patch('cap.modules.mail.users.current_user')
+@patch('cap.modules.mail.custom.recipients.current_user')
 def test_generate_recipients_with_nested_conditions(mock_user, app, users, location, create_schema, create_deposit):
     user = users['cms_user']
     mock_user.email = user.email
 
     config = {
         "recipients": {
-            "owner": {
-                "recipients": True
-            },
-            "current_user": {
-                "recipients": True
-            },
-            "conditions": [{
-                "op": "and",
-                "checks": [
-                    {
-                        "path": "ml_app_use",
-                        "if": "exists",
-                        "value": True,
-                    },
-                    {
-                        # 1st nested: should return true, 1 of them is false and we have or
-                        "op": "or",
-                        "checks": [{
-                            "path": "some_other_field",
-                            "if": "equals",
-                            "value": 'yes',
-                        }, {
-                            "path": "some_field",
+            'recipients': [
+                {"type": "method", "method": "get_owner"},
+                {"type": "method", "method": "get_current_user"},
+                {
+                    "type": "default",
+                    "mails": {
+                        "default": ['default@cern0.ch']
+                    }
+                }
+            ],
+            'bcc': [
+                {
+                    'type': 'condition',
+                    'op': 'and',
+                    "checks": [
+                        {
+                            "path": "ml_app_use",
                             "if": "exists",
                             "value": True,
-                        }, {
-                            # 2nd nested
-                            "op": "and",
+                        },
+                        {
+                            # 1st nested: should return true, 1 of them is false and we have or
+                            "op": "or",
                             "checks": [{
-                                "path": "some_third_field",
+                                "path": "some_other_field",
                                 "if": "equals",
                                 "value": 'yes',
+                            }, {
+                                "path": "some_field",
+                                "if": "exists",
+                                "value": True,
+                            }, {
+                                # 2nd nested
+                                "op": "and",
+                                "checks": [{
+                                    "path": "some_third_field",
+                                    "if": "equals",
+                                    "value": 'yes',
+                                }]
                             }]
-                        }]
-                    }
-                ],
-                "mails": {
-                    "default": {
-                        "cc": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"],
-                        "bcc": ["something-else@cern0.ch"]
+                        }
+                    ],
+                    "mails": {
+                        "default": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
                     }
                 }
-            }],
-            "mails": {
-                "default": {
-                    "recipients": ['default@cern0.ch']
-                }
-            }
+            ]
         }
     }
     create_schema('test', experiment='CMS', config=config)
@@ -238,5 +231,5 @@ def test_generate_recipients_with_nested_conditions(mock_user, app, users, locat
 
     recipients, cc, bcc = generate_recipients(deposit, config)
     assert set(recipients) == {'cms_user@cern.ch', 'default@cern0.ch'}
-    assert set(cc) == {"ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"}
-    assert set(bcc) == {"something-else@cern0.ch"}
+    assert set(bcc) == {"ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"}
+    assert cc == []

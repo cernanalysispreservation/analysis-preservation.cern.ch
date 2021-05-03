@@ -2,7 +2,7 @@
 
 {% block paragraph %}
     <h4>A document has been reviewed.</h4>
-    <p>You can check it <a href="{{ url + analysis_url }}">here</a>.</p>
+    <p>You can check it <a href="{{ working_url }}">here</a>.</p>
 
     {% if message %}
         <hr/>
@@ -10,6 +10,6 @@
     {% endif %}
 {% endblock %}
 
-{% block button_url %}{{ url + analysis_url }}{% endblock %}
+{% block button_url %}{{ working_url }}{% endblock %}
 
 {% block button_text %}Check review{% endblock %}

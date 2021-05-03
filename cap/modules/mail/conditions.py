@@ -25,7 +25,6 @@
 from flask_principal import RoleNeed
 from invenio_access.permissions import Permission
 
-from .users import get_record_owner, get_current_user
 from .utils import path_value_equals
 
 
@@ -59,11 +58,6 @@ CONDITION_METHODS = {
     'exists': exists,
     'is_in': is_in,
     'is_not_in': is_not_in,
-
-    # flags
-    'owner': get_record_owner,
-    'current_user': get_current_user,
-
     # mail
     'has_permission': has_permission
 }

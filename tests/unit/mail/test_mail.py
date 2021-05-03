@@ -30,7 +30,7 @@ from mock import patch
 from invenio_deposit.signals import post_action
 
 
-@patch('cap.modules.mail.users.current_user')
+@patch('cap.modules.mail.custom.recipients.current_user')
 def test_send_mail_published(mock_user, app, users, create_deposit,
                              create_schema, client, auth_headers_for_user):
     config = {
@@ -42,25 +42,25 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                         "plain": True
                     },
                     "subject": {
-                        "template": "mail/subject/subject_published.html",
+                        "template": 'Questionnaire for {{ cadi_id if cadi_id else "" }} {{ published_id }} - '
+                                    '{{ "New Version of Published Analysis" if revision > 0 else "New Published Analysis" }} '
+                                    '| CERN Analysis Preservation',
                         "ctx": [
                             {
                                 "name": "cadi_id",
                                 "type": "path",
                                 "path": "analysis_context.cadi_id"
                             }, {
-                                "name": "revision",
-                                "type": "path",
-                                "path": "_deposit.pid.revision_id"
+                                "type": "method",
+                                "method": "revision"
                             }, {
-                                "name": "recid",
-                                "type": "path",
-                                "path": "_deposit.pid.value"
+                                "type": "method",
+                                "method": "published_id"
                             }
                         ]
                     },
                     "message": {
-                        "template": "mail/message/message_published_plain.html",
+                        "template_file": "mail/message/questionnaire_message_published_plain.html",
                         "ctx": [
                             {
                                 "name": "cadi_id",
@@ -71,56 +71,53 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                                 "type": "path",
                                 "path": "general_title"
                             }, {
-                                "name": "questionnaire_url",
                                 "type": "method",
-                                "method": "create_questionnaire_url"
+                                "method": "published_url"
                             }, {
-                                "name": "submitter_mail",
                                 "type": "method",
-                                "method": "get_submitter_mail"
+                                "method": "submitter_mail"
                             }
                         ]
                     },
                     "recipients": {
-                        "mails": {
-                            "formatted": {
-                                "bcc": [
-                                    {
-                                        "template": "mail/addresses/hypernews.html",
+                        'bcc': [
+                            {
+                                'type': 'default',
+                                'mails': {
+                                    'formatted': [{
+                                        "template": "{% if cadi_id %}hn-cms-{{ cadi_id }}@cern.ch{% endif %}",
                                         "ctx": [{
                                             "name": "cadi_id",
                                             "type": "path",
                                             "path": "analysis_context.cadi_id"
                                         }]
-                                    }
-                                ]
+                                    }]
+                                }
                             }
-                        }
+                        ]
                     }
                 }, {
                     "template": {
                         "default": "mail/analysis_published.html"
                     },
                     "subject": {
-                        "template": "mail/subject/subject_published.html",
+                        "template_file": "mail/subject/questionnaire_subject_published.html",
                         "ctx": [
                             {
                                 "name": "cadi_id",
                                 "type": "path",
                                 "path": "analysis_context.cadi_id"
                             }, {
-                                "name": "revision",
-                                "type": "path",
-                                "path": "_deposit.pid.revision_id"
+                                "type": "method",
+                                "method": "revision"
                             }, {
-                                "name": "recid",
-                                "type": "path",
-                                "path": "_deposit.pid.value"
+                                "type": "method",
+                                "method": "published_id"
                             }
                         ]
                     },
                     "message": {
-                        "template": "mail/message/message_published.html",
+                        "template_file": "mail/message/questionnaire_message_published.html",
                         "ctx": [
                             {
                                 "name": "cadi_id",
@@ -131,41 +128,36 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
                                 "type": "path",
                                 "path": "general_title"
                             }, {
-                                "name": "questionnaire_url",
                                 "type": "method",
-                                "method": "create_questionnaire_url"
+                                "method": "published_url"
                             }, {
-                                "name": "submitter_mail",
                                 "type": "method",
-                                "method": "get_submitter_mail"
+                                "method": "submitter_mail"
                             }
                         ]
                     },
                     "recipients": {
-                        "func": {
-                            "bcc": "get_cms_stat_recipients"
-                        },
-                        "owner": {
-                            "recipients": True
-                        },
-                        "current_user": {
-                            "recipients": True
-                        },
-                        "conditions": [{
-                            "op": "and",
-                            "checks": [
-                                {
-                                    "path": "ml_app_use",
-                                    "if": "exists",
-                                    "value": True,
-                                }
-                            ],
-                            "mails": {
-                                "default": {
-                                    "bcc": ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
+                        'recipients': [
+                            {"type": "method", "method": "get_owner"},
+                            {"type": "method", "method": "get_current_user"}
+                        ],
+                        'bcc': [
+                            {"type": "method", "method": "get_cms_stat_recipients"},
+                            {
+                                'type': 'condition',
+                                'op': 'and',
+                                "checks": [
+                                    {
+                                        "path": "ml_app_use",
+                                        "if": "exists",
+                                        "value": True,
+                                    }
+                                ],
+                                'mails': {
+                                    'default': ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"]
                                 }
                             }
-                        }]
+                        ]
                     }
                 }]
             }
@@ -231,7 +223,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit,
             assert set(standard_mail.recipients) == {'cms_user@cern.ch', 'test@cern.ch'}
 
 
-@patch('cap.modules.mail.users.current_user')
+@patch('cap.modules.mail.custom.recipients.current_user')
 def test_send_mail_published_with_signal_failure(
         mock_user, app, users, create_deposit, create_schema, client, auth_headers_for_user, json_headers):
     mock_user.email = 'test@cern.ch'

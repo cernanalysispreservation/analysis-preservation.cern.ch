@@ -29,13 +29,13 @@ from .custom import templates as custom_templates
 
 from .conditions import CONDITION_METHODS
 from .utils import CONFIG_DEFAULTS, populate_template_from_ctx,\
-    update_mail_lists_from_defaults
+    update_mail_list
 
 
 def check_condition(record, condition):
     # for each condition we have a group of checks to perform
     # all of the checks should give a True/False result
-    operator = condition['op']
+    operator = condition.get('op', 'and')
     checks = condition['checks']
     check_results = []
 
@@ -77,41 +77,31 @@ def get_recipients_from_config(record, config):
     All the used condition methods (found in the 'if' field),
     are in the conditions.py file.
     """
-    recipients = []
-    cc = []
-    bcc = []
+    if not config:
+        return []
 
-    owner = config.get('owner', {})
-    current_user = config.get('current_user', {})
+    mails = []
 
-    if owner:
-        _owner = CONDITION_METHODS['owner'](record)
-        if owner.get('recipients'):
-            recipients.append(_owner)
-        if owner.get('cc'):
-            cc.append(_owner)
-        if owner.get('bcc'):
-            bcc.append(_owner)
+    for item in config:
+        _type = item['type']
 
-    if current_user:
-        _current = CONDITION_METHODS['current_user'](record)
-        if current_user.get('recipients'):
-            recipients.append(_current)
-        if current_user.get('cc'):
-            cc.append(_current)
-        if current_user.get('bcc'):
-            bcc.append(_current)
+        if _type == 'default':
+            mail_config = item.get('mails', {})
+            update_mail_list(record, mail_config, mails)
 
-    # TODO: update for experiment, roles (read/admin)
+        if _type == 'method':
+            method = getattr(custom_recipients, item['method'])
+            result = method(record, item)
+            mails += result if isinstance(result, list) else [result]
+            pass
 
-    # apply rules for conditions
-    conditions = config.get('conditions', [])
-    for condition in conditions:
-        if check_condition(record, condition):
-            update_mail_lists_from_defaults(record, condition, recipients, cc, bcc)  # noqa
+        if _type == 'condition':
+            if check_condition(record, item):
+                mail_config = item.get('mails', {})
+                update_mail_list(record, mail_config, mails)
 
-    # remove duplicates
-    return list(set(recipients)), list(set(cc)), list(set(bcc))
+    # remove duplicates and possible empty values
+    return [mail for mail in set(mails) if mail]
 
 
 def generate_recipients(record, config):
@@ -128,21 +118,9 @@ def generate_recipients(record, config):
     if not re_config:
         return
 
-    recipients, cc, bcc = get_recipients_from_config(record, re_config)
-    update_mail_lists_from_defaults(record, re_config, recipients, cc, bcc)
-
-    # get the mails from functions (adds to right list depending on config)
-    func = re_config.get('func')
-    if func:
-        if func.get('recipients'):
-            custom_recipients_func = getattr(custom_recipients, func['recipients'])  # noqa
-            recipients += custom_recipients_func(record, re_config)
-        if func.get('cc'):
-            custom_recipients_func = getattr(custom_recipients, func['cc'])
-            cc += custom_recipients_func(record, re_config)
-        if func.get('bcc'):
-            custom_recipients_func = getattr(custom_recipients, func['bcc'])
-            bcc += custom_recipients_func(record, re_config)
+    recipients = get_recipients_from_config(record, re_config.get('recipients'))  # noqa
+    cc = get_recipients_from_config(record, re_config.get('cc'))
+    bcc = get_recipients_from_config(record, re_config.get('bcc'))
 
     return recipients, cc, bcc
 
@@ -177,7 +155,7 @@ def generate_message(record, config, action):
     if default:
         return default
 
-    func = msg_config.get('func')
+    func = msg_config.get('method')
     if func:
         custom_message_func = getattr(custom_messages, func)
         message = custom_message_func(record, config)
@@ -211,13 +189,13 @@ def generate_subject(record, config, action):
     """
     subj_config = config.get('subject')
     if not subj_config:
-        return CONFIG_DEFAULTS['subject'][action]
+        return CONFIG_DEFAULTS[action]['subject']
 
     default = subj_config.get('default')
     if default:
         return default
 
-    func = subj_config.get('func')
+    func = subj_config.get('method')
     if func:
         custom_subject_func = getattr(custom_subjects, func)
         subject = custom_subject_func(record, config)
@@ -241,7 +219,7 @@ def generate_template(record, config, action):
     """
     template_config = config.get('template')
     if not template_config:
-        return CONFIG_DEFAULTS['template'][action]
+        return CONFIG_DEFAULTS[action]['template']
 
     # plain or html
     plain = template_config.get('plain')
@@ -250,7 +228,7 @@ def generate_template(record, config, action):
     if default:
         template = default
 
-    func = template_config.get('func')
+    func = template_config.get('method')
     if func:
         custom_template_func = getattr(custom_templates, func)
         template = custom_template_func(record, config)

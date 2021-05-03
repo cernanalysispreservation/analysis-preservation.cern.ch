@@ -23,6 +23,18 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 from flask import current_app
+from flask_login import current_user
+
+from invenio_accounts.models import User
+
+
+def get_current_user(record, config=None):
+    return current_user.email
+
+
+def get_owner(record, config=None):
+    owner = record['_deposit']['owners'][0]
+    return User.query.filter_by(id=owner).one().email
 
 
 def get_cms_stat_recipients(record, config=None):

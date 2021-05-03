@@ -21,3 +21,25 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+
+def published_id(record, config=None):
+    try:
+        return record['_deposit']['pid']['value']
+    except KeyError:
+        return None
+
+
+def draft_id(record, config=None):
+    try:
+        return record['_deposit']['pid']['value']
+    except KeyError:
+        return None
+
+
+def revision(deposit, config=None):
+    try:
+        _, record = deposit.fetch_published()
+        return record.revision_id
+    except Exception:
+        return None

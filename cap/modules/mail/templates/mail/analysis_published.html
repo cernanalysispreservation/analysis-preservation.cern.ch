@@ -2,11 +2,11 @@
 
 {% block paragraph %}
     {% if revision and revision > 0 %}
-        <h4> An newer version of document <em>{{ recid }}</em> has been published.</h4>
-        <p>You can check it <a href="{{ url + "published/" + recid }}">here</a>.</p>
+        <h4> An newer version of document <em>{{ published_id }}</em> has been published.</h4>
+        <p>You can check it <a href="{{ working_url }}">here</a>.</p>
     {% else %}
-        <h4>A new document has been published, with id <em>{{ recid }}</em>.</h4>
-        <p>You can check it <a href="{{ url + "published/" + recid }}">here</a>.</p>
+        <h4>A new document has been published, with id <em>{{ published_id }}</em>.</h4>
+        <p>You can check it <a href="{{ working_url }}">here</a>.</p>
     {% endif %}
 
     {% if message %}
@@ -15,7 +15,7 @@
     {% endif %}
 {% endblock %}
 
-{% block button_url %}{{ url + "published/" + recid }}{% endblock %}
+{% block button_url %}{{ working_url }}{% endblock %}
 
 {% block button_text %}
     {{ "Check new version" if revision and revision > 0 else "Check document"}}
