@@ -46,7 +46,7 @@ const ConditionList = ({
           updateOperatorByPath={updateOperatorByPath}
         />
 
-        <Box>
+        <Box style={{ minWidth: "85px" }}>
           <Button
             text="add simple"
             size="small"

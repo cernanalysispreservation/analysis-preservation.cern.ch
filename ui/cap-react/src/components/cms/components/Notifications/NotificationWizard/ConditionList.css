@@ -1,5 +1,6 @@
 .conditionlist-list {
   width: 88%;
+  padding: 0 10px;
   overflow-x: auto;
 }
 

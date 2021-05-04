@@ -40,6 +40,7 @@ const ConditionsCheckBoxes = ({
           align="center"
           separator={items.op && items.checks && "all"}
           pad="small"
+          style={{ minWidth: "fit-content" }}
           colorIndex={path.length % 2 === 0 ? "light-1" : "light-2"}
           margin={{ horizontal: "small" }}
         >

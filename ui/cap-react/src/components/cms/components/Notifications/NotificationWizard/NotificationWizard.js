@@ -137,15 +137,16 @@ const NotificationWizard = props => {
 
   const updateOperatorByPath = (path, index) => {
     let c = myConditions[index];
-
-    path.map((item, index) => {
-      if (!item.index) {
-        c = c.checks;
-      } else {
-        if (index === path.length - 1) c = c[item.index];
-        else c = c[item.index].checks;
-      }
-    });
+    if (path.length > 1) {
+      path.map((item, index) => {
+        if (!item.index) {
+          c = c.checks;
+        } else {
+          if (index === path.length - 1) c = c[item.index];
+          else c = c[item.index].checks;
+        }
+      });
+    }
     c.op = c.op === "and" ? "or" : "and";
     setMyConditions(myConditions);
     setCount(state => state + 2);
