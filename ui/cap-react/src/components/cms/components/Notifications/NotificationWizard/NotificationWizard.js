@@ -31,7 +31,8 @@ let conditions = [
     mails: {
       default: {
         cc: ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"],
-        bcc: ["something-else@cern0.ch"]
+        bcc: ["something-else@cern0.ch"],
+        to: ["atlas@cern.ch"]
       }
     }
   },
@@ -149,6 +150,15 @@ const NotificationWizard = props => {
     setCount(state => state + 2);
   };
 
+  const updateEmailList = (incoming, index) => {
+    const { destination, email } = incoming;
+
+    let mailList = myConditions[index];
+    mailList.mails.default[destination].push(email);
+    setMyConditions(myConditions);
+    setCount(state => state + 2);
+  };
+
   return (
     <Box pad="small">
       <Heading tag="h2" strong align="center">
@@ -163,6 +173,7 @@ const NotificationWizard = props => {
             item={item}
             updateConditions={path => updateConditions(path, index)}
             updateOperatorByPath={path => updateOperatorByPath(path, index)}
+            updateEmailList={email => updateEmailList(email, index)}
           />
         </Box>
       ))}

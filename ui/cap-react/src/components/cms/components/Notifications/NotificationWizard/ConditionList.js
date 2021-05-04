@@ -3,11 +3,24 @@ import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import ConditionsCheckBoxes from "./ConditionsCheckBoxes";
 import Button from "../../../../partials/Button";
+import EditableField from "../../../../partials/EditableField";
 import "./ConditionList.css";
 import Tag from "../../../../partials/Tag";
 
-const ConditionList = ({ item, updateConditions, updateOperatorByPath }) => {
+const ConditionList = ({
+  item,
+  updateConditions,
+  updateOperatorByPath,
+  updateEmailList
+}) => {
   const [isEmailListConfigurable, setIsEmailListConfigurable] = useState(false);
+
+  const getEmailCount = () => {
+    let emails = item.mails.default;
+    let count = 0;
+    Object.values(emails).map(val => (count += val.length));
+    return `${count} emails`;
+  };
   return (
     <Box
       separator="all"
@@ -63,7 +76,7 @@ const ConditionList = ({ item, updateConditions, updateOperatorByPath }) => {
         direction="row"
       >
         <Box>
-          <Heading tag="h3">12 emails</Heading>
+          <Heading tag="h3"> {getEmailCount()}</Heading>
           <Button
             text={isEmailListConfigurable ? "update" : "configure"}
             primaryOutline
@@ -78,17 +91,80 @@ const ConditionList = ({ item, updateConditions, updateOperatorByPath }) => {
           }
         >
           <Box margin={{ left: "small" }}>
-            <Box>TO:</Box>
-            <Box margin={{ bottom: "small" }}>
-              <Tag text="atlas@cern.ch" />
-            </Box>
-            <Box>BCC:</Box>
-            <Box margin={{ bottom: "small" }}>
-              <Tag text="atlas@cern.ch" />
-            </Box>
-            <Box>CC:</Box>
             <Box>
-              <Tag text="atlas@cern.ch" />
+              <Heading tag="h6" margin="none">
+                TO:
+              </Heading>
+              <Box
+                direction="row"
+                align="center"
+                style={{ marginBottom: "8px" }}
+              >
+                <Box margin={{ right: "small" }}>
+                  <EditableField
+                    emptyValue="add email"
+                    onUpdate={email =>
+                      updateEmailList({ destination: "to", email: email })
+                    }
+                  />
+                </Box>
+                <Box direction="row" wrap align="center">
+                  {item.mails.default.to &&
+                    item.mails.default.to.map(mail => (
+                      <Tag text={mail} key={mail} margin="0 5px 0 0" />
+                    ))}
+                </Box>
+              </Box>
+            </Box>
+            <Box>
+              <Heading tag="h6" margin="none">
+                BCC:
+              </Heading>
+              <Box
+                direction="row"
+                align="center"
+                style={{ marginBottom: "8px" }}
+              >
+                <Box margin={{ right: "small" }}>
+                  <EditableField
+                    emptyValue="add email"
+                    onUpdate={email =>
+                      updateEmailList({ destination: "bcc", email: email })
+                    }
+                  />
+                </Box>
+                <Box direction="row" wrap align="center">
+                  {item.mails.default.bcc &&
+                    item.mails.default.bcc.map(mail => (
+                      <Tag text={mail} key={mail} margin="0 5px 0 0" />
+                    ))}
+                </Box>
+              </Box>
+            </Box>
+            <Box>
+              <Heading tag="h6" margin="none">
+                CC:
+              </Heading>
+              <Box
+                direction="row"
+                align="center"
+                style={{ marginBottom: "8px" }}
+              >
+                <Box margin={{ right: "small" }}>
+                  <EditableField
+                    emptyValue="add email"
+                    onUpdate={email =>
+                      updateEmailList({ destination: "cc", email: email })
+                    }
+                  />
+                </Box>
+                <Box direction="row" wrap align="center">
+                  {item.mails.default.cc &&
+                    item.mails.default.cc.map(mail => (
+                      <Tag text={mail} key={mail} margin="0 5px 0 0" />
+                    ))}
+                </Box>
+              </Box>
             </Box>
           </Box>
         </Box>
