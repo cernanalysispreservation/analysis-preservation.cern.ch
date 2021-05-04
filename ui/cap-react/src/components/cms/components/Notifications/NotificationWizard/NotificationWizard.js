@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import ConditionList from "./ConditionList";
+import Button from "../../../../partials/Button";
 
 let conditions = [
   {
@@ -159,6 +160,12 @@ const NotificationWizard = props => {
     setCount(state => state + 2);
   };
 
+  const removeCondition = index => {
+    myConditions.splice(index, 1);
+    setMyConditions(myConditions);
+    setCount(state => state + 2);
+  };
+
   return (
     <Box pad="small">
       <Heading tag="h2" strong align="center">
@@ -166,9 +173,16 @@ const NotificationWizard = props => {
       </Heading>
       {myConditions.map((item, index) => (
         <Box margin={{ vertical: "small" }} key={index}>
-          <Heading tag="h4" strong margin="none">
-            #{index + 1} Condition
-          </Heading>
+          <Box justify="between" direction="row" margin={{ bottom: "small" }}>
+            <Heading tag="h4" strong margin="none">
+              #{index + 1} Condition
+            </Heading>
+            <Button
+              text="Remove"
+              criticalOutline
+              onClick={() => removeCondition(index)}
+            />
+          </Box>
           <ConditionList
             item={item}
             updateConditions={path => updateConditions(path, index)}
