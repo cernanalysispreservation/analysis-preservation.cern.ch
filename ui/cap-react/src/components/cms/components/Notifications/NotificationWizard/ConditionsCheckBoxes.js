@@ -2,20 +2,10 @@ import React from "react";
 import PropTypes from "prop-types";
 import Tag from "../../../../partials/Tag";
 import Button from "../../../../partials/Button";
-import Menu from "../../../../partials/Menu";
-import MenuItem from "../../../../partials/MenuItem";
 import { Box } from "grommet";
 import "./ConditionsCheckBoxes.css";
-import {
-  AiOutlineSetting,
-  AiOutlineLogout,
-  AiOutlinePlus
-} from "react-icons/ai";
 
-const selectValues = [
-  { value: "multiple", label: "multiple" },
-  { value: "single", label: "single" }
-];
+import { AiOutlineClose } from "react-icons/ai";
 
 const ConditionsCheckBoxes = ({
   item,
@@ -40,7 +30,7 @@ const ConditionsCheckBoxes = ({
           align="center"
           separator={items.op && items.checks && "all"}
           pad="small"
-          style={{ minWidth: "fit-content" }}
+          style={{ minWidth: "fit-content", position: "relative" }}
           colorIndex={path.length % 2 === 0 ? "light-1" : "light-2"}
           margin={{ horizontal: "small" }}
         >
@@ -51,6 +41,15 @@ const ConditionsCheckBoxes = ({
             updateConditions={updateConditions}
             updateOperatorByPath={updateOperatorByPath}
           />
+
+          <Box style={{ position: "absolute", right: -10, top: -10 }}>
+            <Button
+              icon={<AiOutlineClose />}
+              size="iconSmall"
+              criticalOutline
+              rounded
+            />
+          </Box>
         </Box>
         {index !== item.checks.length - 1 && (
           <Box onClick={() => updateOperatorByPath(path)}>
