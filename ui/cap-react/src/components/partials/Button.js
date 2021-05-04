@@ -17,7 +17,7 @@ const ButtonWrapper = styled.div`
   padding: ${props => props.size.padding};
   font-size: ${props => props.size.fontSize};
   line-height: 1.75;
-  border-radius: ${props => (props.rounded ? "50%" : "2px")}
+  border-radius: ${props => (props.rounded ? "50%" : "2px")};
   cursor: pointer;
   margin: ${props => props.margin};
 

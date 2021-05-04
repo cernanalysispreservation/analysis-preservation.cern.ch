@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import ConditionList from "./ConditionList";
 import Button from "../../../../partials/Button";
+import isEqual from "lodash/isEqual";
 
 let conditions = [
   {
@@ -167,6 +168,39 @@ const NotificationWizard = props => {
     setCount(state => state + 2);
   };
 
+  const deleteByPath = (path, index) => {
+    let c = myConditions[index];
+    let itemToDelete = path.pop();
+    path.map((item, index) => {
+      if (!item.index) {
+        c = c.checks;
+      } else {
+        if (index === path.length - 1) c = c[item.index];
+        else c = c[item.index].checks;
+      }
+    });
+
+    let d = c.checks ? c.checks : c;
+    d = d.filter(item => !isEqual(item, itemToDelete));
+
+    c.checks = d;
+
+    setMyConditions(myConditions);
+    setCount(state => state + 2);
+  };
+
+  const removeEmail = (incoming, index) => {
+    let c = myConditions[index];
+    const { destination, email } = incoming;
+
+    c.mails.default[destination] = c.mails.default[destination].filter(
+      item => item != email
+    );
+
+    setMyConditions(myConditions);
+    setCount(state => state + 2);
+  };
+
   return (
     <Box pad="small">
       <Heading tag="h2" strong align="center">
@@ -189,6 +223,8 @@ const NotificationWizard = props => {
             updateConditions={path => updateConditions(path, index)}
             updateOperatorByPath={path => updateOperatorByPath(path, index)}
             updateEmailList={email => updateEmailList(email, index)}
+            deleteByPath={path => deleteByPath(path, index)}
+            removeEmail={email => removeEmail(email, index)}
           />
         </Box>
       ))}

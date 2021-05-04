@@ -13,7 +13,8 @@ const ConditionsCheckBoxes = ({
   path = [],
   updateConditions,
   index = undefined,
-  updateOperatorByPath
+  updateOperatorByPath,
+  deleteByPath = { deleteByPath }
 }) => {
   path = [...path, index ? { checks: "checks", index } : "checks"];
   if (item.op && item.checks) {
@@ -40,6 +41,7 @@ const ConditionsCheckBoxes = ({
             index={index}
             updateConditions={updateConditions}
             updateOperatorByPath={updateOperatorByPath}
+            deleteByPath={deleteByPath}
           />
 
           <Box style={{ position: "absolute", right: -10, top: -10 }}>
@@ -48,6 +50,7 @@ const ConditionsCheckBoxes = ({
               size="iconSmall"
               criticalOutline
               rounded
+              onClick={() => deleteByPath([...path, items])}
             />
           </Box>
         </Box>

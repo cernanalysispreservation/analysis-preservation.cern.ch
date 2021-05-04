@@ -7,11 +7,15 @@ import EditableField from "../../../../partials/EditableField";
 import "./ConditionList.css";
 import Tag from "../../../../partials/Tag";
 
+import { AiOutlineClose } from "react-icons/ai";
+
 const ConditionList = ({
   item,
   updateConditions,
   updateOperatorByPath,
-  updateEmailList
+  updateEmailList,
+  deleteByPath,
+  removeEmail
 }) => {
   const [isEmailListConfigurable, setIsEmailListConfigurable] = useState(false);
 
@@ -44,6 +48,7 @@ const ConditionList = ({
           initial
           updateConditions={updateConditions}
           updateOperatorByPath={updateOperatorByPath}
+          deleteByPath={deleteByPath}
         />
 
         <Box style={{ minWidth: "85px" }}>
@@ -102,6 +107,7 @@ const ConditionList = ({
               >
                 <Box margin={{ right: "small" }}>
                   <EditableField
+                    colorIndex="light-1"
                     emptyValue="add email"
                     onUpdate={email =>
                       updateEmailList({ destination: "to", email: email })
@@ -111,7 +117,22 @@ const ConditionList = ({
                 <Box direction="row" wrap align="center">
                   {item.mails.default.to &&
                     item.mails.default.to.map(mail => (
-                      <Tag text={mail} key={mail} margin="0 5px 0 0" />
+                      <Box key={mail} style={{ position: "relative" }}>
+                        <Tag text={mail} margin="0 10px 0 0" />
+                        <Box
+                          style={{ position: "absolute", right: 0, top: -20 }}
+                        >
+                          <Button
+                            icon={<AiOutlineClose size={12} />}
+                            size="iconSmall"
+                            criticalOutline
+                            rounded
+                            onClick={() =>
+                              removeEmail({ destination: "to", email: mail })
+                            }
+                          />
+                        </Box>
+                      </Box>
                     ))}
                 </Box>
               </Box>
@@ -127,6 +148,7 @@ const ConditionList = ({
               >
                 <Box margin={{ right: "small" }}>
                   <EditableField
+                    colorIndex="light-1"
                     emptyValue="add email"
                     onUpdate={email =>
                       updateEmailList({ destination: "bcc", email: email })
@@ -136,7 +158,22 @@ const ConditionList = ({
                 <Box direction="row" wrap align="center">
                   {item.mails.default.bcc &&
                     item.mails.default.bcc.map(mail => (
-                      <Tag text={mail} key={mail} margin="0 5px 0 0" />
+                      <Box key={mail} style={{ position: "relative" }}>
+                        <Tag text={mail} margin="0 10px 0 0" />
+                        <Box
+                          style={{ position: "absolute", right: 0, top: -20 }}
+                        >
+                          <Button
+                            icon={<AiOutlineClose size={12} />}
+                            size="iconSmall"
+                            criticalOutline
+                            rounded
+                            onClick={() =>
+                              removeEmail({ destination: "bcc", email: mail })
+                            }
+                          />
+                        </Box>
+                      </Box>
                     ))}
                 </Box>
               </Box>
@@ -152,6 +189,7 @@ const ConditionList = ({
               >
                 <Box margin={{ right: "small" }}>
                   <EditableField
+                    colorIndex="light-1"
                     emptyValue="add email"
                     onUpdate={email =>
                       updateEmailList({ destination: "cc", email: email })
@@ -161,7 +199,22 @@ const ConditionList = ({
                 <Box direction="row" wrap align="center">
                   {item.mails.default.cc &&
                     item.mails.default.cc.map(mail => (
-                      <Tag text={mail} key={mail} margin="0 5px 0 0" />
+                      <Box key={mail} style={{ position: "relative" }}>
+                        <Tag text={mail} margin="0 10px 0 0" />
+                        <Box
+                          style={{ position: "absolute", right: 0, top: -20 }}
+                        >
+                          <Button
+                            icon={<AiOutlineClose size={12} />}
+                            size="iconSmall"
+                            criticalOutline
+                            rounded
+                            onClick={() =>
+                              removeEmail({ destination: "cc", email: mail })
+                            }
+                          />
+                        </Box>
+                      </Box>
                     ))}
                 </Box>
               </Box>
