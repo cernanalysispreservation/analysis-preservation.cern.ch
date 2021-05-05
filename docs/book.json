@@ -22,15 +22,15 @@
     "themeCAP": {
       "nav": [
         {
-          "url": "/docs/general",
+          "url": "/docs/general/",
           "name": "General"
         },
         {
-          "url": "/docs/cli",
+          "url": "/docs/cli/",
           "name": "CLI client"
         },
         {
-          "url": "/docs/api",
+          "url": "/docs/api/",
           "name": "REST API",
           "target": "_blank"
         },

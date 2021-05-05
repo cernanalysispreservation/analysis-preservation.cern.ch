@@ -1,6 +1,6 @@
 # JSON and JSON Schema
 
-The analysis information is modelled in JSON to ensure data is added in the structure and formatting predefined by the CERN Analysis Preservation team in and the physicists from the LHC collaborations. JSON is an open data format where data is represented as objects of key-value pairs. It is independent from any tools and programming languages, usually stored in .json text files and can be parsed and created to and from most programming languages and systems. Therefore it is an easy format to share and preserve data.
+The analysis information is modelled in JSON to ensure data is added in the structure and formatting predefined by the CERN Analysis Preservation team and each collaboration. JSON is an open data format where data is represented as objects of key-value pairs. It is independent from any tools and programming languages, usually stored in `.json` text files and can be parsed and created to and from most programming languages and systems. Therefore it is an easy format to share and preserve data.
 
 An example miniature JSON file::
 
@@ -25,7 +25,7 @@ The above definitions contain a name, status and an array of names and emails. E
 
 A JSON schema defines a structure and rules that apply to it. JSON data can be validated against a schema to check whether the data fits the pre-defined structure and requirements of the schema.
 
-An example schema against which the above JSON file is validated::
+An example schema against which the above JSON file is validated:
 
     {
       "$schema": "http://json-schema.org/draft-04/schema#",
@@ -83,10 +83,10 @@ An example schema against which the above JSON file is validated::
       }
     }
 
-The schema defines the structure and data types JSON data needs to follow and use to validate against it and allows to add additional rules like required fields.
+The schema defines the structure and data types JSON data needs to follow and use to be valid against the schema, and it allows adding additional rules like required fields.
 
 Each schema is directly provided or created with the support of collaboration physicists and tested, as well as revised, several times to ensure that important information will be preserved. Throughout this process, core components of an analysis are identified and structured. Each collaboration has its own unique schema to capture the workflow that fits their specific requirements.
 
 Every schema change is versioned so that it can adapt to changes in the data or other components provided by the collaborations. This practice also ensures the that the integrity of the older analysis records is maintained.
 
-Depending on the preference and work environment of the researcher, analysis information can be created and edited through a [project-submission-form](./tutorials.md#the-cap-form) on the web interface or via the [project-rest-api](./api.md).
+Depending on the preference and work environment of the researcher, analysis information can be created and edited through a [submission form](./tutorials.md#the-cap-form) on the web interface or via the [API](./api.md).
