@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import ConditionsCheckBoxes from "./ConditionsCheckBoxes";
-import Button from "../../../../partials/Button";
-import EditableField from "../../../../partials/EditableField";
+import Button from "../../../../../../partials/Button";
+import EditableField from "../../../../../../partials/EditableField";
 import "./ConditionList.css";
-import Tag from "../../../../partials/Tag";
+import Tag from "../../../../../../partials/Tag";
 
 import { AiOutlineClose } from "react-icons/ai";
 

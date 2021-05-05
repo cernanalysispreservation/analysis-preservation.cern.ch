@@ -3,6 +3,20 @@
   padding: 0 10px;
   overflow-x: auto;
 }
+.conditionlist-list-email-selected {
+  animation: slowFading 1s ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slowFading {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
 
 .conditionlist-email-section {
   width: 10%;

@@ -5,33 +5,38 @@ import NotificationBox from "./NotificationBox";
 
 const myList = [
   {
-    title: "Review",
+    title: "review",
     conditions: 15,
     emails: 23
   },
   {
-    title: "Publish",
+    title: "publish",
     conditions: 3,
     emails: 12
   },
   {
-    title: "Edit"
+    title: "edit"
   }
 ];
 
-const NotificationsList = props => {
+const NotificationsList = ({ updateSelectedAction }) => {
   return (
     <Box
       margin={{ top: "medium" }}
       pad="small"
       style={{
         display: "grid",
-        gridGap: "1rem",
-        gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))"
+        gridGap: "2rem",
+        gridTemplateColumns: "repeat(3,1fr)"
       }}
     >
       {myList.map((item, index) => (
-        <NotificationBox key={item.title} item={item} index={index + 1} />
+        <NotificationBox
+          key={item.title}
+          item={item}
+          index={index + 1}
+          updateSelectedAction={updateSelectedAction}
+        />
       ))}
     </Box>
   );

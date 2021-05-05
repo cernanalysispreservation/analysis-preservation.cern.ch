@@ -5,7 +5,6 @@ import ReactDOM from "react-dom";
 
 import { AiOutlineUser } from "react-icons/ai";
 import styled from "styled-components";
-import Button from "./Button";
 
 const Wrapper = styled.div`
   padding: ${props => props.padding};
@@ -29,9 +28,7 @@ const Menu = ({
   iconWrapperClassName = "",
   padding = "5px",
   minWidth = "120px",
-  shadow = false,
-  dropDown = false,
-  displayButton = null
+  shadow = false
 }) => {
   const [expanded, setExpanded] = useState(false);
   const dropDownMenu = useRef(null);
@@ -71,25 +68,16 @@ const Menu = ({
   );
 
   return (
-    <Box
-      ref={dropDownMenu}
-      className="menu"
-      data-cy="header-menu"
-      style={{ position: dropDown && "relative" }}
-    >
-      {displayButton ? (
-        <Button text="add check" onClick={() => setExpanded(!expanded)} />
-      ) : (
-        <Wrapper
-          hover={hoverColor}
-          expanded={expanded}
-          padding={padding}
-          onClick={() => setExpanded(!expanded)}
-          className={iconWrapperClassName}
-        >
-          {icon}
-        </Wrapper>
-      )}
+    <Box ref={dropDownMenu} className="menu" data-cy="header-menu">
+      <Wrapper
+        hover={hoverColor}
+        expanded={expanded}
+        padding={padding}
+        onClick={() => setExpanded(!expanded)}
+        className={iconWrapperClassName}
+      >
+        {icon}
+      </Wrapper>
       <Box
         style={{
           position: "absolute",

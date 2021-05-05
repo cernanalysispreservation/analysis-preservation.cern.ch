@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Tag from "../../../../partials/Tag";
-import Button from "../../../../partials/Button";
+import Tag from "../../../../../../partials/Tag";
+import Button from "../../../../../../partials/Button";
 import { Box } from "grommet";
 import "./ConditionsCheckBoxes.css";
 
@@ -50,7 +50,7 @@ const ConditionsCheckBoxes = ({
               size="iconSmall"
               criticalOutline
               rounded
-              onClick={() => deleteByPath([...path, items])}
+              onClick={() => deleteByPath([...path, { item: items, index }])}
             />
           </Box>
         </Box>

@@ -13,6 +13,7 @@ import Box from "grommet/components/Box";
 import Label from "grommet/components/Label";
 import { DownloadIcon } from "grommet/components/icons/base";
 import SettingsModal from "./SettingsModal";
+import NotificationModal from "./NotificationModal";
 import {
   AiOutlineSetting,
   AiOutlineArrowLeft,
@@ -24,7 +25,6 @@ import JsonDiff from "./JSONDiff";
 
 import Truncate from "react-truncate";
 import GuidelinesPopUp from "./GuidelinesPopUp";
-import ConfigModal from "./ConfigModal";
 import { shoudDisplayGuideLinePopUp } from "../utils/common";
 
 ["json"].forEach(lang => {
@@ -151,7 +151,7 @@ class SchemaWizardHeader extends React.Component {
             <Button
               icon={<AiOutlineControl size={20} />}
               size="small"
-              onClick={() => this.setState({ configModal: true })}
+              onClick={() => this.setState({ showNotification: true })}
             />
             <Button
               icon={<FaCode size={20} />}
@@ -183,10 +183,10 @@ class SchemaWizardHeader extends React.Component {
           }
         />
       ),
-      this.state.configModal && (
-        <ConfigModal
-          show={this.state.configModal}
-          onClose={() => this.setState({ configModal: false })}
+      this.state.showNotification && (
+        <NotificationModal
+          show={this.state.showNotification}
+          onClose={() => this.setState({ showNotification: false })}
         />
       ),
       this.state.schemaPreviewEnabled && (

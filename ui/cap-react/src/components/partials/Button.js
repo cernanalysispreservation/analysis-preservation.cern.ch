@@ -297,7 +297,8 @@ Button.propTypes = {
   hoverColor: PropTypes.string,
   reverse: PropTypes.bool,
   className: PropTypes.string,
-  id: PropTypes.string
+  id: PropTypes.string,
+  rounded: PropTypes.bool
 };
 
 export default Button;

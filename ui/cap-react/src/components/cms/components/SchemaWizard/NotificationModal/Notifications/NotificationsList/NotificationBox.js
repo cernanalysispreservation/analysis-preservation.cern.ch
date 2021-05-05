@@ -1,24 +1,25 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
-import Button from "../../../../partials/Button";
+import Button from "../../../../../../partials/Button";
 import { BsArrowRight } from "react-icons/bs";
 import { AiOutlinePlus } from "react-icons/ai";
 
-const NotificationBox = ({ item, index }) => {
+const NotificationBox = ({ item, index, updateSelectedAction }) => {
   return (
     <Box
-      size="large"
       colorIndex="light-2"
       margin={{ horizontal: "small" }}
       pad="small"
-      style={{ height: "180px" }}
+      style={{ height: "180px", width: "80%", borderRadius: "3px" }}
     >
       <Box direction="row" responsive={false} align="center" justify="between">
         <Heading tag="h3" strong>
           {item.title}
         </Heading>
-        <Heading tag="h4">#{index}</Heading>
+        <Heading tag="h4" style={{ color: "rgba(0,0,0,0.3)" }}>
+          #{index}
+        </Heading>
       </Box>
       {!item.conditions && !item.emails ? (
         <Box
@@ -37,6 +38,7 @@ const NotificationBox = ({ item, index }) => {
             text="create conditions"
             icon={<AiOutlinePlus />}
             primaryOutline
+            onClick={() => updateSelectedAction(item.title)}
           />
         </Box>
       ) : (
@@ -77,6 +79,7 @@ const NotificationBox = ({ item, index }) => {
               icon={<BsArrowRight />}
               reverse
               primaryOutline
+              onClick={() => updateSelectedAction(item.title)}
             />
           </Box>
         </React.Fragment>
