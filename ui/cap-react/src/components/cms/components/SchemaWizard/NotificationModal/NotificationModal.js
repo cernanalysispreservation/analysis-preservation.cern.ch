@@ -5,8 +5,12 @@ import Box from "grommet/components/Box";
 import NotificationList from "./Notifications/NotificationsList";
 import NotificationWizard from "./Notifications/NotificationWizard";
 
-const NotificationModal = ({ onClose }) => {
+const NotificationModal = ({ onClose, updateSchemaConfig, schemaConfig }) => {
   const [selectedAction, setSelectedAction] = useState(null);
+
+  console.log("====================================");
+  console.log(schemaConfig.toJS().notifications);
+  console.log("====================================");
   return (
     <Box>
       <Modal
@@ -22,9 +26,11 @@ const NotificationModal = ({ onClose }) => {
             <NotificationWizard
               action={selectedAction}
               updateSelectedAction={() => setSelectedAction(null)}
+              notifications={schemaConfig.toJS().notifications.actions}
             />
           ) : (
             <NotificationList
+              notifications={schemaConfig.toJS().notifications.actions}
               updateSelectedAction={action => setSelectedAction(action)}
             />
           )}

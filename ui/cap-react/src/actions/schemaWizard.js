@@ -19,6 +19,12 @@ export const CURRENT_UPDATE_PATH = "CURRENT_UPDATE_PATH";
 export const CURRENT_UPDATE_SCHEMA_PATH = "CURRENT_UPDATE_SCHEMA_PATH";
 export const CURRENT_UPDATE_UI_SCHEMA_PATH = "CURRENT_UPDATE_UI_SCHEMA_PATH";
 
+export const UPDATE_SCHEMA_CONFIG = "UPDATE_SCHEMA_CONFIG";
+
+export function schemaConfigUpdate(data) {
+  return { type: UPDATE_SCHEMA_CONFIG, payload: data };
+}
+
 export function schemaError(error) {
   return {
     type: SCHEMA_ERROR,

@@ -15,13 +15,13 @@ const NotificationBox = ({ item, index, updateSelectedAction }) => {
     >
       <Box direction="row" responsive={false} align="center" justify="between">
         <Heading tag="h3" strong>
-          {item.title}
+          {item[0]}
         </Heading>
         <Heading tag="h4" style={{ color: "rgba(0,0,0,0.3)" }}>
           #{index}
         </Heading>
       </Box>
-      {!item.conditions && !item.emails ? (
+      {item[1].length < 1 ? (
         <Box
           align="center"
           justify="center"
@@ -55,7 +55,7 @@ const NotificationBox = ({ item, index, updateSelectedAction }) => {
                 conditions
               </Heading>
               <Heading tag="h2" margin="none">
-                {item.conditions}
+                {item[1].length}
               </Heading>
             </Box>
             <Box align="end">
@@ -63,7 +63,7 @@ const NotificationBox = ({ item, index, updateSelectedAction }) => {
                 emails
               </Heading>
               <Heading tag="h2" margin="none">
-                {item.emails}
+                {item[1].length}
               </Heading>
             </Box>
           </Box>
@@ -79,7 +79,7 @@ const NotificationBox = ({ item, index, updateSelectedAction }) => {
               icon={<BsArrowRight />}
               reverse
               primaryOutline
-              onClick={() => updateSelectedAction(item.title)}
+              onClick={() => updateSelectedAction(item[0])}
             />
           </Box>
         </React.Fragment>

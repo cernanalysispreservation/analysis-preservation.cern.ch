@@ -188,6 +188,8 @@ class SchemaWizardHeader extends React.Component {
         <NotificationModal
           show={this.state.showNotification}
           onClose={() => this.setState({ showNotification: false })}
+          updateSchemaConfig={this.props.updateSchemaConfig}
+          schemaConfig={this.props.schemaConfig}
         />
       ),
       this.state.schemaPreviewEnabled && (

@@ -19,7 +19,11 @@ const myList = [
   }
 ];
 
-const NotificationsList = ({ updateSelectedAction }) => {
+const NotificationsList = ({ updateSelectedAction, notifications }) => {
+  let list = Object.entries(notifications);
+  console.log("====================================");
+  console.log(list);
+  console.log("====================================");
   return (
     <Box
       margin={{ top: "medium" }}
@@ -30,9 +34,9 @@ const NotificationsList = ({ updateSelectedAction }) => {
         gridTemplateColumns: "repeat(3,1fr)"
       }}
     >
-      {myList.map((item, index) => (
+      {Object.entries(notifications).map((item, index) => (
         <NotificationBox
-          key={item.title}
+          key={item[0]}
           item={item}
           index={index + 1}
           updateSelectedAction={updateSelectedAction}

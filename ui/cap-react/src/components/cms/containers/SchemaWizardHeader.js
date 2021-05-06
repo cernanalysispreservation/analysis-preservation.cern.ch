@@ -2,6 +2,7 @@ import { connect } from "react-redux";
 
 import SchemaWizardHeader from "../components/SchemaWizard/SchemaWizardHeader";
 import { withRouter } from "react-router-dom";
+import { schemaConfigUpdate } from "../../../actions/schemaWizard";
 
 function mapStateToProps(state) {
   return {
@@ -14,8 +15,10 @@ function mapStateToProps(state) {
   };
 }
 
-function mapDispatchToProps() {
-  return {};
+function mapDispatchToProps(dispatch) {
+  return {
+    updateSchemaConfig: data => dispatch(schemaConfigUpdate(data))
+  };
 }
 
 export default withRouter(

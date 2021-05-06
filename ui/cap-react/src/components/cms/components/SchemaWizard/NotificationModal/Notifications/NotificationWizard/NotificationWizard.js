@@ -42,8 +42,12 @@ let conditions = [
   }
 ];
 
-const NotificationWizard = ({ updateSelectedAction, action }) => {
-  const [myConditions, setMyConditions] = useState(conditions);
+const NotificationWizard = ({
+  updateSelectedAction,
+  action,
+  notifications
+}) => {
+  const [myConditions, setMyConditions] = useState(notifications[action]);
 
   /**
    * Add a new check either simple or multiple

@@ -11,7 +11,8 @@ import {
   ADD_PROPERTY,
   ADD_PROPERTY_INIT,
   SCHEMA_ERROR,
-  SCHEMA_INIT_REQUEST
+  SCHEMA_INIT_REQUEST,
+  SCHEMA_CONFIG_UPDATE
 } from "../actions/schemaWizard";
 
 const initialState = Map({
@@ -28,7 +29,68 @@ const initialState = Map({
   propKeyEditor: null,
   error: null,
   loader: false,
-  schemaConfig: Map({})
+  schemaConfig: Map({
+    reviewable: true,
+    notifications: {
+      actions: {
+        publish: [
+          {
+            op: "and",
+            checks: [
+              {
+                path: "ml_app_use",
+                if: "exists",
+                value: "True"
+              },
+              {
+                op: "or",
+                checks: [
+                  {
+                    path: "first",
+                    if: "exists",
+                    value: "True"
+                  },
+                  {
+                    path: "second",
+                    if: "exists",
+                    value: "True"
+                  }
+                ]
+              }
+            ],
+            mails: {
+              default: {
+                cc: [
+                  "ml-conveners-test@cern0.ch",
+                  "ml-conveners-jira-test@cern0.ch"
+                ],
+                bcc: ["something-else@cern0.ch"],
+                to: ["atlas@cern.ch"]
+              }
+            }
+          }
+        ],
+        review: [
+          {
+            op: "and",
+            checks: [
+              {
+                path: "ml_app_use",
+                if: "exists",
+                value: "True"
+              }
+            ],
+            mails: {
+              default: {
+                bcc: ["something-else@cern0.ch"],
+                to: ["atlas@cern.ch"]
+              }
+            }
+          }
+        ]
+      }
+    }
+  })
 });
 
 export default function schemaReducer(state = initialState, action) {
@@ -88,6 +150,8 @@ export default function schemaReducer(state = initialState, action) {
       );
     case CURRENT_UPDATE_CONFIG:
       return state.set("config", action.config);
+    case SCHEMA_CONFIG_UPDATE:
+      return state.set("schemaConfig", fromJS(action.payload));
     default:
       return state;
   }
