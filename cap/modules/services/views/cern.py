@@ -28,6 +28,7 @@
 import requests
 import ldap
 from ldap import LDAPError
+import ldap.filter
 from flask import jsonify, request, abort
 
 from . import blueprint
@@ -70,11 +71,11 @@ def _ldap(query, sf=None, by=None):
     if by == 'mail':
         ldap_fields = LDAP_USER_RESP_FIELDS
         search_at = 'OU=Users,OU=Organic Units,DC=cern,DC=ch'
-        ldap_query = f'(&(cernAccountType=Primary)(mail=*{query}*))'
+        ldap_query = f'(&(cernAccountType=Primary)(mail=*{ldap.filter.escape_filter_chars(query)}*))'
     else:
         ldap_fields = LDAP_EGROUP_RESP_FIELDS
         search_at = 'OU=e-groups,OU=Workgroups,DC=cern,DC=ch'
-        ldap_query = f'{sf}=*{query}*'
+        ldap_query = f'{sf}=*{ldap.filter.escape_filter_chars(query)}*'
 
     try:
         lc.search_ext(
