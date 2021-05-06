@@ -100,6 +100,14 @@ const ConditionsCheckBoxes = ({
   );
 };
 
-ConditionsCheckBoxes.propTypes = {};
+ConditionsCheckBoxes.propTypes = {
+  item: PropTypes.object,
+  initial: PropTypes.bool,
+  updateConditions: PropTypes.func,
+  path: PropTypes.array,
+  index: PropTypes.number,
+  updateOperatorByPath: PropTypes.func,
+  deleteByPath: PropTypes.func
+};
 
 export default ConditionsCheckBoxes;

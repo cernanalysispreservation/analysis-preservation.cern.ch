@@ -34,6 +34,8 @@ const NotificationModal = ({ onClose }) => {
   );
 };
 
-NotificationModal.propTypes = {};
+NotificationModal.propTypes = {
+  onClose: PropTypes.func
+};
 
 export default NotificationModal;

@@ -88,6 +88,10 @@ const NotificationBox = ({ item, index, updateSelectedAction }) => {
   );
 };
 
-NotificationBox.propTypes = {};
+NotificationBox.propTypes = {
+  item: PropTypes.object,
+  index: PropTypes.number,
+  updateSelectedAction: PropTypes.func
+};
 
 export default NotificationBox;

@@ -226,6 +226,13 @@ const ConditionList = ({
   );
 };
 
-ConditionList.propTypes = {};
+ConditionList.propTypes = {
+  item: PropTypes.object,
+  updateConditions: PropTypes.func,
+  updateOperatorByPath: PropTypes.func,
+  updateEmailList: PropTypes.func,
+  deleteByPath: PropTypes.func,
+  remove: PropTypes.func
+};
 
 export default ConditionList;

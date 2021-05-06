@@ -251,6 +251,9 @@ const NotificationWizard = ({ updateSelectedAction, action }) => {
   );
 };
 
-NotificationWizard.propTypes = {};
+NotificationWizard.propTypes = {
+  updateSelectedAction: PropTypes.func,
+  action: PropTypes.string
+};
 
 export default NotificationWizard;

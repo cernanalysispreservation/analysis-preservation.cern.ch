@@ -1,9 +1,8 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import NotificationsList from "./NotificationsList";
 
-const Notifications = props => {
+const Notifications = () => {
   return (
     <Box align="center">
       <Heading tag="h2" strong>
@@ -15,7 +14,5 @@ const Notifications = props => {
     </Box>
   );
 };
-
-Notifications.propTypes = {};
 
 export default Notifications;

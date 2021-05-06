@@ -42,6 +42,8 @@ const NotificationsList = ({ updateSelectedAction }) => {
   );
 };
 
-NotificationsList.propTypes = {};
+NotificationsList.propTypes = {
+  updateSelectedAction: PropTypes.func
+};
 
 export default NotificationsList;
