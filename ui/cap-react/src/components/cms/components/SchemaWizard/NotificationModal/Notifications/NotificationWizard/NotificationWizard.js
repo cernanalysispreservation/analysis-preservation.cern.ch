@@ -9,16 +9,19 @@ import Label from "grommet/components/Label";
 import { connect } from "react-redux";
 import {
   removeConditionFromSchemaConfig,
-  addConditionToSchemaConfig
+  addConditionToSchemaConfig,
+  updateEmailFromSchemaConfig,
+  updateOperatorToCheck
 } from "../../../../../../../actions/schemaWizard";
 
 const NotificationWizard = ({
   updateSelectedAction,
   action,
   notifications,
-  updateSchemaConfig,
   removeCondition,
-  addNewCondition
+  addNewCondition,
+  updateEmail,
+  updateOperatorByPath
 }) => {
   const [myConditions, setMyConditions] = useState(notifications[action]);
 
@@ -64,28 +67,23 @@ const NotificationWizard = ({
   /**
    * Update the operator onClick, based on the path
    */
-  const updateOperatorByPath = (path, index) => {
-    let temp = myConditions[index];
-    if (path.length > 1) {
-      path.map((item, index) => {
-        if (!item.index) {
-          temp = temp.checks;
-        } else {
-          if (index === path.length - 1) temp = temp[item.index];
-          else temp = temp[item.index].checks;
-        }
-      });
-    }
-    temp.op = temp.op === "and" ? "or" : "and";
+  // const updateOperatorByPath = (path, index) => {
+  //   let temp = myConditions[index];
+  //   if (path.length > 1) {
+  //     path.map((item, index) => {
+  //       if (!item.index) {
+  //         temp = temp.checks;
+  //       } else {
+  //         if (index === path.length - 1) temp = temp[item.index];
+  //         else temp = temp[item.index].checks;
+  //       }
+  //     });
+  //   }
+  //   temp.op = temp.op === "and" ? "or" : "and";
 
-    setMyConditions([...myConditions]);
-  };
-  const updateEmailList = (incoming, index) => {
-    const { destination, email } = incoming;
+  //   setMyConditions([...myConditions]);
+  // };
 
-    myConditions[index].mails.default[destination].push(email);
-    setMyConditions([...myConditions]);
-  };
   /**
    * Delete a check based on the path
    */
@@ -113,43 +111,6 @@ const NotificationWizard = ({
 
     setMyConditions([...myConditions]);
   };
-  /**
-   * Remove email from a specific destination
-   * e.x from the first condition and the list with bcc
-   */
-  const removeEmail = (incoming, index) => {
-    let c = myConditions[index];
-    const { destination, email } = incoming;
-
-    c.mails.default[destination] = c.mails.default[destination].filter(
-      item => item != email
-    );
-
-    setMyConditions([...myConditions]);
-  };
-  /**
-   * adds new condition row
-   */
-  // const addNewCondition = () => {
-  //   const condition = {
-  //     op: "and",
-  //     checks: [
-  //       {
-  //         path: "ml_app_use",
-  //         if: "exists",
-  //         value: "True"
-  //       }
-  //     ],
-  //     mails: {
-  //       default: {
-  //         cc: [],
-  //         to: [],
-  //         bcc: []
-  //       }
-  //     }
-  //   };
-  //   setMyConditions(conditions => [condition, ...conditions]);
-  // };
 
   return (
     <Box pad="small">
@@ -204,10 +165,12 @@ const NotificationWizard = ({
           <ConditionList
             item={item}
             updateConditions={path => updateConditions(path, index)}
-            updateOperatorByPath={path => updateOperatorByPath(path, index)}
-            updateEmailList={email => updateEmailList(email, index)}
+            updateOperatorByPath={path =>
+              updateOperatorByPath(path, index, action)
+            }
+            updateEmailList={email => updateEmail(email, index, action, "add")}
             deleteByPath={path => deleteByPath(path, index)}
-            removeEmail={email => removeEmail(email, index)}
+            removeEmail={email => updateEmail(email, index, action, "delete")}
           />
         </Box>
       ))}
@@ -223,7 +186,11 @@ NotificationWizard.propTypes = {
 const mapDispatchToProps = dispatch => ({
   removeCondition: (index, action) =>
     dispatch(removeConditionFromSchemaConfig(index, action)),
-  addNewCondition: action => dispatch(addConditionToSchemaConfig(action))
+  addNewCondition: action => dispatch(addConditionToSchemaConfig(action)),
+  updateEmail: (email, index, action, howToUpdate) =>
+    dispatch(updateEmailFromSchemaConfig(email, index, action, howToUpdate)),
+  updateOperatorByPath: (path, index, action) =>
+    dispatch(updateOperatorToCheck(path, index, action))
 });
 
 export default connect(

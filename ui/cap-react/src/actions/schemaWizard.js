@@ -22,6 +22,8 @@ export const CURRENT_UPDATE_UI_SCHEMA_PATH = "CURRENT_UPDATE_UI_SCHEMA_PATH";
 export const UPDATE_SCHEMA_CONFIG = "UPDATE_SCHEMA_CONFIG";
 export const UPDATE_CONDITIONS_SCHEMA_CONFIG =
   "UPDATE_CONDITIONS_SCHEMA_CONFIG";
+export const UPDATE_EMAIL_LIST_TO_CONDITION = "UPDATE_EMAIL_LIST_TO_CONDITION";
+export const UPDATE_OPERATOR_OF_CONDITION = "UPDATE_OPERATOR_OF_CONDITION";
 
 export function schemaConfigUpdate(data) {
   return { type: UPDATE_SCHEMA_CONFIG, payload: data };
@@ -413,5 +415,73 @@ export function addConditionToSchemaConfig(action) {
 
     conditions = conditions.splice(0, 0, condition);
     dispatch(updateConditionsToConfigSchema(conditions, action));
+  };
+}
+
+export function updateEmailListToCondition(item) {
+  return { type: UPDATE_EMAIL_LIST_TO_CONDITION, payload: item };
+}
+
+export function updateEmailFromSchemaConfig(
+  incoming,
+  index,
+  action,
+  howToUpdate = "add"
+) {
+  return function(dispatch, getState) {
+    let { destination } = incoming;
+    let mails = getState().schemaWizard.getIn([
+      "schemaConfig",
+      "notifications",
+      "actions",
+      action,
+      index,
+      "mails",
+      "default",
+      incoming.destination
+    ]);
+    if (howToUpdate === "delete") mails = mails.delete(incoming.index);
+    else mails = mails.push(incoming.email);
+
+    const item = {
+      mails,
+      index,
+      action,
+      destination
+    };
+    dispatch(updateEmailListToCondition(item));
+  };
+}
+
+export function updateOperatorOfCondition(item) {
+  return { type: UPDATE_OPERATOR_OF_CONDITION, payload: item };
+}
+export function updateOperatorToCheck(path, index, action) {
+  return function(dispatch, getState) {
+    let conditions = getState()
+      .schemaWizard.getIn([
+        "schemaConfig",
+        "notifications",
+        "actions",
+        action,
+        index
+      ])
+      .toJS();
+    let temp = conditions;
+    path.length > 1 &&
+      path.map((item, index) => {
+        if (!item.index) {
+          temp = temp.checks;
+        } else {
+          if (index === path.length - 1) temp = temp[item.index];
+          else temp = temp[item.index].checks;
+        }
+      });
+    temp.op = temp.op === "and" ? "or" : "and";
+    console.log("====================================");
+    console.log(conditions);
+    console.log("====================================");
+    const item = { conditions, action, index };
+    dispatch(updateOperatorOfCondition(item));
   };
 }

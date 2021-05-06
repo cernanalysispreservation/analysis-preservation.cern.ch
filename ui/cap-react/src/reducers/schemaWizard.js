@@ -13,7 +13,9 @@ import {
   SCHEMA_ERROR,
   SCHEMA_INIT_REQUEST,
   UPDATE_SCHEMA_CONFIG,
-  UPDATE_CONDITIONS_SCHEMA_CONFIG
+  UPDATE_CONDITIONS_SCHEMA_CONFIG,
+  UPDATE_EMAIL_LIST_TO_CONDITION,
+  UPDATE_OPERATOR_OF_CONDITION
 } from "../actions/schemaWizard";
 
 const initialState = Map({
@@ -35,6 +37,41 @@ const initialState = Map({
     notifications: {
       actions: {
         publish: [
+          {
+            op: "and",
+            checks: [
+              {
+                path: "ml_app_use",
+                if: "exists",
+                value: "True"
+              },
+              {
+                op: "or",
+                checks: [
+                  {
+                    path: "first",
+                    if: "exists",
+                    value: "True"
+                  },
+                  {
+                    path: "second",
+                    if: "exists",
+                    value: "True"
+                  }
+                ]
+              }
+            ],
+            mails: {
+              default: {
+                cc: [
+                  "ml-conveners-test@cern0.ch",
+                  "ml-conveners-jira-test@cern0.ch"
+                ],
+                bcc: ["something-else@cern0.ch"],
+                to: ["atlas@cern.ch"]
+              }
+            }
+          },
           {
             op: "and",
             checks: [
@@ -158,7 +195,31 @@ export default function schemaReducer(state = initialState, action) {
         ["schemaConfig", "notifications", "actions", action.payload.action],
         action.payload.conditions
       );
-
+    case UPDATE_EMAIL_LIST_TO_CONDITION:
+      return state.setIn(
+        [
+          "schemaConfig",
+          "notifications",
+          "actions",
+          action.payload.action,
+          action.payload.index,
+          "mails",
+          "default",
+          action.payload.destination
+        ],
+        action.payload.mails
+      );
+    case UPDATE_OPERATOR_OF_CONDITION:
+      return state.setIn(
+        [
+          "schemaConfig",
+          "notifications",
+          "actions",
+          action.payload.action,
+          action.payload.index
+        ],
+        fromJS(action.payload.conditions)
+      );
     default:
       return state;
   }

@@ -116,7 +116,7 @@ const ConditionList = ({
                 </Box>
                 <Box direction="row" wrap align="center">
                   {item.mails.default.to &&
-                    item.mails.default.to.map(mail => (
+                    item.mails.default.to.map((mail, index) => (
                       <Box key={mail} style={{ position: "relative" }}>
                         <Tag text={mail} margin="0 10px 0 0" />
                         <Box
@@ -128,7 +128,11 @@ const ConditionList = ({
                             criticalOutline
                             rounded
                             onClick={() =>
-                              removeEmail({ destination: "to", email: mail })
+                              removeEmail({
+                                destination: "to",
+                                email: mail,
+                                index
+                              })
                             }
                           />
                         </Box>
@@ -157,7 +161,7 @@ const ConditionList = ({
                 </Box>
                 <Box direction="row" wrap align="center">
                   {item.mails.default.bcc &&
-                    item.mails.default.bcc.map(mail => (
+                    item.mails.default.bcc.map((mail, index) => (
                       <Box key={mail} style={{ position: "relative" }}>
                         <Tag text={mail} margin="0 10px 0 0" />
                         <Box
@@ -169,7 +173,11 @@ const ConditionList = ({
                             criticalOutline
                             rounded
                             onClick={() =>
-                              removeEmail({ destination: "bcc", email: mail })
+                              removeEmail({
+                                destination: "bcc",
+                                email: mail,
+                                index
+                              })
                             }
                           />
                         </Box>
@@ -198,7 +206,7 @@ const ConditionList = ({
                 </Box>
                 <Box direction="row" wrap align="center">
                   {item.mails.default.cc &&
-                    item.mails.default.cc.map(mail => (
+                    item.mails.default.cc.map((mail, index) => (
                       <Box key={mail} style={{ position: "relative" }}>
                         <Tag text={mail} margin="0 10px 0 0" />
                         <Box
@@ -210,7 +218,11 @@ const ConditionList = ({
                             criticalOutline
                             rounded
                             onClick={() =>
-                              removeEmail({ destination: "cc", email: mail })
+                              removeEmail({
+                                destination: "cc",
+                                email: mail,
+                                index
+                              })
                             }
                           />
                         </Box>
