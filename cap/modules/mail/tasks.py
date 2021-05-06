@@ -33,6 +33,7 @@ from invenio_mail.api import TemplatedMessage
                  'countdown': 10
              })
 def create_and_send(template, ctx, mail_ctx, plain=False):
+    """Creates the mail using the invenio-mail template, and sends it."""
     if not current_app.config['CAP_SEND_MAIL']:
         return
 

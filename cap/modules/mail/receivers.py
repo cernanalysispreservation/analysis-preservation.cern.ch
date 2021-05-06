@@ -70,6 +70,7 @@ def post_action_notifications(sender, action=None, pid=None, deposit=None):
             'bcc': bcc
         }
 
+        # retrieve the most common Deposit/Record attributes, used in messages
         msg_ctx = {
             'published_id': published_id(deposit),
             'draft_id': draft_id(deposit),

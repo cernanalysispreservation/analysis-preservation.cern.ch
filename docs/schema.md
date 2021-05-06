@@ -133,27 +133,25 @@ Let's provide some examples for each one, and explain their usage.
 This field provides configuration regarding the `subject` of the mail. It looks like this:
 
     "subject": {
-      "template": "mail/subject/subject_published.html",
-      "ctx": {
-        "cadi_id": {
-          "type": "path",
-          "path": "analysis_context.cadi_id"
-        },
-        "some_field": {
-          "type": "method",
-          "method": "some_method"
-        }
-      }
+      "template": "Subject with {{ title }} and id {{ published_id }}",
+      "ctx": [{
+        "name": "title",
+        "type": "path",
+        "path": "general_title"
+      }, {
+        "type": "method",
+        "method": "published_id"
+      }]
     }
 
-The user needs to provide a path to a `template`, that will be populated by the context (`ctx`). The context variables can
-be accessed in 2 different ways by their `type`:
+The user needs to provide a path to a `template` or `template_file`, that will be populated by the context (`ctx`).
+The context variables can be accessed in 2 different ways by their `type`:
 
 - `path` uses the deposit path that holds a variable
 - `method` uses a custom method that can be created and accessed in the `cap.modules.mail.custom.subject.py` file
 
-The subject `template` should be added in the `cap.modules.mail.templates.mail.subject` folder. The template can be omitted
-since there are defaults that can be used for each action.
+The subject `template_file` should be added in the `cap.modules.mail.templates.mail.subject` folder.
+The template can be omitted since there are defaults that can be used for each action.
 
 
 ##### 2. Message
@@ -161,21 +159,19 @@ since there are defaults that can be used for each action.
 Similar to the subject, we provide a template and a context for the message of tha notification, as follows:
 
     "message": {
-      "template": "mail/message/message_published.html",
-      "ctx": {
-        "title": {
-          "type": "path",
-          "path": "general_title"
-        },
-        "questionnaire_url": {
-          "type": "method",
-          "method": "create_questionnaire_url"
-        }
-      }
+      "template_file": "mail/message/questionnaire_message_published.html",
+      "ctx": [{
+        "name": "title",
+        "type": "path",
+        "path": "general_title"
+      }, {
+        "type": "method",
+        "method": "submitter_mail"
+      }]
     }
 
 The same rules are being followed, with the exception that if no message is provided, then the notification will only
-contain a header with general information, and no specific info. The template should be added in the 
+contain a header with general information, and no specific info. The template file should be added in the 
 `cap.modules.mail.templates.mail.message` folder, and the custom functions in the `cap.modules.mail.custom.message.py` file
 
 
@@ -185,42 +181,48 @@ Due to the complicated nature and requirements in adding recipients, the configu
 look at an example:
 
     "recipients": {
-      "func": "get_cms_stat_recipients",
-      "owner": true,
-      "current_user": true,
-      "conditions": [{
-        "op": "and",
-        "checks": [{
-          "path": "parton_distribution_functions",
-          "if": "exists",
-          "value": true
-        }],
-        "mails": ["pdf-forum-placeholder@cern.ch"]
-      }, {
-        "op": "and",
-        "checks": [{
-          "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
-          "if": "exists",
-          "value": true
+      "bcc": [
+        {
+          "type": "method",
+          "method": "get_owner"
         }, {
-          "path": "multivariate_discriminants.use_of_centralized_cms_apps.options",
-          "if": "is_not_in",
-          "value": "No"
-        }],
-        "mails": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
-      }],
-      "default": ["some-recipient-placeholder@cern.ch"],
-      "type": "bcc"
+          "type": "default",
+          "mails": {
+            "default": ["some-recipient-placeholder@cern.ch"],
+            "formatted": [{
+              "template": "{% if cadi_id %}hn-cms-{{ cadi_id }}@cern.ch{% endif %}",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }]
+            }]
+          }
+        }, {
+          "type": "condition",
+          "checks": [{
+            "path": "parton_distribution_functions",
+            "if": "exists",
+            "value": true
+          }],
+          "mails": {
+            "default": ["pdf-forum-placeholder@cern.ch"]
+          }
+        }
+      ]
     }
 
-There are several first level fields that need to be addressed:
+The `recipients` field differentiates 3 categories:
+- `recipients`
+- `cc`
+- `bcc`
 
-- `func`: a function that returns a list of recipients, needs to be added in `cap.modules.mail.custom.recipients.py`
-- `owner`: if `true`, the owner of the analysis will also be notified
-- `current_user`: if `true`, the current user (the one that publishes or reviews) of the analysis will also be notified
-- `default`: a list of recipients that will be notified in any case
-- `type`: the type of the recipients in the mail (recipients/bcc/cc)
-- `conditions`: a collection of checks that determine if a list of mails are added in the recipients
+All 3 can be used to send a mail, and have their own mails and rules about how they will be added. The rules are in 3 categories:
+
+- `default`: the mails in the list will be added
+- `method`: a method that returns a list of mail (for complicated options)
+- `conditions`: mails will be added if a certain condition is true
+
 
 Regarding the conditions, each one of them has a collection of checks that need to pass, in order for the mails to be added
 in the recipients list. Each condition object contains:

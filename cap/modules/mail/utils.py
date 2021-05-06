@@ -58,6 +58,8 @@ def populate_template_from_ctx(record, config, action=None,
         config: The analysis config, provided in the `schema`.
         action: THe action that triggered the notification (e.g. `publish`).
         module: The file that will hold the custom created functions.
+        type: The specific attribute that triggers this template, e.g.
+              subject, message, etc
 
     Returns: The rendered string, using the required context values.
     """
@@ -73,7 +75,14 @@ def populate_template_from_ctx(record, config, action=None,
         template = template_file
 
     if not (template or template_file):
-        return CONFIG_DEFAULTS[action][type]
+        default_template = CONFIG_DEFAULTS.get(action, {}).get(type)
+        if not default_template:
+            msg = f'Not template passed and no default templates found. ' \
+                  f'Notification procedure aborted.'
+            current_app.logger.error(msg)
+            abort(404, msg)
+
+        return default_template
 
     ctx = {}
     for attrs in config_ctx:
@@ -95,6 +104,17 @@ def populate_template_from_ctx(record, config, action=None,
 
 
 def update_mail_list(record, config, mails):
+    """
+    Adds mails (default or formatted) in tha mails collection.
+    An example of the expected config is this:
+    "mails": {
+        "default": [default1, default2],
+        "formatted": [{
+          "template": "template-mail-with-{{ var }}",
+          "ctx": [{"name": "var", "type": "path", "path": "fields.field1"}]
+        }]
+    }
+    """
     mails_list = config.get('default')
     formatted_list = config.get('formatted')
 

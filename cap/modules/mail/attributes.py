@@ -33,6 +33,35 @@ from .utils import CONFIG_DEFAULTS, populate_template_from_ctx,\
 
 
 def check_condition(record, condition):
+    """
+    For each condition we have a group of checks to perform, which should
+    return True/False
+
+    Each condition has the following:
+    - `checks`: the checks to be evaluated
+    - `op`: the operation to be used for all the checks (and/or)
+    - `mails`: the mail list
+
+    Each check has their own attributes:
+    - `if`: the type of check (e.g. exists, is_in, etc)
+    - `value`: the result
+    - `path`: the path that gets the field to be evaluated
+
+    An example of conditions:
+    {
+      "type": "condition",
+      "checks": [{
+        "path": "parton_distribution_functions",
+        "if": "exists",
+        "value": true
+      }],
+      "mails": {
+        "default": ["pdf-forum-placeholder@cern.ch"]
+      }
+    }
+
+    Nested checks are also allowed.
+    """
     # for each condition we have a group of checks to perform
     # all of the checks should give a True/False result
     operator = condition.get('op', 'and')
@@ -62,20 +91,43 @@ def check_condition(record, condition):
 
 def get_recipients_from_config(record, config):
     """
-    Retrieve the recipients that are provided in the schema config file.
-    The different options are as follows:
-    - default: a list of default recipients
-    - owner/current_user/experiment, etc: user-related options,
-      to be retrieved by the db
-    - conditions: a dict that defines a path, and what should be true for
-      that path, according to the record data, e.g.
-      {"path": "foo.bar.options",
-       "if": ["exists", "is_not_in"],
-       "values": [true, "No"],
-       "op": "and",
-       "mail": ["test@cern.ch"]}
-    All the used condition methods (found in the 'if' field),
-    are in the conditions.py file.
+    The `recipients` field differentiates 3 categories:
+    - recipients
+    - cc
+    - bcc
+    All 3 can be used to send a mail, and have their own mails and rules about
+    how they will be added.
+
+    The rules are in 3 categories:
+    - `default`: the mails in the list will be added
+    - `method`: a method that returns a list of mail (for complicated options)
+    - `conditions`: mails will be added if a certain condition is true
+
+    An example config of recipients:
+    "recipients": {
+      "bcc": [
+        {
+          "type": "method",
+          "method": "get_owner"
+        }, {
+          "type": "default",
+          "mails": {
+            "default": ["some-recipient-placeholder@cern.ch"],
+            "formatted": [{
+              "template": "{% if cadi_id %}hn-cms-{{ cadi_id }}@cern.ch{% endif %}",  # noqa
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }]
+            }]
+          }
+        }, {
+          "type": "condition",
+          ...
+        }
+      ]
+    }
     """
     if not config:
         return []
@@ -107,12 +159,8 @@ def get_recipients_from_config(record, config):
 def generate_recipients(record, config):
     """
     Recipients generator for notification action.
-    Retrieves from config and from custom function if it exists:
-    - custom function name in the 'func' field of the recipients config
-    - implementation should ALWAYS go in the mail.custom.recipients.py file
-
-    Also returns the `type` of the recipients that the mail should have, in
-    this case: recipients/bcc/cc.
+    Using the `get_recipients_from_config` function, it retrieves and returns
+    3 possible lists of mails: recipients, bcc, cc.
     """
     re_config = config.get('recipients')
     if not re_config:
@@ -128,24 +176,24 @@ def generate_recipients(record, config):
 def generate_message(record, config, action):
     """
     Message generator for notification action.
-    Retrieves from config and from custom function if it exists:
-    - custom function name in the 'func' field of the message config
-    - implementation should ALWAYS go in the mail.custom.messages.py file
-    - if a template and context are available, it will be rendered and added
-      to the mail
-    - the default is None, where the mail sent will just show standard info
-      (analysis published, etc)
+    It requires a template and a context (dict of vars-values), to populate it.
+    If no template is found, the default one will be used.
 
     Example of message config:
     "message": {
-      "template": "mail/message/message_review.html",
-      "ctx": {
-        "title": {
-          "type": "path",
-          "path": "general_title"
-        }
-      }
+      "template_file": "mail/message/questionnaire_message_published.html",
+      "ctx": [{
+        "name": "title",
+        "type": "path",
+        "path": "general_title"
+      }, {
+        "type": "method",
+        "method": "submitter_mail"
+      }]
     }
+
+    In case of `method`, then the message will be retrieved from the result of
+    the method. It's implementation should always be in the mail.custom.messages.py file  # noqa
     """
     msg_config = config.get('message')
     if not msg_config:
@@ -170,22 +218,25 @@ def generate_message(record, config, action):
 
 def generate_subject(record, config, action):
     """
-    Message generator for notification action.
-    Retrieves from config and from custom function if it exists
-    - custom function name in the 'func' field of the subject config
-    - implementation should ALWAYS go in the mail.custom.subjects.py file
-    - the default, according to the `action`, is retrieved from the
-      `SUBJECT_DEFAULTS` in the `cap.mail.utils.py` file
+    Subject generator for notification action.
+    It requires a template and a context (dict of vars-values), to populate it.
+    If no template is found, the default one will be used.
+
     Example of subject config:
     "subject": {
-      "template": "mail/subject/subject_published.html",
-      "ctx": {
-        "cadi_id": {
-          "type": "path",
-          "path": "analysis_context.cadi_id"
-        }
-      }
+      "template": "Subject with {{ title }} and id {{ published_id }}",
+      "ctx": [{
+        "name": "title",
+        "type": "path",
+        "path": "general_title"
+      }, {
+        "type": "method",
+        "method": "published_id"
+      }]
     }
+
+    In case of `method`, then the subject will be retrieved from the result of
+    the method. It's implementation should always be in the mail.custom.subjects.py file  # noqa
     """
     subj_config = config.get('subject')
     if not subj_config:
@@ -210,12 +261,17 @@ def generate_subject(record, config, action):
 
 def generate_template(record, config, action):
     """
-    Template generator for notification action.
-    Retrieves from config and from custom function if it exists:
-    - custom function name in the 'func' field of the template config
-    - implementation should ALWAYS go in the mail.custom.templates.py file
-    - the default, according to the `action`, is retrieved from the
-      `TEMPLATE_DEFAULTS` in the `cap.mail.utils.py` file
+    Template generator for notification action. Differentiates between html or
+    plain text using the `plain` variable.
+
+    Example of subject config:
+    "template": {
+      "default": "mail/analysis_plain_text.html",
+      "plain": true
+    }
+
+    In case of `method`, then the template will be retrieved from the result of
+    the method. It's implementation should always be in the mail.custom.templates.py file  # noqa
     """
     template_config = config.get('template')
     if not template_config:
