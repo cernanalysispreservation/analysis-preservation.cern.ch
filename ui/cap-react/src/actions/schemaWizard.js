@@ -20,6 +20,8 @@ export const CURRENT_UPDATE_SCHEMA_PATH = "CURRENT_UPDATE_SCHEMA_PATH";
 export const CURRENT_UPDATE_UI_SCHEMA_PATH = "CURRENT_UPDATE_UI_SCHEMA_PATH";
 
 export const UPDATE_SCHEMA_CONFIG = "UPDATE_SCHEMA_CONFIG";
+export const UPDATE_CONDITIONS_SCHEMA_CONFIG =
+  "UPDATE_CONDITIONS_SCHEMA_CONFIG";
 
 export function schemaConfigUpdate(data) {
   return { type: UPDATE_SCHEMA_CONFIG, payload: data };
@@ -358,5 +360,58 @@ export function updateSchemaProps(prop) {
     }
 
     dispatch(updateSchemaByPath([], schema));
+  };
+}
+
+export function updateConditionsToConfigSchema(conditions, action) {
+  return {
+    type: UPDATE_CONDITIONS_SCHEMA_CONFIG,
+    payload: { conditions, action }
+  };
+}
+
+export function removeConditionFromSchemaConfig(index, action) {
+  return function(dispatch, getState) {
+    let conditions = getState().schemaWizard.getIn([
+      "schemaConfig",
+      "notifications",
+      "actions",
+      action
+    ]);
+
+    conditions = conditions.delete(index);
+    dispatch(updateConditionsToConfigSchema(conditions, action));
+  };
+}
+
+export function addConditionToSchemaConfig(action) {
+  return function(dispatch, getState) {
+    let conditions = getState().schemaWizard.getIn([
+      "schemaConfig",
+      "notifications",
+      "actions",
+      action
+    ]);
+
+    const condition = {
+      op: "and",
+      checks: [
+        {
+          path: "path",
+          if: "exists",
+          value: "True"
+        }
+      ],
+      mails: {
+        default: {
+          cc: [],
+          to: [],
+          bcc: []
+        }
+      }
+    };
+
+    conditions = conditions.splice(0, 0, condition);
+    dispatch(updateConditionsToConfigSchema(conditions, action));
   };
 }

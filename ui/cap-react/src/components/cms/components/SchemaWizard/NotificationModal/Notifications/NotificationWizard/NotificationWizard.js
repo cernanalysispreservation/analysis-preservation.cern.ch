@@ -6,46 +6,19 @@ import Button from "../../../../../../partials/Button";
 import { AiOutlineArrowLeft, AiOutlinePlus } from "react-icons/ai";
 import EmptyIcon from "./utils/emptyLogo";
 import Label from "grommet/components/Label";
-
-let conditions = [
-  {
-    op: "and",
-    checks: [
-      {
-        path: "ml_app_use",
-        if: "exists",
-        value: "True"
-      },
-      {
-        op: "or",
-        checks: [
-          {
-            path: "first",
-            if: "exists",
-            value: "True"
-          },
-          {
-            path: "second",
-            if: "exists",
-            value: "True"
-          }
-        ]
-      }
-    ],
-    mails: {
-      default: {
-        cc: ["ml-conveners-test@cern0.ch", "ml-conveners-jira-test@cern0.ch"],
-        bcc: ["something-else@cern0.ch"],
-        to: ["atlas@cern.ch"]
-      }
-    }
-  }
-];
+import { connect } from "react-redux";
+import {
+  removeConditionFromSchemaConfig,
+  addConditionToSchemaConfig
+} from "../../../../../../../actions/schemaWizard";
 
 const NotificationWizard = ({
   updateSelectedAction,
   action,
-  notifications
+  notifications,
+  updateSchemaConfig,
+  removeCondition,
+  addNewCondition
 }) => {
   const [myConditions, setMyConditions] = useState(notifications[action]);
 
@@ -88,7 +61,6 @@ const NotificationWizard = ({
     c.push(itemToAdd);
     setMyConditions([...myConditions]);
   };
-
   /**
    * Update the operator onClick, based on the path
    */
@@ -108,14 +80,12 @@ const NotificationWizard = ({
 
     setMyConditions([...myConditions]);
   };
-
   const updateEmailList = (incoming, index) => {
     const { destination, email } = incoming;
 
     myConditions[index].mails.default[destination].push(email);
     setMyConditions([...myConditions]);
   };
-
   /**
    * Delete a check based on the path
    */
@@ -143,7 +113,6 @@ const NotificationWizard = ({
 
     setMyConditions([...myConditions]);
   };
-
   /**
    * Remove email from a specific destination
    * e.x from the first condition and the list with bcc
@@ -158,37 +127,29 @@ const NotificationWizard = ({
 
     setMyConditions([...myConditions]);
   };
-
   /**
    * adds new condition row
    */
-  const addNewCondition = () => {
-    const condition = {
-      op: "and",
-      checks: [
-        {
-          path: "ml_app_use",
-          if: "exists",
-          value: "True"
-        }
-      ],
-      mails: {
-        default: {
-          cc: [],
-          to: [],
-          bcc: []
-        }
-      }
-    };
-    setMyConditions(conditions => [condition, ...conditions]);
-  };
-
-  /**
-   * Removes a condition row based on the index
-   */
-  const removeCondition = i => {
-    setMyConditions(cond => cond.filter((_, index) => index !== i));
-  };
+  // const addNewCondition = () => {
+  //   const condition = {
+  //     op: "and",
+  //     checks: [
+  //       {
+  //         path: "ml_app_use",
+  //         if: "exists",
+  //         value: "True"
+  //       }
+  //     ],
+  //     mails: {
+  //       default: {
+  //         cc: [],
+  //         to: [],
+  //         bcc: []
+  //       }
+  //     }
+  //   };
+  //   setMyConditions(conditions => [condition, ...conditions]);
+  // };
 
   return (
     <Box pad="small">
@@ -204,17 +165,17 @@ const NotificationWizard = ({
           when {`${action}ed`}
         </Heading>
         <Box>
-          {myConditions.length > 0 && (
+          {notifications[action].length > 0 && (
             <Button
               text="new condition"
               primary
               icon={<AiOutlinePlus />}
-              onClick={() => addNewCondition()}
+              onClick={() => addNewCondition(action)}
             />
           )}
         </Box>
       </Box>
-      {myConditions.length == 0 && (
+      {notifications[action].length == 0 && (
         <Box flex pad="small" align="center" justify="center">
           <Box colorIndex="light-2" pad="small">
             <EmptyIcon size="large" />
@@ -224,11 +185,11 @@ const NotificationWizard = ({
             text="create conditions"
             primary
             size="large"
-            onClick={() => addNewCondition()}
+            onClick={() => addNewCondition(action)}
           />
         </Box>
       )}
-      {myConditions.map((item, index) => (
+      {notifications[action].map((item, index) => (
         <Box margin={{ vertical: "small" }} key={index}>
           <Box justify="between" direction="row" margin={{ bottom: "small" }}>
             <Heading tag="h4" strong margin="none">
@@ -237,7 +198,7 @@ const NotificationWizard = ({
             <Button
               text="Remove"
               criticalOutline
-              onClick={() => removeCondition(index)}
+              onClick={() => removeCondition(index, action)}
             />
           </Box>
           <ConditionList
@@ -259,4 +220,13 @@ NotificationWizard.propTypes = {
   action: PropTypes.string
 };
 
-export default NotificationWizard;
+const mapDispatchToProps = dispatch => ({
+  removeCondition: (index, action) =>
+    dispatch(removeConditionFromSchemaConfig(index, action)),
+  addNewCondition: action => dispatch(addConditionToSchemaConfig(action))
+});
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(NotificationWizard);

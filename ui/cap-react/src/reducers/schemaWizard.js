@@ -12,7 +12,8 @@ import {
   ADD_PROPERTY_INIT,
   SCHEMA_ERROR,
   SCHEMA_INIT_REQUEST,
-  SCHEMA_CONFIG_UPDATE
+  UPDATE_SCHEMA_CONFIG,
+  UPDATE_CONDITIONS_SCHEMA_CONFIG
 } from "../actions/schemaWizard";
 
 const initialState = Map({
@@ -29,7 +30,7 @@ const initialState = Map({
   propKeyEditor: null,
   error: null,
   loader: false,
-  schemaConfig: Map({
+  schemaConfig: fromJS({
     reviewable: true,
     notifications: {
       actions: {
@@ -150,8 +151,14 @@ export default function schemaReducer(state = initialState, action) {
       );
     case CURRENT_UPDATE_CONFIG:
       return state.set("config", action.config);
-    case SCHEMA_CONFIG_UPDATE:
+    case UPDATE_SCHEMA_CONFIG:
       return state.set("schemaConfig", fromJS(action.payload));
+    case UPDATE_CONDITIONS_SCHEMA_CONFIG:
+      return state.setIn(
+        ["schemaConfig", "notifications", "actions", action.payload.action],
+        action.payload.conditions
+      );
+
     default:
       return state;
   }

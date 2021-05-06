@@ -38,7 +38,7 @@ const NotificationBox = ({ item, index, updateSelectedAction }) => {
             text="create conditions"
             icon={<AiOutlinePlus />}
             primaryOutline
-            onClick={() => updateSelectedAction(item.title)}
+            onClick={() => updateSelectedAction(item[0])}
           />
         </Box>
       ) : (

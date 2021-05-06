@@ -8,9 +8,6 @@ import NotificationWizard from "./Notifications/NotificationWizard";
 const NotificationModal = ({ onClose, updateSchemaConfig, schemaConfig }) => {
   const [selectedAction, setSelectedAction] = useState(null);
 
-  console.log("====================================");
-  console.log(schemaConfig.toJS().notifications);
-  console.log("====================================");
   return (
     <Box>
       <Modal
@@ -27,6 +24,7 @@ const NotificationModal = ({ onClose, updateSchemaConfig, schemaConfig }) => {
               action={selectedAction}
               updateSelectedAction={() => setSelectedAction(null)}
               notifications={schemaConfig.toJS().notifications.actions}
+              updateSchemaConfig={updateSchemaConfig}
             />
           ) : (
             <NotificationList

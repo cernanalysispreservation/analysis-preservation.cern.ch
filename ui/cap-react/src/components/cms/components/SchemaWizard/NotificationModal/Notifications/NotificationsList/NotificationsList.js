@@ -3,27 +3,7 @@ import PropTypes from "prop-types";
 import { Box } from "grommet";
 import NotificationBox from "./NotificationBox";
 
-const myList = [
-  {
-    title: "review",
-    conditions: 15,
-    emails: 23
-  },
-  {
-    title: "publish",
-    conditions: 3,
-    emails: 12
-  },
-  {
-    title: "edit"
-  }
-];
-
 const NotificationsList = ({ updateSelectedAction, notifications }) => {
-  let list = Object.entries(notifications);
-  console.log("====================================");
-  console.log(list);
-  console.log("====================================");
   return (
     <Box
       margin={{ top: "medium" }}
