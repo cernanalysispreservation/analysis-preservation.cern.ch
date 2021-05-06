@@ -232,6 +232,7 @@ def send_mail_on_publish(recid, revision,
         template = "mail/analysis_published_new.html"
 
     send_mail_on_hypernews(recipients, subject, message)
+    send_mail_on_jira(recid, host_url, recipients, message, subject, template)
 
     create_and_send.delay(
         template,
@@ -275,4 +276,19 @@ def send_mail_on_hypernews(recipients, subject, message):
             subject,
             hypernews_list,
             type="plain"
+        )
+
+
+def send_mail_on_jira(recid, host_url, recipients, message, subject, template):
+    # only JIRA ML mail
+    conveners_ml_jira_mail = current_app.config.get("CONVENERS_ML_JIRA_MAIL")
+
+    if conveners_ml_jira_mail in recipients:
+        recipients.remove(conveners_ml_jira_mail)
+
+        create_and_send.delay(
+            template,
+            dict(recid=recid, url=host_url, message=message),
+            subject,
+            [conveners_ml_jira_mail]
         )

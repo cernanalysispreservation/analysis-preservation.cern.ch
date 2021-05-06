@@ -69,7 +69,8 @@ def test_send_mail_published(mock_user, app, users, create_deposit, create_schem
 
             # hypernews mail needs to be sent as plain text
             hypernews_mail = outbox[0]
-            standard_mail = outbox[1]
+            jira_ml_mail = outbox[1]
+            standard_mail = outbox[2]
 
             # subject is the same in both
             assert hypernews_mail.subject == \
@@ -97,7 +98,7 @@ def test_send_mail_published(mock_user, app, users, create_deposit, create_schem
             # recipients
             assert 'test@cern.ch' in standard_mail.bcc
             assert 'ml-conveners-test@cern0.ch' in standard_mail.bcc
-            assert 'ml-conveners-jira-test@cern0.ch' in standard_mail.bcc
+            assert 'ml-conveners-jira-test@cern0.ch' not in standard_mail.bcc
             assert 'hn-cms-ABC-11-111@cern0.ch' not in standard_mail.bcc
 
 
