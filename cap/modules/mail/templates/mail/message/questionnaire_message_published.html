@@ -1,0 +1,12 @@
+{% block paragraph %}
+    {% if cadi_id %}
+        <p>CADI URL: https://cms.cern.ch/iCMS/analysisadmin/cadi?ancode={{ cadi_id }}</p>
+    {% endif %}
+    <p>Title: {{ title }}</p>
+    <p>Questionnaire URL: {{ published_url }}</p>
+    {% if params %}
+        Statistics Committee assignee: {{ params.get('primary', '-') }} (primary), {{ params.get('secondary', '-') }} (secondary).
+    {% endif %}
+    <br>
+    <p>Submitted by {{ submitter_mail }}.</p>
+{% endblock %}

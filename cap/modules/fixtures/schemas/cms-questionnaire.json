@@ -4,10 +4,249 @@
   "fullname":"CMS Statistics Questionnaire",
   "experiment":"CMS",
   "is_indexed":true,
-  "use_deposit_as_record":true,
   "config": {
-    "reviewable": true
+    "reviewable": true,
+    "notifications": {
+      "actions": {
+        "publish": [
+          {
+            "subject": {
+              "template": "Questionnaire for {{ cadi_id if cadi_id else \"\" }} {{ published_id }} - {{ \"New Version of Published Analysis\" if revision > 0 else \"New Published Analysis\" }} | CERN Analysis Preservation",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "type": "method",
+                "method": "revision"
+              }, {
+                "type": "method",
+                "method": "published_id"
+              }]
+            },
+            "message": {
+              "template_file": "mail/message/questionnaire_message_published.html",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "type": "method",
+                "method": "published_url"
+              }, {
+                "type": "method",
+                "method": "reviewer_params"
+              }, {
+                "type": "method",
+                "method": "submitter_mail"
+              }]
+            },
+            "recipients": {
+              "bcc": [
+                {
+                  "type": "method",
+                  "method": "get_cms_stat_recipients"
+                }, {
+                  "type": "method",
+                  "method": "get_owner"
+                }, {
+                  "type": "method",
+                  "method": "get_current_user"
+                }, {
+                  "type": "default",
+                  "mails": {
+                    "default": ["some-recipient-placeholder@cern.ch"]
+                  }
+                }, {
+                  "type": "condition",
+                  "checks": [{
+                    "path": "parton_distribution_functions",
+                    "if": "exists",
+                    "value": true
+                  }],
+                  "mails": {
+                    "default": ["pdf-forum-placeholder@cern.ch"]
+                  }
+                }, {
+                  "type": "condition",
+                  "checks": [{
+                    "path": "multivariate_discriminants.mva_use",
+                    "if": "equals",
+                    "value": "Yes"
+                  }],
+                  "mails": {
+                    "default": ["cms-conveners-placeholder@cern.ch", "cms-conveners-jira-placeholder@cern.ch"]
+                  }
+                }
+              ]
+            }
+          }, {
+            "template": {
+              "default": "mail/analysis_plain_text.html",
+              "plain": true
+            },
+            "subject": {
+              "template": "Questionnaire for {{ cadi_id if cadi_id else \"\" }} {{ published_id }} - {{ \"New Version of Published Analysis\" if revision > 0 else \"New Published Analysis\" }} | CERN Analysis Preservation",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "type": "method",
+                "method": "revision"
+              }, {
+                "type": "method",
+                "method": "published_id"
+              }]
+            },
+            "message": {
+              "template_file": "mail/message/questionnaire_message_published_plain.html",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "type": "method",
+                "method": "published_url"
+              }, {
+                "type": "method",
+                "method": "reviewer_params"
+              }, {
+                "type": "method",
+                "method": "submitter_mail"
+              }]
+            },
+            "recipients": {
+              "bcc": [
+                {
+                  "type": "default",
+                  "mails": {
+                    "formatted": [{
+                      "template": "{% if cadi_id %}hn-cms-{{ cadi_id }}@cern.ch{% endif %}",
+                      "ctx": [{
+                        "name": "cadi_id",
+                        "type": "path",
+                        "path": "analysis_context.cadi_id"
+                      }]
+                    }]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "review": [
+          {
+            "subject": {
+              "template": "Questionnaire for {{ cadi_id }} - New Review on Analysis | CERN Analysis Preservation",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }]
+            },
+            "message": {
+              "template_file": "mail/message/questionnaire_message_review.html",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "type": "method",
+                "method": "working_url"
+              }, {
+                "type": "method",
+                "method": "reviewer_mail"
+              }, {
+                "type": "method",
+                "method": "submitter_mail"
+              }]
+            },
+            "recipients": {
+              "bcc": [
+                {
+                  "type": "method",
+                  "method": "get_owner"
+                },
+                {
+                  "type": "method",
+                  "method": "get_current_user"
+                }
+              ]
+            }
+          }, {
+            "template": {
+              "default": "mail/analysis_plain_text.html",
+              "plain": true
+            },
+            "subject": {
+              "template": "Questionnaire for {{ cadi_id }} - New Review on Analysis | CERN Analysis Preservation",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }]
+            },
+            "message": {
+              "template_file": "mail/message/questionnaire_message_review_plain.html",
+              "ctx": [{
+                "name": "cadi_id",
+                "type": "path",
+                "path": "analysis_context.cadi_id"
+              }, {
+                "name": "title",
+                "type": "path",
+                "path": "general_title"
+              },{
+                "type": "method",
+                "method": "working_url"
+              }, {
+                "type": "method",
+                "method": "reviewer_mail"
+              }, {
+                "type": "method",
+                "method": "submitter_mail"
+              }]
+            },
+            "recipients": {
+              "bcc": [{
+                "type": "condition",
+                "op": "and",
+                "checks": [{
+                  "path": "parton_distribution_functions",
+                  "if": "has_permission",
+                  "value": "comittee-mail@cern0.ch"
+                }],
+                "mails": {
+                  "formatted": [{
+                    "template": "mail/addresses/hypernews.html",
+                    "ctx": [{
+                      "name": "cadi_id",
+                      "type": "path",
+                      "path": "analysis_context.cadi_id"
+                    }]
+                  }]
+                }
+              }]
+            }
+          }
+        ]
+      }
+    }
   },
+  "use_deposit_as_record":true,
   "deposit_schema":{
     "additionalProperties":false,
     "$schema":"http://json-schema.org/draft-04/schema#",

@@ -22,23 +22,42 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from celery import shared_task
-from flask import current_app
-from invenio_mail.api import TemplatedMessage
+from flask_principal import RoleNeed
+from invenio_access.permissions import Permission
+
+from .utils import path_value_equals
 
 
-@shared_task(autoretry_for=(Exception, ),
-             retry_kwargs={
-                 'max_retries': 3,
-                 'countdown': 10
-             })
-def create_and_send(template, ctx, mail_ctx, plain=False):
-    """Creates the mail using the invenio-mail template, and sends it."""
-    if not current_app.config['CAP_SEND_MAIL']:
-        return
+def equals(record, path, value):
+    data = path_value_equals(path, record)
+    return True if data and data == value else False
 
-    msg = TemplatedMessage(template_body=template, ctx=ctx, **mail_ctx) \
-        if plain \
-        else TemplatedMessage(template_html=template, ctx=ctx, **mail_ctx)
 
-    current_app.extensions['mail'].send(msg)
+def exists(record, path, value):
+    data = path_value_equals(path, record)
+    return True if data else False
+
+
+def is_in(record, path, value):
+    data = path_value_equals(path, record)
+    return True if data and value in data else False
+
+
+def is_not_in(record, path, value):
+    data = path_value_equals(path, record)
+    return True if data and value not in data else False
+
+
+def has_permission(record, path, value):
+    return Permission(RoleNeed(value)).can()
+
+
+CONDITION_METHODS = {
+    # conditions
+    'equals': equals,
+    'exists': exists,
+    'is_in': is_in,
+    'is_not_in': is_not_in,
+    # mail
+    'has_permission': has_permission
+}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of CERN Analysis Preservation Framework.
-# Copyright (C) 2016 CERN.
+# Copyright (C) 2021 CERN.
 #
 # CERN Analysis Preservation Framework is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License as
@@ -21,24 +21,3 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
-from celery import shared_task
-from flask import current_app
-from invenio_mail.api import TemplatedMessage
-
-
-@shared_task(autoretry_for=(Exception, ),
-             retry_kwargs={
-                 'max_retries': 3,
-                 'countdown': 10
-             })
-def create_and_send(template, ctx, mail_ctx, plain=False):
-    """Creates the mail using the invenio-mail template, and sends it."""
-    if not current_app.config['CAP_SEND_MAIL']:
-        return
-
-    msg = TemplatedMessage(template_body=template, ctx=ctx, **mail_ctx) \
-        if plain \
-        else TemplatedMessage(template_html=template, ctx=ctx, **mail_ctx)
-
-    current_app.extensions['mail'].send(msg)
