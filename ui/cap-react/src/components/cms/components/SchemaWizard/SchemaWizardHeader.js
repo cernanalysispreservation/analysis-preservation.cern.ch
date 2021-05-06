@@ -45,6 +45,7 @@ class SchemaWizardHeader extends React.Component {
   _getSchema = () => {
     const fileData = JSON.stringify(
       {
+        config: this.props.schemaConfig.toJS(),
         deposit_schema: this.props.schema.toJS(),
         deposit_options: this.props.uiSchema.toJS(),
         ...this.props.config
@@ -263,7 +264,8 @@ SchemaWizardHeader.propTypes = {
   initialUiSchema: PropTypes.object,
   initialSchema: PropTypes.object,
   history: PropTypes.object,
-  loader: PropTypes.bool
+  loader: PropTypes.bool,
+  schemaConfig: PropTypes.object
 };
 
 export default SchemaWizardHeader;

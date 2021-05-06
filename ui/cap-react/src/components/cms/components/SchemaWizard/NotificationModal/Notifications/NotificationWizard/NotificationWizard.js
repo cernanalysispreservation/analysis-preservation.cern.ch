@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import ConditionList from "./ConditionList";
 import Button from "../../../../../../partials/Button";
 import { AiOutlineArrowLeft, AiOutlinePlus } from "react-icons/ai";
-import isEqual from "lodash/isEqual";
 import EmptyIcon from "./utils/emptyLogo";
 import Label from "grommet/components/Label";
 

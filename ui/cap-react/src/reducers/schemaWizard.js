@@ -27,7 +27,8 @@ const initialState = Map({
   field: null,
   propKeyEditor: null,
   error: null,
-  loader: false
+  loader: false,
+  schemaConfig: Map({})
 });
 
 export default function schemaReducer(state = initialState, action) {
