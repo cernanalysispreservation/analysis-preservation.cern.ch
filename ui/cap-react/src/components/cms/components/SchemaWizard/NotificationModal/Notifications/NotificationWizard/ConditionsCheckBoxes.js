@@ -17,8 +17,8 @@ const ConditionsCheckBoxes = ({
   deleteByPath = { deleteByPath }
 }) => {
   path = [...path, index ? { checks: "checks", index } : "checks"];
-  if (item.op && item.checks) {
-    return item.checks.map((items, index) => (
+  if (item.has("op") && item.has("checks")) {
+    return item.get("checks").map((items, index) => (
       <Box
         key={index}
         direction="row"
@@ -54,11 +54,11 @@ const ConditionsCheckBoxes = ({
             />
           </Box>
         </Box>
-        {index !== item.checks.length - 1 && (
+        {index !== item.get("checks").size - 1 && (
           <Box onClick={() => updateOperatorByPath(path)}>
             <Tag
               margin="0 10px"
-              text={<b>{item.op}</b>}
+              text={<b>{item.get("op")}</b>}
               color={{
                 bgcolor: "#c41d7f",
                 border: "#fff0f6",
@@ -69,7 +69,7 @@ const ConditionsCheckBoxes = ({
           </Box>
         )}
 
-        {index === item.checks.length - 1 &&
+        {index === item.get("checks").size - 1 &&
           !initial && (
             <Box>
               <Button
@@ -93,9 +93,9 @@ const ConditionsCheckBoxes = ({
 
   return (
     <Box direction="row" responsive={false} separator="all" pad="small">
-      <Tag text={item.path} size="large" />
-      <Tag text={item.if} size="large" />
-      <Tag text={item.value} size="large" />
+      <Tag text={item.get("path")} size="large" />
+      <Tag text={item.get("if")} size="large" />
+      <Tag text={item.get("value")} size="large" />
     </Box>
   );
 };
