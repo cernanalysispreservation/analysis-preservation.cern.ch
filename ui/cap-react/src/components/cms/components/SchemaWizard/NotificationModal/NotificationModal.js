@@ -25,6 +25,7 @@ const NotificationModal = ({ onClose, updateSchemaConfig, schemaConfig }) => {
               action={selectedAction}
               updateSelectedAction={() => setSelectedAction(null)}
               notifications={schemaConfig.toJS().notifications.actions}
+              notification={schemaConfig}
               updateSchemaConfig={updateSchemaConfig}
             />
           ) : (

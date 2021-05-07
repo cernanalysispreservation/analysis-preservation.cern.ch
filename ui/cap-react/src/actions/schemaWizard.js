@@ -493,9 +493,9 @@ export function updateChecksInConditions(
 ) {
   return function(dispatch, getState) {
     const newObject = {
-      path: "general_title",
-      if: "exists",
-      value: "antonios"
+      path: "Path..",
+      if: "Action..",
+      value: "Value.."
     };
 
     const multiple = {

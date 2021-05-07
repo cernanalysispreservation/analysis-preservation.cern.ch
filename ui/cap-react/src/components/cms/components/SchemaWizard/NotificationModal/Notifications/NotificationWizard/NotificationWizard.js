@@ -21,7 +21,8 @@ const NotificationWizard = ({
   updateCondition,
   updateEmail,
   updateOperatorByPath,
-  updateChecksInConditions
+  updateChecksInConditions,
+  notification
 }) => {
   return (
     <Box pad="small">
@@ -37,7 +38,8 @@ const NotificationWizard = ({
           when {`${action}ed`}
         </Heading>
         <Box>
-          {notifications[action].length > 0 && (
+          {notification.getIn(["notifications", "actions", action]).size >
+            0 && (
             <Button
               text="new condition"
               primary
@@ -47,7 +49,7 @@ const NotificationWizard = ({
           )}
         </Box>
       </Box>
-      {notifications[action].length == 0 && (
+      {notification.getIn(["notifications", "actions", action]).size == 0 && (
         <Box flex pad="small" align="center" justify="center">
           <Box colorIndex="light-2" pad="small">
             <EmptyIcon size="large" />
@@ -61,34 +63,38 @@ const NotificationWizard = ({
           />
         </Box>
       )}
-      {notifications[action].map((item, index) => (
-        <Box margin={{ vertical: "small" }} key={index}>
-          <Box justify="between" direction="row" margin={{ bottom: "small" }}>
-            <Heading tag="h4" strong margin="none">
-              #{index + 1} Condition
-            </Heading>
-            <Button
-              text="Remove"
-              criticalOutline
-              onClick={() => updateCondition(action, "delete", index)}
+      {notification
+        .getIn(["notifications", "actions", action])
+        .map((item, index) => (
+          <Box margin={{ vertical: "small" }} key={index}>
+            <Box justify="between" direction="row" margin={{ bottom: "small" }}>
+              <Heading tag="h4" strong margin="none">
+                #{index + 1} Condition
+              </Heading>
+              <Button
+                text="Remove"
+                criticalOutline
+                onClick={() => updateCondition(action, "delete", index)}
+              />
+            </Box>
+            <ConditionList
+              item={item}
+              updateConditions={path =>
+                updateChecksInConditions(path, index, action, "add")
+              }
+              updateOperatorByPath={path =>
+                updateOperatorByPath(path, index, action)
+              }
+              updateEmailList={email =>
+                updateEmail(email, index, action, "add")
+              }
+              deleteByPath={path =>
+                updateChecksInConditions(path, index, action, "delete")
+              }
+              removeEmail={email => updateEmail(email, index, action, "delete")}
             />
           </Box>
-          <ConditionList
-            item={item}
-            updateConditions={path =>
-              updateChecksInConditions(path, index, action, "add")
-            }
-            updateOperatorByPath={path =>
-              updateOperatorByPath(path, index, action)
-            }
-            updateEmailList={email => updateEmail(email, index, action, "add")}
-            deleteByPath={path =>
-              updateChecksInConditions(path, index, action, "delete")
-            }
-            removeEmail={email => updateEmail(email, index, action, "delete")}
-          />
-        </Box>
-      ))}
+        ))}
     </Box>
   );
 };

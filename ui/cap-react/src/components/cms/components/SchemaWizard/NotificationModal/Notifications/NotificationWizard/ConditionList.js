@@ -20,9 +20,12 @@ const ConditionList = ({
   const [isEmailListConfigurable, setIsEmailListConfigurable] = useState(false);
 
   const getEmailCount = () => {
-    let emails = item.mails.default;
+    let emails = item.getIn(["mails", "default"]);
     let count = 0;
-    Object.values(emails).map(val => (count += val.length));
+    emails.mapEntries(v => {
+      count += v[1].size;
+    });
+
     return `${count} emails`;
   };
 
@@ -97,141 +100,65 @@ const ConditionList = ({
           }
         >
           <Box margin={{ left: "small" }}>
-            <Box>
-              <Heading tag="h6" margin="none">
-                TO:
-              </Heading>
-              <Box
-                direction="row"
-                align="center"
-                style={{ marginBottom: "8px" }}
-              >
-                <Box margin={{ right: "small" }}>
-                  <EditableField
-                    colorIndex="light-1"
-                    emptyValue="add email"
-                    onUpdate={email =>
-                      updateEmailList({ destination: "to", email: email })
-                    }
-                  />
-                </Box>
-                <Box direction="row" wrap align="center">
-                  {item.mails.default.to &&
-                    item.mails.default.to.map((mail, index) => (
-                      <Box key={mail} style={{ position: "relative" }}>
-                        <Tag text={mail} margin="0 10px 0 0" />
-                        <Box
-                          style={{ position: "absolute", right: 0, top: -20 }}
-                        >
-                          <Button
-                            icon={<AiOutlineClose size={12} />}
-                            size="iconSmall"
-                            criticalOutline
-                            rounded
-                            onClick={() =>
-                              removeEmail({
-                                destination: "to",
-                                email: mail,
-                                index
-                              })
-                            }
-                          />
-                        </Box>
+            {item
+              .getIn(["mails", "default"])
+              .entrySeq()
+              .reverse()
+              .map(entry => {
+                return (
+                  <Box key={entry[0]}>
+                    <Heading tag="h6" margin="none">
+                      {entry[0].toUpperCase()} :
+                    </Heading>
+                    <Box
+                      direction="row"
+                      align="center"
+                      style={{ marginBottom: "8px" }}
+                    >
+                      <Box margin={{ right: "small" }}>
+                        <EditableField
+                          colorIndex="light-1"
+                          emptyValue="add email"
+                          onUpdate={email =>
+                            updateEmailList({
+                              destination: entry[0],
+                              email: email
+                            })
+                          }
+                        />
                       </Box>
-                    ))}
-                </Box>
-              </Box>
-            </Box>
-            <Box>
-              <Heading tag="h6" margin="none">
-                BCC:
-              </Heading>
-              <Box
-                direction="row"
-                align="center"
-                style={{ marginBottom: "8px" }}
-              >
-                <Box margin={{ right: "small" }}>
-                  <EditableField
-                    colorIndex="light-1"
-                    emptyValue="add email"
-                    onUpdate={email =>
-                      updateEmailList({ destination: "bcc", email: email })
-                    }
-                  />
-                </Box>
-                <Box direction="row" wrap align="center">
-                  {item.mails.default.bcc &&
-                    item.mails.default.bcc.map((mail, index) => (
-                      <Box key={mail} style={{ position: "relative" }}>
-                        <Tag text={mail} margin="0 10px 0 0" />
-                        <Box
-                          style={{ position: "absolute", right: 0, top: -20 }}
-                        >
-                          <Button
-                            icon={<AiOutlineClose size={12} />}
-                            size="iconSmall"
-                            criticalOutline
-                            rounded
-                            onClick={() =>
-                              removeEmail({
-                                destination: "bcc",
-                                email: mail,
-                                index
-                              })
-                            }
-                          />
-                        </Box>
+                      <Box direction="row" wrap align="center">
+                        {entry[1].map((mail, index) => (
+                          <Box key={mail} style={{ position: "relative" }}>
+                            <Tag text={mail} margin="0 10px 0 0" />
+                            <Box
+                              style={{
+                                position: "absolute",
+                                right: 0,
+                                top: -20
+                              }}
+                            >
+                              <Button
+                                icon={<AiOutlineClose size={12} />}
+                                size="iconSmall"
+                                criticalOutline
+                                rounded
+                                onClick={() =>
+                                  removeEmail({
+                                    destination: entry[0],
+                                    email: mail,
+                                    index
+                                  })
+                                }
+                              />
+                            </Box>
+                          </Box>
+                        ))}
                       </Box>
-                    ))}
-                </Box>
-              </Box>
-            </Box>
-            <Box>
-              <Heading tag="h6" margin="none">
-                CC:
-              </Heading>
-              <Box
-                direction="row"
-                align="center"
-                style={{ marginBottom: "8px" }}
-              >
-                <Box margin={{ right: "small" }}>
-                  <EditableField
-                    colorIndex="light-1"
-                    emptyValue="add email"
-                    onUpdate={email =>
-                      updateEmailList({ destination: "cc", email: email })
-                    }
-                  />
-                </Box>
-                <Box direction="row" wrap align="center">
-                  {item.mails.default.cc &&
-                    item.mails.default.cc.map((mail, index) => (
-                      <Box key={mail} style={{ position: "relative" }}>
-                        <Tag text={mail} margin="0 10px 0 0" />
-                        <Box
-                          style={{ position: "absolute", right: 0, top: -20 }}
-                        >
-                          <Button
-                            icon={<AiOutlineClose size={12} />}
-                            size="iconSmall"
-                            criticalOutline
-                            rounded
-                            onClick={() =>
-                              removeEmail({
-                                destination: "cc",
-                                email: mail,
-                                index
-                              })
-                            }
-                          />
-                        </Box>
-                      </Box>
-                    ))}
-                </Box>
-              </Box>
-            </Box>
+                    </Box>
+                  </Box>
+                );
+              })}
           </Box>
         </Box>
       </Box>
