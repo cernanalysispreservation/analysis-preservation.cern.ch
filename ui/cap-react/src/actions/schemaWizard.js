@@ -427,7 +427,7 @@ export function updateEmailFromSchemaConfig(
 ) {
   return function(dispatch, getState) {
     let { destination } = incoming;
-    let mails = getState().schemaWizard.getIn([
+    const path = [
       "schemaConfig",
       "notifications",
       "actions",
@@ -435,8 +435,9 @@ export function updateEmailFromSchemaConfig(
       index,
       "mails",
       "default",
-      incoming.destination
-    ]);
+      destination
+    ];
+    let mails = getState().schemaWizard.getIn(path);
     if (howToUpdate === "delete") mails = mails.delete(incoming.index);
     else mails = mails.push(incoming.email);
 
@@ -445,16 +446,7 @@ export function updateEmailFromSchemaConfig(
       index,
       action,
       destination,
-      path: [
-        "schemaConfig",
-        "notifications",
-        "actions",
-        action,
-        index,
-        "mails",
-        "default",
-        incoming.destination
-      ]
+      path
     };
     dispatch(updateEmailListToCondition(item));
   };
@@ -462,14 +454,15 @@ export function updateEmailFromSchemaConfig(
 
 export function updateOperatorToCheck(path, index, action) {
   return function(dispatch, getState) {
+    const valuesPpath = [
+      "schemaConfig",
+      "notifications",
+      "actions",
+      action,
+      index
+    ];
     let conditions = getState()
-      .schemaWizard.getIn([
-        "schemaConfig",
-        "notifications",
-        "actions",
-        action,
-        index
-      ])
+      .schemaWizard.getIn(valuesPpath)
       .toJS();
     let temp = conditions;
     path.length > 1 &&
@@ -486,7 +479,7 @@ export function updateOperatorToCheck(path, index, action) {
       conditions,
       action,
       index,
-      path: ["schemaConfig", "notifications", "actions", action, index]
+      path: valuesPpath
     };
     dispatch(updateConditionInConfig(item));
   };
@@ -521,14 +514,16 @@ export function updateChecksInConditions(
       ]
     };
 
+    const valuesPath = [
+      "schemaConfig",
+      "notifications",
+      "actions",
+      action,
+      index
+    ];
+
     let conditions = getState()
-      .schemaWizard.getIn([
-        "schemaConfig",
-        "notifications",
-        "actions",
-        action,
-        index
-      ])
+      .schemaWizard.getIn(valuesPath)
       .toJS();
 
     let temp = conditions;
@@ -564,7 +559,7 @@ export function updateChecksInConditions(
       conditions,
       action,
       index,
-      path: ["schemaConfig", "notifications", "actions", action, index]
+      path: valuesPath
     };
     dispatch(updateConditionInConfig(item));
   };
