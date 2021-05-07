@@ -11,7 +11,8 @@ const NotificationsList = ({ updateSelectedAction, notifications }) => {
       style={{
         display: "grid",
         gridGap: "2rem",
-        gridTemplateColumns: "repeat(3,1fr)"
+        gridTemplateColumns: "repeat(auto-fill,minmax(400px,450px))",
+        justifyContent: "center"
       }}
     >
       {Object.entries(notifications).map((item, index) => (
