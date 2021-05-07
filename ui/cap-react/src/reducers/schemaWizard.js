@@ -15,7 +15,7 @@ import {
   UPDATE_SCHEMA_CONFIG,
   UPDATE_CONDITIONS_SCHEMA_CONFIG,
   UPDATE_EMAIL_LIST_TO_CONDITION,
-  UPDATE_OPERATOR_OF_CONDITION
+  UPDATE_CONFIG_SCHEMA_CONDITION
 } from "../actions/schemaWizard";
 
 const initialState = Map({
@@ -193,31 +193,16 @@ export default function schemaReducer(state = initialState, action) {
     case UPDATE_CONDITIONS_SCHEMA_CONFIG:
       return state.setIn(
         ["schemaConfig", "notifications", "actions", action.payload.action],
-        action.payload.conditions
+        fromJS(action.payload.conditions)
       );
     case UPDATE_EMAIL_LIST_TO_CONDITION:
       return state.setIn(
-        [
-          "schemaConfig",
-          "notifications",
-          "actions",
-          action.payload.action,
-          action.payload.index,
-          "mails",
-          "default",
-          action.payload.destination
-        ],
-        action.payload.mails
+        [...action.payload.path],
+        fromJS(action.payload.mails)
       );
-    case UPDATE_OPERATOR_OF_CONDITION:
+    case UPDATE_CONFIG_SCHEMA_CONDITION:
       return state.setIn(
-        [
-          "schemaConfig",
-          "notifications",
-          "actions",
-          action.payload.action,
-          action.payload.index
-        ],
+        [...action.payload.path],
         fromJS(action.payload.conditions)
       );
     default:

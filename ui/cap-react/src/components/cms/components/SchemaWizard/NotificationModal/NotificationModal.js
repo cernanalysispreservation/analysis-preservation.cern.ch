@@ -4,6 +4,7 @@ import Modal from "../../../../partials/Modal";
 import Box from "grommet/components/Box";
 import NotificationList from "./Notifications/NotificationsList";
 import NotificationWizard from "./Notifications/NotificationWizard";
+import "./NotificationModal.css";
 
 const NotificationModal = ({ onClose, updateSchemaConfig, schemaConfig }) => {
   const [selectedAction, setSelectedAction] = useState(null);
@@ -18,7 +19,7 @@ const NotificationModal = ({ onClose, updateSchemaConfig, schemaConfig }) => {
         position="left"
         animated
       >
-        <Box style={{ width: "1500px" }}>
+        <Box className="notification-modal-size">
           {selectedAction ? (
             <NotificationWizard
               action={selectedAction}

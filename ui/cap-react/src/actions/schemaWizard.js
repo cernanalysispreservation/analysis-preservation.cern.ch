@@ -1,4 +1,5 @@
 import axios from "axios";
+import { fromJS } from "immutable";
 import { push } from "connected-react-router";
 import cogoToast from "cogo-toast";
 import { slugify, _initSchemaStructure } from "../components/cms/utils";
@@ -24,9 +25,26 @@ export const UPDATE_CONDITIONS_SCHEMA_CONFIG =
   "UPDATE_CONDITIONS_SCHEMA_CONFIG";
 export const UPDATE_EMAIL_LIST_TO_CONDITION = "UPDATE_EMAIL_LIST_TO_CONDITION";
 export const UPDATE_OPERATOR_OF_CONDITION = "UPDATE_OPERATOR_OF_CONDITION";
+export const UPDATE_CHECK_IN_CONDITION = "UPDATE_CHECK_IN_CONDITION";
+export const UPDATE_CONFIG_SCHEMA_CONDITION = "UPDATE_CONFIG_SCHEMA_CONDITION";
 
 export function schemaConfigUpdate(data) {
   return { type: UPDATE_SCHEMA_CONFIG, payload: data };
+}
+
+export function updateConditionInConfig(item) {
+  return { type: UPDATE_CONFIG_SCHEMA_CONDITION, payload: item };
+}
+
+export function updateEmailListToCondition(item) {
+  return { type: UPDATE_EMAIL_LIST_TO_CONDITION, payload: item };
+}
+
+export function updateConditionsToConfigSchema(conditions, action) {
+  return {
+    type: UPDATE_CONDITIONS_SCHEMA_CONFIG,
+    payload: { conditions, action }
+  };
 }
 
 export function schemaError(error) {
@@ -365,14 +383,11 @@ export function updateSchemaProps(prop) {
   };
 }
 
-export function updateConditionsToConfigSchema(conditions, action) {
-  return {
-    type: UPDATE_CONDITIONS_SCHEMA_CONFIG,
-    payload: { conditions, action }
-  };
-}
-
-export function removeConditionFromSchemaConfig(index, action) {
+export function updateConditionToSchemaConfig(
+  action,
+  howToUpdate = "add",
+  index
+) {
   return function(dispatch, getState) {
     let conditions = getState().schemaWizard.getIn([
       "schemaConfig",
@@ -381,21 +396,7 @@ export function removeConditionFromSchemaConfig(index, action) {
       action
     ]);
 
-    conditions = conditions.delete(index);
-    dispatch(updateConditionsToConfigSchema(conditions, action));
-  };
-}
-
-export function addConditionToSchemaConfig(action) {
-  return function(dispatch, getState) {
-    let conditions = getState().schemaWizard.getIn([
-      "schemaConfig",
-      "notifications",
-      "actions",
-      action
-    ]);
-
-    const condition = {
+    const condition = fromJS({
       op: "and",
       checks: [
         {
@@ -411,15 +412,11 @@ export function addConditionToSchemaConfig(action) {
           bcc: []
         }
       }
-    };
-
-    conditions = conditions.splice(0, 0, condition);
+    });
+    if (howToUpdate === "add") conditions = conditions.splice(0, 0, condition);
+    else conditions = conditions.delete(index);
     dispatch(updateConditionsToConfigSchema(conditions, action));
   };
-}
-
-export function updateEmailListToCondition(item) {
-  return { type: UPDATE_EMAIL_LIST_TO_CONDITION, payload: item };
 }
 
 export function updateEmailFromSchemaConfig(
@@ -447,15 +444,22 @@ export function updateEmailFromSchemaConfig(
       mails,
       index,
       action,
-      destination
+      destination,
+      path: [
+        "schemaConfig",
+        "notifications",
+        "actions",
+        action,
+        index,
+        "mails",
+        "default",
+        incoming.destination
+      ]
     };
     dispatch(updateEmailListToCondition(item));
   };
 }
 
-export function updateOperatorOfCondition(item) {
-  return { type: UPDATE_OPERATOR_OF_CONDITION, payload: item };
-}
 export function updateOperatorToCheck(path, index, action) {
   return function(dispatch, getState) {
     let conditions = getState()
@@ -478,10 +482,90 @@ export function updateOperatorToCheck(path, index, action) {
         }
       });
     temp.op = temp.op === "and" ? "or" : "and";
-    console.log("====================================");
-    console.log(conditions);
-    console.log("====================================");
-    const item = { conditions, action, index };
-    dispatch(updateOperatorOfCondition(item));
+    const item = {
+      conditions,
+      action,
+      index,
+      path: ["schemaConfig", "notifications", "actions", action, index]
+    };
+    dispatch(updateConditionInConfig(item));
+  };
+}
+
+export function updateChecksInConditions(
+  path,
+  index,
+  action,
+  howToUpdate = "add"
+) {
+  return function(dispatch, getState) {
+    const newObject = {
+      path: "general_title",
+      if: "exists",
+      value: "antonios"
+    };
+
+    const multiple = {
+      op: "and",
+      checks: [
+        {
+          path: "first",
+          if: "equals",
+          value: "yes"
+        },
+        {
+          path: "second",
+          if: "exists",
+          value: "true"
+        }
+      ]
+    };
+
+    let conditions = getState()
+      .schemaWizard.getIn([
+        "schemaConfig",
+        "notifications",
+        "actions",
+        action,
+        index
+      ])
+      .toJS();
+
+    let temp = conditions;
+    if (howToUpdate === "add") {
+      path.path.map(item => {
+        if (!item.index) {
+          temp = temp.checks;
+        } else temp = temp[item.index].checks;
+      });
+      let itemToAdd = path.nested ? multiple : newObject;
+
+      temp.push(itemToAdd);
+    } else {
+      let itemToDelete = path.pop();
+      path.map((item, index) => {
+        if (!item.index) {
+          if (Array.isArray(temp)) temp = temp[0];
+          else temp = temp.checks;
+        } else {
+          if (index === path.length - 1) {
+            temp = temp[item.index];
+          } else temp = temp[item.index].checks;
+        }
+      });
+      let d = temp.checks ? temp.checks : temp;
+      d = d.filter((_, index) => index !== itemToDelete.index);
+
+      if (path.length === 1 && path[0] === "checks") conditions.checks = d;
+      else temp.checks = d;
+    }
+
+    const item = {
+      conditions,
+      action,
+      index,
+      path: ["schemaConfig", "notifications", "actions", action, index]
+    };
+    dispatch(updateConditionInConfig(item));
   };
 }

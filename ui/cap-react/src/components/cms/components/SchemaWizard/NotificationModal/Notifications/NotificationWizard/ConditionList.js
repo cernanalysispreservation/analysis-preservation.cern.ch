@@ -25,6 +25,7 @@ const ConditionList = ({
     Object.values(emails).map(val => (count += val.length));
     return `${count} emails`;
   };
+
   return (
     <Box
       separator="all"

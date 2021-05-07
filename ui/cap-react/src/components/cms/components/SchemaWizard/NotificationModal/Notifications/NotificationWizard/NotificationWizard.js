@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { Box, Heading } from "grommet";
 import ConditionList from "./ConditionList";
@@ -8,110 +8,21 @@ import EmptyIcon from "./utils/emptyLogo";
 import Label from "grommet/components/Label";
 import { connect } from "react-redux";
 import {
-  removeConditionFromSchemaConfig,
-  addConditionToSchemaConfig,
+  updateConditionToSchemaConfig,
   updateEmailFromSchemaConfig,
-  updateOperatorToCheck
+  updateOperatorToCheck,
+  updateChecksInConditions
 } from "../../../../../../../actions/schemaWizard";
 
 const NotificationWizard = ({
   updateSelectedAction,
   action,
   notifications,
-  removeCondition,
-  addNewCondition,
+  updateCondition,
   updateEmail,
-  updateOperatorByPath
+  updateOperatorByPath,
+  updateChecksInConditions
 }) => {
-  const [myConditions, setMyConditions] = useState(notifications[action]);
-
-  /**
-   * Add a new check either simple or multiple
-   * Based on the path
-   */
-  const updateConditions = (path, index) => {
-    const newObject = {
-      path: "general_title",
-      if: "exists",
-      value: "antonios"
-    };
-
-    const multiple = {
-      op: "and",
-      checks: [
-        {
-          path: "first",
-          if: "equals",
-          value: "yes"
-        },
-        {
-          path: "second",
-          if: "exists",
-          value: "true"
-        }
-      ]
-    };
-
-    let c = myConditions[index];
-
-    path.path.map(item => {
-      if (!item.index) {
-        c = c.checks;
-      } else c = c[item.index].checks;
-    });
-    let itemToAdd = path.nested ? multiple : newObject;
-
-    c.push(itemToAdd);
-    setMyConditions([...myConditions]);
-  };
-  /**
-   * Update the operator onClick, based on the path
-   */
-  // const updateOperatorByPath = (path, index) => {
-  //   let temp = myConditions[index];
-  //   if (path.length > 1) {
-  //     path.map((item, index) => {
-  //       if (!item.index) {
-  //         temp = temp.checks;
-  //       } else {
-  //         if (index === path.length - 1) temp = temp[item.index];
-  //         else temp = temp[item.index].checks;
-  //       }
-  //     });
-  //   }
-  //   temp.op = temp.op === "and" ? "or" : "and";
-
-  //   setMyConditions([...myConditions]);
-  // };
-
-  /**
-   * Delete a check based on the path
-   */
-  const deleteByPath = (path, index) => {
-    let temp = myConditions[index];
-    let itemToDelete = path.pop();
-
-    path.map((item, index) => {
-      if (!item.index) {
-        if (Array.isArray(temp)) temp = temp[0];
-        else temp = temp.checks;
-      } else {
-        if (index === path.length - 1) {
-          temp = temp[item.index];
-        } else temp = temp[item.index].checks;
-      }
-    });
-
-    let d = temp.checks ? temp.checks : temp;
-    d = d.filter((_, index) => index !== itemToDelete.index);
-
-    if (path.length === 1 && path[0] === "checks")
-      myConditions[index].checks = d;
-    else temp.checks = d;
-
-    setMyConditions([...myConditions]);
-  };
-
   return (
     <Box pad="small">
       <Box direction="row" align="center" responsive={false} justify="between">
@@ -131,7 +42,7 @@ const NotificationWizard = ({
               text="new condition"
               primary
               icon={<AiOutlinePlus />}
-              onClick={() => addNewCondition(action)}
+              onClick={() => updateCondition(action, "add")}
             />
           )}
         </Box>
@@ -146,7 +57,7 @@ const NotificationWizard = ({
             text="create conditions"
             primary
             size="large"
-            onClick={() => addNewCondition(action)}
+            onClick={() => updateCondition(action, "add")}
           />
         </Box>
       )}
@@ -159,17 +70,21 @@ const NotificationWizard = ({
             <Button
               text="Remove"
               criticalOutline
-              onClick={() => removeCondition(index, action)}
+              onClick={() => updateCondition(action, "delete", index)}
             />
           </Box>
           <ConditionList
             item={item}
-            updateConditions={path => updateConditions(path, index)}
+            updateConditions={path =>
+              updateChecksInConditions(path, index, action, "add")
+            }
             updateOperatorByPath={path =>
               updateOperatorByPath(path, index, action)
             }
             updateEmailList={email => updateEmail(email, index, action, "add")}
-            deleteByPath={path => deleteByPath(path, index)}
+            deleteByPath={path =>
+              updateChecksInConditions(path, index, action, "delete")
+            }
             removeEmail={email => updateEmail(email, index, action, "delete")}
           />
         </Box>
@@ -180,17 +95,23 @@ const NotificationWizard = ({
 
 NotificationWizard.propTypes = {
   updateSelectedAction: PropTypes.func,
-  action: PropTypes.string
+  action: PropTypes.string,
+  updateCondition: PropTypes.func,
+  updateEmail: PropTypes.func,
+  updateOperatorByPath: PropTypes.func,
+  updateChecksInConditions: PropTypes.func,
+  notifications: PropTypes.array
 };
 
 const mapDispatchToProps = dispatch => ({
-  removeCondition: (index, action) =>
-    dispatch(removeConditionFromSchemaConfig(index, action)),
-  addNewCondition: action => dispatch(addConditionToSchemaConfig(action)),
+  updateCondition: (action, howToUpdate, index) =>
+    dispatch(updateConditionToSchemaConfig(action, howToUpdate, index)),
   updateEmail: (email, index, action, howToUpdate) =>
     dispatch(updateEmailFromSchemaConfig(email, index, action, howToUpdate)),
   updateOperatorByPath: (path, index, action) =>
-    dispatch(updateOperatorToCheck(path, index, action))
+    dispatch(updateOperatorToCheck(path, index, action)),
+  updateChecksInConditions: (path, index, action, howToUpdate) =>
+    dispatch(updateChecksInConditions(path, index, action, howToUpdate))
 });
 
 export default connect(
