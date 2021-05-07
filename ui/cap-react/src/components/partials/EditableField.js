@@ -13,7 +13,8 @@ const EditableField = ({
   renderDisplay = null,
   onUpdate = null,
   isEditable = true,
-  dataCy = ""
+  dataCy = "",
+  colorIndex = ""
 }) => {
   const [currentValue, setCurrentValue] = useState(value);
   const [hoverTitle, setHoverTitle] = useState(false);
@@ -49,6 +50,7 @@ const EditableField = ({
       pad="none"
       responsive={false}
       className="jst-md-center"
+      colorIndex={colorIndex}
     >
       <Label size={size} margin="none" direction="row">
         <input
@@ -77,7 +79,7 @@ const EditableField = ({
       </Box>
     </Box>
   ) : (
-    <Box direction="row" wrap={false}>
+    <Box direction="row" wrap={false} colorIndex={colorIndex}>
       <Box
         align="center"
         key="draft-title"
@@ -125,7 +127,8 @@ EditableField.propTypes = {
   onUpdate: PropTypes.func,
   size: PropTypes.string,
   isEditable: PropTypes.bool,
-  dataCy: PropTypes.string
+  dataCy: PropTypes.string,
+  colorIndex: PropTypes.string
 };
 
 export default EditableField;

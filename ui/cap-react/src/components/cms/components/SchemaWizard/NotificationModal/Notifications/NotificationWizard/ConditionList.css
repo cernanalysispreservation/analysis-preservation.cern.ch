@@ -1,0 +1,73 @@
+.conditionlist-list {
+  width: 88%;
+  padding: 0 10px;
+  overflow-x: auto;
+}
+.conditionlist-list-email-selected {
+  animation: slowFading 1s ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slowFading {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.conditionlist-email-section {
+  width: 10%;
+  background-color: #f5f5f5;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  top: 0;
+}
+.conditionlist-email-section-selected {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  min-height: 165px;
+  height: 100%;
+  background-color: #f5f5f5;
+  animation: swipe 2s ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes swipe {
+  0% {
+    width: 10%;
+    justify-content: flex-start;
+  }
+  100% {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+.email-configuration {
+  display: none;
+}
+
+.email-configuration-selected {
+  animation: hideShow 2s ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes hideShow {
+  0% {
+    opacity: 0;
+    display: none;
+  }
+  90% {
+    opacity: 0;
+    display: none;
+  }
+  100% {
+    display: flex;
+    opacity: 1;
+  }
+}

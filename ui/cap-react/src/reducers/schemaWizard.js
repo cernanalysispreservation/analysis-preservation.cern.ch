@@ -11,7 +11,11 @@ import {
   ADD_PROPERTY,
   ADD_PROPERTY_INIT,
   SCHEMA_ERROR,
-  SCHEMA_INIT_REQUEST
+  SCHEMA_INIT_REQUEST,
+  UPDATE_SCHEMA_CONFIG,
+  UPDATE_CONDITIONS_SCHEMA_CONFIG,
+  UPDATE_EMAIL_LIST_TO_CONDITION,
+  UPDATE_CONFIG_SCHEMA_CONDITION
 } from "../actions/schemaWizard";
 
 const initialState = Map({
@@ -27,7 +31,104 @@ const initialState = Map({
   field: null,
   propKeyEditor: null,
   error: null,
-  loader: false
+  loader: false,
+  schemaConfig: fromJS({
+    reviewable: true,
+    notifications: {
+      actions: {
+        publish: [
+          {
+            op: "and",
+            checks: [
+              {
+                path: "ml_app_use",
+                if: "exists",
+                value: "True"
+              },
+              {
+                op: "or",
+                checks: [
+                  {
+                    path: "first",
+                    if: "exists",
+                    value: "True"
+                  },
+                  {
+                    path: "second",
+                    if: "exists",
+                    value: "True"
+                  }
+                ]
+              }
+            ],
+            mails: {
+              default: {
+                cc: [
+                  "ml-conveners-test@cern0.ch",
+                  "ml-conveners-jira-test@cern0.ch"
+                ],
+                bcc: ["something-else@cern0.ch"],
+                to: ["atlas@cern.ch"]
+              }
+            }
+          },
+          {
+            op: "and",
+            checks: [
+              {
+                path: "ml_app_use",
+                if: "exists",
+                value: "True"
+              },
+              {
+                op: "or",
+                checks: [
+                  {
+                    path: "first",
+                    if: "exists",
+                    value: "True"
+                  },
+                  {
+                    path: "second",
+                    if: "exists",
+                    value: "True"
+                  }
+                ]
+              }
+            ],
+            mails: {
+              default: {
+                cc: [
+                  "ml-conveners-test@cern0.ch",
+                  "ml-conveners-jira-test@cern0.ch"
+                ],
+                bcc: ["something-else@cern0.ch"],
+                to: ["atlas@cern.ch"]
+              }
+            }
+          }
+        ],
+        review: [
+          {
+            op: "and",
+            checks: [
+              {
+                path: "ml_app_use",
+                if: "exists",
+                value: "True"
+              }
+            ],
+            mails: {
+              default: {
+                bcc: ["something-else@cern0.ch"],
+                to: ["atlas@cern.ch"]
+              }
+            }
+          }
+        ]
+      }
+    }
+  })
 });
 
 export default function schemaReducer(state = initialState, action) {
@@ -87,6 +188,23 @@ export default function schemaReducer(state = initialState, action) {
       );
     case CURRENT_UPDATE_CONFIG:
       return state.set("config", action.config);
+    case UPDATE_SCHEMA_CONFIG:
+      return state.set("schemaConfig", fromJS(action.payload));
+    case UPDATE_CONDITIONS_SCHEMA_CONFIG:
+      return state.setIn(
+        ["schemaConfig", "notifications", "actions", action.payload.action],
+        fromJS(action.payload.conditions)
+      );
+    case UPDATE_EMAIL_LIST_TO_CONDITION:
+      return state.setIn(
+        [...action.payload.path],
+        fromJS(action.payload.mails)
+      );
+    case UPDATE_CONFIG_SCHEMA_CONDITION:
+      return state.setIn(
+        [...action.payload.path],
+        fromJS(action.payload.conditions)
+      );
     default:
       return state;
   }

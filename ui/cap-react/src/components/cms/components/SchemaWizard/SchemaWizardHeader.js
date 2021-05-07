@@ -13,10 +13,12 @@ import Box from "grommet/components/Box";
 import Label from "grommet/components/Label";
 import { DownloadIcon } from "grommet/components/icons/base";
 import SettingsModal from "./SettingsModal";
+import NotificationModal from "./NotificationModal";
 import {
   AiOutlineSetting,
   AiOutlineArrowLeft,
-  AiOutlineInfoCircle
+  AiOutlineInfoCircle,
+  AiOutlineControl
 } from "react-icons/ai";
 import { FaCode } from "react-icons/fa";
 import JsonDiff from "./JSONDiff";
@@ -43,6 +45,7 @@ class SchemaWizardHeader extends React.Component {
   _getSchema = () => {
     const fileData = JSON.stringify(
       {
+        config: this.props.schemaConfig.toJS(),
         deposit_schema: this.props.schema.toJS(),
         deposit_options: this.props.uiSchema.toJS(),
         ...this.props.config
@@ -147,6 +150,11 @@ class SchemaWizardHeader extends React.Component {
               onClick={this._getSchema}
             />
             <Button
+              icon={<AiOutlineControl size={20} />}
+              size="small"
+              onClick={() => this.setState({ showNotification: true })}
+            />
+            <Button
               icon={<FaCode size={20} />}
               size="small"
               onClick={this._toggleSchemaPreviewEnabled}
@@ -174,6 +182,14 @@ class SchemaWizardHeader extends React.Component {
               showModal: false
             })
           }
+        />
+      ),
+      this.state.showNotification && (
+        <NotificationModal
+          show={this.state.showNotification}
+          onClose={() => this.setState({ showNotification: false })}
+          updateSchemaConfig={this.props.updateSchemaConfig}
+          schemaConfig={this.props.schemaConfig}
         />
       ),
       this.state.schemaPreviewEnabled && (
@@ -250,7 +266,8 @@ SchemaWizardHeader.propTypes = {
   initialUiSchema: PropTypes.object,
   initialSchema: PropTypes.object,
   history: PropTypes.object,
-  loader: PropTypes.bool
+  loader: PropTypes.bool,
+  schemaConfig: PropTypes.object
 };
 
 export default SchemaWizardHeader;

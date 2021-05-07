@@ -17,7 +17,7 @@ const ButtonWrapper = styled.div`
   padding: ${props => props.size.padding};
   font-size: ${props => props.size.fontSize};
   line-height: 1.75;
-  border-radius: 2px;
+  border-radius: ${props => (props.rounded ? "50%" : "2px")};
   cursor: pointer;
   margin: ${props => props.margin};
 
@@ -129,7 +129,8 @@ const Button = ({
   reverse = false,
   className = "",
   id = "",
-  dataCy = ""
+  dataCy = "",
+  rounded = false
 }) => {
   const getPadFromSize = size => {
     const choices = {
@@ -252,6 +253,7 @@ const Button = ({
       className={className}
       id={id}
       data-cy={dataCy}
+      rounded={rounded}
     >
       {loading && (
         <Box style={{ position: "absolute", left: getLoadingLeft(size) }}>
@@ -295,7 +297,8 @@ Button.propTypes = {
   hoverColor: PropTypes.string,
   reverse: PropTypes.bool,
   className: PropTypes.string,
-  id: PropTypes.string
+  id: PropTypes.string,
+  rounded: PropTypes.bool
 };
 
 export default Button;
